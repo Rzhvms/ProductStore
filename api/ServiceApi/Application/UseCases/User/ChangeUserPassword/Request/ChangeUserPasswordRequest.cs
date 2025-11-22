@@ -1,3 +1,6 @@
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+
 namespace Application.UseCases.User.ChangeUserPassword.Request;
 
 /// <summary>
@@ -6,17 +9,16 @@ namespace Application.UseCases.User.ChangeUserPassword.Request;
 public record ChangeUserPasswordRequest
 {
     /// <summary>
-    /// Идентификатор пользвоателя
-    /// </summary>
-    public Guid Id { get; init; }
-    
-    /// <summary>
     /// Новый пароль
     /// </summary>
-    public string NewPassword { get; init; }
+    [JsonPropertyName("newPassword")]
+    [Required]
+    public required string NewPassword { get; init; }
     
     /// <summary>
     /// Старый пароль
     /// </summary>
-    public string OldPassword { get; init; }
+    [JsonPropertyName("oldPassword")]
+    [Required]
+    public required string OldPassword { get; init; }
 }

@@ -1,4 +1,3 @@
-using Application.UseCases.Auth.SignOut.Request;
 using Application.UseCases.Auth.SignOut.Response;
 
 namespace Application.UseCases.Auth.SignOut;
@@ -11,5 +10,5 @@ public interface ISignOutUseCase
     /// <summary>
     /// Выполняет выход пользователя, деактивируя refresh-токен.
     /// </summary>
-    Task<SignOutResponse> ExecuteAsync(SignOutRequest request);
+    Task<SignOutResponse> ExecuteAsync(Guid userId);
 }

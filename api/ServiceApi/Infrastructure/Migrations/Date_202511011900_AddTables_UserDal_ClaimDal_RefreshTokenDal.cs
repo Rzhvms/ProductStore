@@ -19,7 +19,7 @@ public class Date_202511011900_AddTables_UserDal_ClaimDal_RefreshTokenDal : Migr
         {
             Create.Table(_userTableName)
                 .WithColumn(nameof(UserModel.Id)).AsGuid().PrimaryKey()
-                .WithColumn(nameof(UserModel.Email)).AsString(50).NotNullable()
+                .WithColumn(nameof(UserModel.Email)).AsString(50).NotNullable().Unique()
                 .WithColumn(nameof(UserModel.Phone)).AsString(20).Nullable()
                 .WithColumn(nameof(UserModel.Password)).AsString().NotNullable()
                 .WithColumn(nameof(UserModel.Salt)).AsString().NotNullable()

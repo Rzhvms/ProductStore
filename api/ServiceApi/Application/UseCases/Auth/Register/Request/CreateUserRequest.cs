@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
-using System.Security.Claims;
 using System.Text.Json.Serialization;
+using Claim = Application.UseCases.Auth.CreateUser.Request.Claim;
 
-namespace Application.UseCases.Auth.CreateUser.Request;
+namespace Application.UseCases.Auth.Register.Request;
 
 /// <summary>
 /// Входная модель создания пользователя
@@ -29,5 +29,6 @@ public record CreateUserRequest
     /// Права
     /// </summary>
     [JsonPropertyName("claims")]
-    public IList<Claim> Claims { get; set; }
+    [Required]
+    public required IList<Claim> Claims { get; set; }
 }

@@ -6,11 +6,6 @@ namespace Application.UseCases.User.UpdateUserInfo.Request;
 public record UpdateUserInfoRequest
 {
     /// <summary>
-    /// Идентификатор пользователя
-    /// </summary>
-    public Guid Id { get; init; }
-    
-    /// <summary>
     /// Номер телефона пользователя.
     /// </summary>
     public string? Phone { get; init; }

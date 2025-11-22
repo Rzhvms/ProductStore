@@ -19,6 +19,11 @@ public class UserAddressModel
     /// Страна
     /// </summary>
     public string? Country { get; set; }
+    
+    /// <summary>
+    /// Область
+    /// </summary>
+    public string? Region { get; init; }
 
     /// <summary>
     /// Город
@@ -48,5 +53,5 @@ public class UserAddressModel
     /// <summary>
     /// Используется ли адрес по умолчанию при оформлении заказа
     /// </summary>
-    public bool IsDefault { get; set; } = false;
+    public bool? IsDefault { get; set; } = false;
 }

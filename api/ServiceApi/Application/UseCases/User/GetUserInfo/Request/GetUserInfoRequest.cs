@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Application.UseCases.User.GetUserInfo.Request;
 
 /// <summary>
@@ -8,5 +10,6 @@ public record GetUserInfoRequest
     /// <summary>
     /// Идентификатор пользователя
     /// </summary>
-    public Guid Id { get; init; }
+    [Required]
+    public required Guid Id { get; init; }
 }

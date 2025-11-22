@@ -3,6 +3,8 @@ using Application.Ports.Repositories;
 using Application.Ports.Services;
 using Application.UseCases.Auth.CreateUser.Request;
 using Application.UseCases.Auth.CreateUser.Response;
+using Application.UseCases.Auth.Register.Request;
+using Application.UseCases.Auth.Register.Response;
 using Domain.User;
 using Microsoft.Extensions.Logging;
 
@@ -69,7 +71,7 @@ public class CreateUserUseCase : ICreateUserUseCase
     /// <inheritdoc />
     public async Task<ContinueRegisterResponse> ContinueRegisterAsync(ContinueRegisterRequest request)
     {
-        await _authRepository.UpdateUserForFinalRegistrationAsync(request.Id, request.Name, request.LastName, request.Gender, request.Phone);
+        await _authRepository.UpdateUserForFinalRegistrationAsync(request.UserId, request.Name, request.LastName, request.Gender, request.Phone);
         return new ContinueRegisterResponse();
     }
 
