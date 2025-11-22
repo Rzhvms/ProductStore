@@ -17,9 +17,9 @@ public class UpdateUserInfoUseCase : IUpdateUserInfoUseCase
     }
     
     /// <inheritdoc />
-    public async Task<UpdateUserInfoResponse> ExecuteAsync(UpdateUserInfoRequest request)
+    public async Task<UpdateUserInfoResponse> ExecuteAsync(Guid userId, UpdateUserInfoRequest request)
     {
-        var result = await _userRepository.UpdateUserInfoAsync(request.Id, request.Phone, request.Name, request.LastName);
+        var result = await _userRepository.UpdateUserInfoAsync(userId, request.Phone, request.Name, request.LastName);
         var (id, updateAt) = result;
         var response = new UpdateUserInfoResponse()
         {

@@ -1,3 +1,4 @@
+using Application.Extensions;
 using Application.UseCases.Auth.CreateUser;
 using Application.UseCases.Auth.CreateUser.Request;
 using Application.UseCases.Auth.CreateUser.Response;
@@ -7,8 +8,9 @@ using Application.UseCases.Auth.Login.Response;
 using Application.UseCases.Auth.RefreshToken;
 using Application.UseCases.Auth.RefreshToken.Request;
 using Application.UseCases.Auth.RefreshToken.Response;
+using Application.UseCases.Auth.Register.Request;
+using Application.UseCases.Auth.Register.Response;
 using Application.UseCases.Auth.SignOut;
-using Application.UseCases.Auth.SignOut.Request;
 using Application.UseCases.Auth.SignOut.Response;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -67,9 +69,10 @@ public class AuthController : ControllerBase
     [Authorize]
     [HttpPost("sign-out")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<SignOutResponse> SignOutAsync(SignOutRequest request)
+    public async Task<SignOutResponse> SignOutAsync()
     {
-        return await _signOutUseCase.ExecuteAsync(request);
+        var userId = User.GetUserId();
+        return await _signOutUseCase.ExecuteAsync(userId);
     }
 
     /// <summary>

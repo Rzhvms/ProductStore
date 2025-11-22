@@ -119,7 +119,7 @@ public class JwtService : IAuthTokenService
                 ValidateIssuer = true,
                 ValidateAudience = true,
                 ValidateLifetime =
-                    false, // we may be trying to validate an expired token so it makes no sense checking for it's lifetime.
+                    false,
                 ValidateIssuerSigningKey = true,
                 ValidIssuer = _settings.Value.AccessTokenSettings.Issuer,
                 ValidAudience = _settings.Value.AccessTokenSettings.Audience,

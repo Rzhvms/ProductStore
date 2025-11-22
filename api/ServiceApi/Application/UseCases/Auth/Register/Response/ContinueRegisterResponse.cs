@@ -1,4 +1,4 @@
-namespace Application.UseCases.Auth.CreateUser.Response;
+namespace Application.UseCases.Auth.Register.Response;
 
 /// <summary>
 /// Выходная модель завершения регистрации

@@ -23,9 +23,9 @@ public class ChangeUserPasswordUseCase : IChangeUserPasswordUseCase
     }
     
     /// <inheritdoc />
-    public async Task<ChangeUserPasswordResponse> ExecuteAsync(ChangeUserPasswordRequest request)
+    public async Task<ChangeUserPasswordResponse> ExecuteAsync(Guid id, ChangeUserPasswordRequest request)
     {
-        var user = await _authRepository.GetUserByUserIdAsync(request.Id);
+        var user = await _authRepository.GetUserByUserIdAsync(id);
         if (user == null)
         {
             return new ChangeUserPasswordResponse
