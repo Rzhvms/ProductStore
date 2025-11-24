@@ -6,6 +6,7 @@ using Application.UseCases.User.ChangeUserPassword;
 using Application.UseCases.User.GetUserInfo;
 using Application.UseCases.User.UpdateUserInfo;
 using Application.UseCases.UserAddress;
+using Application.UseCases.UserProfile;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Application;
@@ -22,6 +23,7 @@ public static class ApplicationForStartup
         services.AddScoped<IGetUserInfoUseCase, GetUserInfoUseCase>();
         services.AddScoped<IUpdateUserInfoUseCase, UpdateUserInfoUseCase>();
         services.AddScoped<IUserAddressUseCase, UserAddressUseCase>();
+        services.AddScoped<IUserProfileUseCase, UserProfileUseCase>();
 
         return services;
     }

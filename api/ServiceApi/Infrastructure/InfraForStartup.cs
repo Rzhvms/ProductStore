@@ -48,6 +48,7 @@ public static class InfraForStartup
         services.AddScoped<IAuthRepository, AuthRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserAddressRepository, UserAddressRepository>();
+        services.AddScoped<IUserProfileRepository, UserProfileRepository>();
 
         // FluentMigrator
         services.AddFluentMigratorCore()
