@@ -115,7 +115,7 @@ const handleSubmit = async () => {
   try {
     const response = await createUser(email.value, password.value, claims);
     if (response.userId) {
-      localStorage.setItem("UserId", response.data.userId);
+      localStorage.setItem("UserId", response.userId);
       router.push("/confirm-email");
     }
   } catch (error) {
