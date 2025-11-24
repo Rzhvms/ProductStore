@@ -109,11 +109,7 @@ const handleSubmit = async () => {
 
   try {
     const email_response = await login(email.value, password.value);
-    if (!email_response.ok) {
-      throw new Error("Вход не удался: неверный логин или пароль");
-    }
-    localStorage.setItem("email", email.value);
-    router.push("/finish-registration");
+    router.push("/admin");
   } catch (error) {
     console.log(error);
     globalError.value.push(error.message);

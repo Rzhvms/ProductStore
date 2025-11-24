@@ -63,7 +63,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import router from "@/router";
-// import { createUser } from "@/services/api";
+import { finishRegister } from "@/services/api";
 
 const name = ref("");
 const lastName = ref("");
@@ -74,11 +74,14 @@ const isFormValid = computed(() => {
   return name.value && lastName.value && gender.value && phone.value;
 });
 
-const handleSubmit = () => {
-  const email = localStorage.getItem("email");
-  // Заглушка под API
-  // createUser(email, name.value, lastName.value, gender.value, phone.value);
-  router.push("/admin");
+const handleSubmit = async () => {
+  try {
+    const response = await finishRegister(localStorage.getItem("UserId"), name.value, lastName.value, phone.value, gender.value);
+    //localStorage.removeItem("UserId");
+    router.push("/admin");
+  } catch (error) {
+    console.log(error);
+  }
 };
 </script>
 

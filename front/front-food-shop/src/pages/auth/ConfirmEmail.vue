@@ -121,7 +121,7 @@ const handleResend = () => {
   localStorage.setItem("lastResendTime", now.toString());
 
   // Заглушка для API
-  const email = localStorage.getItem("email");
+  // const email = localStorage.getItem("email");
   // sendVerificationEmail(email);
 
   startTimer(60);

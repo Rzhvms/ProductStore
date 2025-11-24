@@ -40,7 +40,6 @@
               <p class="contact-text" style="font-size: 16px; text-align: left; margin-bottom: 4px;">Сложность пароля:</p>
               <div class="password-strength">
                 <div class="strength-bar" :style="{ width: strengthWidth, background: strengthColor }"></div>
-                <span class="strength-text">{{ strengthText }}</span>
               </div>
             </div>
           </transition>
@@ -79,6 +78,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
+import { createUser } from "@/services/api";
 
 const router = useRouter();
 const email = ref("");
@@ -109,8 +109,18 @@ const handleSubmit = async () => {
   else if (password.value.length < 8) errors.value.password = "Пароль слишком короткий";
 
   if (errors.value.email || errors.value.password) return;
-
-  router.push("/confirm-email");
+  let claims = [];
+  let claim = { type: "role", value: "user" };
+  claims.push(claim);
+  try {
+    const response = await createUser(email.value, password.value, claims);
+    if (response.userId) {
+      localStorage.setItem("UserId", response.data.userId);
+      router.push("/confirm-email");
+    }
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 /* --- PASSWORD STRENGTH --- */
@@ -156,13 +166,6 @@ const updatePasswordStrength = () => {
 
   passwordStrength.value = Math.min(score, 6);
 };
-
-const strengthText = computed(() => {
-  const s = passwordStrength.value;
-  if (s <= 2) return "Слабый";
-  if (s <= 4) return "Средний";
-  return "Сильный";
-});
 
 const strengthWidth = computed(() => {
   if (!password.value) return "10%";
@@ -217,12 +220,6 @@ const handleLogin = () => router.push("/login");
   height: 8px;
   border-radius: 4px;
   transition: width 0.3s ease, background 0.3s ease;
-}
-
-.strength-text {
-  font-size: 12px;
-  margin-top: 4px;
-  display: block;
 }
 
 .submit-btn.inactive-btn {
