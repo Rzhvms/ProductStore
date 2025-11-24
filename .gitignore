@@ -90,3 +90,6 @@ tmp/
 backup/
 *.backup
 *.bak
+
+# Frontend
+node_modules/
