@@ -1,52 +1,58 @@
 <template>
   <div class="auth-container">
     <!-- Карточка -->
-    <div class="auth-card">
+    <div class="auth-card" style="height: 832px;">
       <!-- Заголовок -->
       <h1 class="auth-title">Завершение регистрации</h1>
 
       <!-- Форма -->
       <form @submit.prevent="handleSubmit" class="auth-form">
-        <div class="auth-email">
-          <p>Введите ваше имя: </p>
+        <div class="field-wrap">
+          <label class="field-label">Введите ваше имя:</label>
           <input
+            v-model="name"
             type="text"
             placeholder="Олег"
-            class="auth-email-input"/>
+            class="input"
+          />
         </div>
 
-        <div class="auth-email">
-          <p>Введите вашу фамилию: </p>
+        <div class="field-wrap">
+          <label class="field-label">Введите вашу фамилию:</label>
           <input
+            v-model="lastName"
             type="text"
             placeholder="Волков"
-            class="auth-email-input"/>
+            class="input"
+          />
         </div>
 
-        <div class="auth-email">
-          <p>Ваш пол: </p>
-          <input
-            type="checkbox"
-            placeholder="Женский/Мужской"
-            class="auth-email-input"/>
+        <div class="field-wrap">
+          <label class="field-label">Ваш пол:</label>
+          <select v-model="gender" class="input">
+            <option value="" disabled>Выберите пол</option>
+            <option value="male">Мужской</option>
+            <option value="female">Женский</option>
+          </select>
         </div>
 
-        <div class="auth-email">
-          <p>Введите ваш номер телефона</p>
+        <div class="field-wrap">
+          <label class="field-label">Введите ваш номер телефона:</label>
           <input
+            v-model="phone"
             type="tel"
             placeholder="+7 (...) ...-..-.."
-            class="auth-email-input"/>
+            class="input"
+          />
         </div>
 
         <!-- Submit -->
-        <button
-          type="submit"
-          class="auth-button-submit">
+        <button type="submit" class="submit-btn" :disabled="!isFormValid">
           Завершить
         </button>
       </form>
-      <p class="info-message">
+
+      <p class="contact-text" style="margin-top: 16px;">
         По всем вопросам можете обращаться:<br>
         adminexample@gmail.com
       </p>
@@ -55,25 +61,73 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import router from "@/router";
-import { createUser } from "@/services/api";
+// import { createUser } from "@/services/api";
 
 const name = ref("");
 const lastName = ref("");
 const gender = ref("");
 const phone = ref("");
 
+const isFormValid = computed(() => {
+  return name.value && lastName.value && gender.value && phone.value;
+});
+
 const handleSubmit = () => {
   const email = localStorage.getItem("email");
-  const email_response = createUser(email, password.value, name.value, lastName.value, claims.value);
+  // Заглушка под API
+  // createUser(email, name.value, lastName.value, gender.value, phone.value);
   router.push("/admin");
 };
 </script>
 
 <style scoped>
 @import './auth.css';
-.email-placeholder::placeholder {
-  transform: translateX(20px);
+
+.field-label {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 6px;
+  color: #3c3c3c;
+}
+
+.field-wrap {
+  width: 362px;
+  margin: 12px auto;
+}
+
+.input, select {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 18px;
+  border: none;
+  background-color: #f4f4f4;
+  font-size: 16px;
+  outline: none;
+}
+
+.submit-btn {
+  width: 362px;
+  height: 48px;
+  background: #ff7a00;
+  color: white;
+  border-radius: 18px;
+  border: none;
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 32px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.submit-btn:hover {
+  background: #ffa84c;
+}
+
+.submit-btn:disabled {
+  background: #FFA84C;
+  cursor: not-allowed;
 }
 </style>

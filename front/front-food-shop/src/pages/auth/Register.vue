@@ -128,7 +128,7 @@ const onPasswordInput = () => {
 const updatePasswordStrength = () => {
   const pass = password.value;
 
-  let score = 0;
+  let score = 1;
 
   // --- длина ---
   if (pass.length >= 8) score++;
