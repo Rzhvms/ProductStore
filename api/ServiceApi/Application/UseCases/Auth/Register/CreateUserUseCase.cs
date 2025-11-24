@@ -3,6 +3,8 @@ using Application.Ports.Repositories;
 using Application.Ports.Services;
 using Application.UseCases.Auth.CreateUser.Request;
 using Application.UseCases.Auth.CreateUser.Response;
+using Application.UseCases.Auth.Register.Request;
+using Application.UseCases.Auth.Register.Response;
 using Domain.User;
 using Microsoft.Extensions.Logging;
 
@@ -51,8 +53,6 @@ public class CreateUserUseCase : ICreateUserUseCase
             Email = request.Email,
             Password = _cryptographyService.HashPassword(request.Password, salt),
             Salt = salt,
-            Name = request.Name,
-            LastName = request.LastName,
             Claims = ToClaims(request.Claims),
             CreateAt = now,
             UpdateAt = now
@@ -66,6 +66,13 @@ public class CreateUserUseCase : ICreateUserUseCase
         {
             UserId = user.Id
         };
+    }
+
+    /// <inheritdoc />
+    public async Task<ContinueRegisterResponse> ContinueRegisterAsync(ContinueRegisterRequest request)
+    {
+        await _authRepository.UpdateUserForFinalRegistrationAsync(request.UserId, request.Name, request.LastName, request.Gender, request.Phone);
+        return new ContinueRegisterResponse();
     }
 
     /// <summary>

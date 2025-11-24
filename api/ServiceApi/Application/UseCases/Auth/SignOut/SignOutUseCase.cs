@@ -1,6 +1,5 @@
 using Application.Enums;
 using Application.Ports.Repositories;
-using Application.UseCases.Auth.SignOut.Request;
 using Application.UseCases.Auth.SignOut.Response;
 using Microsoft.Extensions.Logging;
 
@@ -21,10 +20,10 @@ public class SignOutUseCase : ISignOutUseCase
     }
 
     /// <inheritdoc />
-    public async Task<SignOutResponse> ExecuteAsync(SignOutRequest request)
+    public async Task<SignOutResponse> ExecuteAsync(Guid userId)
     {
         // 1. Проверяем, что пользователь существует
-        var user = await _authRepository.GetUserByUserIdAsync(request.UserId);
+        var user = await _authRepository.GetUserByUserIdAsync(userId);
         if (user == null)
             return Error(ErrorCodes.UserDoesNotExist);
 

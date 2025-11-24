@@ -53,7 +53,8 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<UpdateUserInfoResponse> UpdateUserInfoAsync(UpdateUserInfoRequest request)
     {
-        return await _updateUserInfoUseCase.ExecuteAsync(request);
+        var id = User.GetUserId();
+        return await _updateUserInfoUseCase.ExecuteAsync(id, request);
     }
 
     /// <summary>
@@ -63,6 +64,7 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ChangeUserPasswordResponse> ChangeUserPasswordAsync(ChangeUserPasswordRequest request)
     {
-        return await _changeUserPasswordUseCase.ExecuteAsync(request);
+        var id = User.GetUserId();
+        return await _changeUserPasswordUseCase.ExecuteAsync(id, request);
     }
 }

@@ -1,5 +1,7 @@
 using Application.UseCases.Auth.CreateUser.Request;
 using Application.UseCases.Auth.CreateUser.Response;
+using Application.UseCases.Auth.Register.Request;
+using Application.UseCases.Auth.Register.Response;
 
 namespace Application.UseCases.Auth.CreateUser;
 
@@ -13,4 +15,9 @@ public interface ICreateUserUseCase
     /// Создает нового пользователя, если email ещё не зарегистрирован.
     /// </summary>
     Task<CreateUserResponse> ExecuteAsync(CreateUserRequest request);
+
+    /// <summary>
+    /// Завершение регистрации
+    /// </summary>
+    Task<ContinueRegisterResponse> ContinueRegisterAsync(ContinueRegisterRequest request);
 }

@@ -1,7 +1,8 @@
 using System.ComponentModel.DataAnnotations;
-using System.Security.Claims;
+using System.Text.Json.Serialization;
+using Claim = Application.UseCases.Auth.CreateUser.Request.Claim;
 
-namespace Application.UseCases.Auth.CreateUser.Request;
+namespace Application.UseCases.Auth.Register.Request;
 
 /// <summary>
 /// Входная модель создания пользователя
@@ -14,30 +15,20 @@ public record CreateUserRequest
     [EmailAddress]
     [MaxLength(50)]
     [Required]
+    [JsonPropertyName("email")]
     public required string Email { get; set; }
     
     /// <summary>
     /// Пароль
     /// </summary>
     [Required]
+    [JsonPropertyName("password")]
     public required string Password { get; set; }
-    
-    /// <summary>
-    /// Имя
-    /// </summary>
-    [MaxLength(50)]
-    [Required]
-    public required string Name { get; set; }
-    
-    /// <summary>
-    /// Фамилия
-    /// </summary>
-    [MaxLength(50)]
-    [Required]
-    public required string LastName { get; set; }
     
     /// <summary>
     /// Права
     /// </summary>
-    public IList<Claim> Claims { get; set; }
+    [JsonPropertyName("claims")]
+    [Required]
+    public required IList<Claim> Claims { get; set; }
 }
