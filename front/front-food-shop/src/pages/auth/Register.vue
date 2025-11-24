@@ -77,7 +77,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
@@ -89,8 +89,15 @@ const errors = ref({ email: null, password: null });
 const passwordStrength = ref(0);
 const showPasswordStrength = ref(false);
 
-const isFormValid = computed(() => email.value.includes("@") && password.length >= 8);
+/* --- VALIDATION --- */
+
+const isFormValid = computed(() => {
+  return email.value.includes("@") && password.value.length >= 8;
+});
+
 const showAltButton = computed(() => !email.value && !password.value);
+
+/* --- SUBMIT --- */
 
 const handleSubmit = async () => {
   errors.value = { email: null, password: null };
@@ -106,8 +113,11 @@ const handleSubmit = async () => {
   router.push("/confirm-email");
 };
 
+/* --- PASSWORD STRENGTH --- */
+
 const onPasswordInput = () => {
-  checkPasswordStrength();
+  updatePasswordStrength();
+
   if (password.value.length > 0) {
     setTimeout(() => showPasswordStrength.value = true, 50);
   } else {
@@ -115,36 +125,55 @@ const onPasswordInput = () => {
   }
 };
 
-const checkPasswordStrength = () => {
+const updatePasswordStrength = () => {
   const pass = password.value;
+
   let score = 0;
-  if (pass.length >= 8) score += 1;
-  if (/[a-z]/.test(pass) && /[A-Z]/.test(pass)) score += 1;
-  if (/[0-9]/.test(pass)) score += 1;
-  passwordStrength.value = score;
+
+  // --- длина ---
+  if (pass.length >= 8) score++;
+  if (pass.length >= 12) score++;
+  if (pass.length >= 15) score++;
+
+  // --- композиция ---
+  const hasLower = /[a-z]/.test(pass);
+  const hasUpper = /[A-Z]/.test(pass);
+  const hasDigits = /\d/.test(pass);
+  const hasSymbols = /[^A-Za-z0-9]/.test(pass);
+
+  if (hasLower && hasUpper) score++;
+  if (hasDigits) score++;
+  if (hasSymbols) score++;
+
+  // --- оценка для простых паттернов ---
+  const lowerPass = pass.toLowerCase();
+  const isSequence =
+    "abcdefghijklmnopqrstuvwxyz".includes(lowerPass) ||
+    "qwertyuiopasdfghjklzxcvbnm".includes(lowerPass) ||
+    "0123456789".includes(pass);
+
+  if (isSequence) score = Math.max(1, score - 2);
+
+  passwordStrength.value = Math.min(score, 6);
 };
 
 const strengthText = computed(() => {
-  switch (passwordStrength.value) {
-    case 1: return "Слабый";
-    case 2: return "Средний";
-    case 3: return "Сильный";
-    default: return "Слабый";
-  }
+  const s = passwordStrength.value;
+  if (s <= 2) return "Слабый";
+  if (s <= 4) return "Средний";
+  return "Сильный";
 });
 
 const strengthWidth = computed(() => {
   if (!password.value) return "10%";
-  return `${passwordStrength.value * 30 + 10}%`;
+  return `${passwordStrength.value * 15 + 10}%`; // до 100%
 });
 
 const strengthColor = computed(() => {
-  switch (passwordStrength.value) {
-    case 1: return "#E63946";
-    case 2: return "#FFA84C";
-    case 3: return "#8ED76A";
-    default: return "#E63946";
-  }
+  const s = passwordStrength.value;
+  if (s <= 2) return "#E63946";  // красный
+  if (s <= 4) return "#FFA84C";  // желтый
+  return "#8ED76A";              // зеленый
 });
 
 const handleLogin = () => router.push("/login");

@@ -2,10 +2,8 @@
   <div class="page-bg">
     <!-- Карточка -->
     <div class="login-card">
-      <!-- Заголовок -->
       <h1 class="login-title">Восстановление пароля</h1>
 
-      <!-- Инструкция -->
       <p class="contact-text" style="margin-bottom: 16px; text-align: center; font-size: 16px;">
         Введите вашу электронную почту, чтобы <br>
         получить код подтверждения и восстановить <br>
@@ -14,6 +12,7 @@
 
       <!-- Форма -->
       <form @submit.prevent="handleSubmit" class="form">
+
         <!-- Email -->
         <div class="field-wrap">
           <div :class="['field', errors.email ? 'field-error' : '']">
@@ -27,18 +26,17 @@
           <p v-if="errors.email" class="error-text">{{ errors.email }}</p>
         </div>
 
-        <!-- Submit -->
+        <!-- Submit button -->
         <button
           type="submit"
           class="submit-btn"
-          :class="{ 'hover-light': !isFormValid }"
+          :class="{ 'inactive-btn': !isFormValid }"
           :disabled="!isFormValid"
         >
           Отправить код
         </button>
       </form>
 
-      <!-- Отмена -->
       <button class="create-btn" @click="handleDecline">
         Отмена
       </button>
@@ -54,14 +52,13 @@
 <script setup>
 import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
-// import { sendVerificationEmail } from "@/services/api";
 
 const router = useRouter();
 const email = ref("");
 
 const errors = ref({ email: null });
 
-// Проверка валидности формы
+// Валидность формы: есть @ и не пустая строка
 const isFormValid = computed(() => {
   return email.value.length > 0 && email.value.includes("@");
 });
@@ -78,14 +75,6 @@ const handleSubmit = async () => {
   }
 
   try {
-    // Пример API вызова
-    // const response = await sendVerificationEmail(email.value);
-    // if (!response.ok) {
-    //   if (response.status === 404) errors.value.email = "Аккаунт с такой почтой не существует";
-    //   else throw new Error("Не удалось отправить письмо");
-    //   return;
-    // }
-
     router.push("/confirm-email");
   } catch (error) {
     errors.value.email = error.message;
@@ -99,4 +88,11 @@ const handleDecline = () => {
 
 <style scoped>
 @import './auth.css';
+
+/* Отключённая кнопка — как в регистрации */
+.submit-btn.inactive-btn {
+  background-color: #FFA84C;
+  color: white;
+  cursor: not-allowed;
+}
 </style>
