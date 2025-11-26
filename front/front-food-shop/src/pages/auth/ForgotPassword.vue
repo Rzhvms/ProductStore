@@ -75,7 +75,7 @@ const handleSubmit = async () => {
   }
 
   try {
-    router.push("/confirm-email");
+    router.push("/recovery-code");
   } catch (error) {
     errors.value.email = error.message;
   }

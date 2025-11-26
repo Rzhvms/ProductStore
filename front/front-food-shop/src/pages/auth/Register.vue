@@ -228,8 +228,4 @@ const handleLogin = () => router.push("/login");
   cursor: not-allowed;
 }
 
-.submit-btn:enabled:hover {
-  background-color: #f4f4f4;
-  color: #ff7a00;
-}
 </style>

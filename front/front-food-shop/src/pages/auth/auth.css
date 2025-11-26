@@ -110,8 +110,8 @@
 .custom-checkbox {
   appearance: none;
   -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   border: 2px solid #c0c0c0;
   border-radius: 4px;
   position: relative;
@@ -134,13 +134,13 @@
 .custom-checkbox:checked::after {
   content: '';
   position: absolute;
-  width: 5px;
-  height: 9px;
+  width: 40%;
+  height: 70%;
   border: solid white;
-  border-width: 0 2px 2px 0;
+  border-width: 0 0.2em 0.2em 0;
   transform: rotate(45deg);
-  left: 2.5px;
-  bottom: 2px;
+  left: 22%;
+  bottom: 20%;
 }
 
 /* Buttons */

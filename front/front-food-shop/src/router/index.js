@@ -5,6 +5,8 @@ import Login from '../pages/auth/Login.vue'
 import Register from '../pages/auth/Register.vue'
 import ConfirmEmail from '../pages/auth/ConfirmEmail.vue'
 import FinishRegistration from '../pages/auth/FinishRegistration.vue'
+import RecoveryCode from '@/pages/auth/RecoveryCode.vue'
+import RecoveryNewPassword from '@/pages/auth/RecoveryNewPassword.vue'
 import ForgotPassword from '../pages/auth/ForgotPassword.vue'
 import ForgotPasswordOptions from '../pages/auth/ForgotPasswordOptions.vue'
 
@@ -33,6 +35,8 @@ import ProfileSettings from '../pages/profile/Settings.vue'
 // Admin
 import AdminIndex from '../pages/admin/Index.vue'
 
+
+
 const routes = [
   { path: '/', component: Home },
 
@@ -40,6 +44,8 @@ const routes = [
   { path: '/login', component: Login },
   { path: '/register', component: Register },
   { path: '/confirm-email', component: ConfirmEmail },
+  { path: '/recovery-code', component: RecoveryCode },
+  { path: '/new-password', component: RecoveryNewPassword },
   { path: '/finish-registration', component: FinishRegistration },
   { path: '/forgot-password', component: ForgotPassword },
   { path: '/forgot-password-options', component: ForgotPasswordOptions },
