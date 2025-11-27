@@ -1,4 +1,4 @@
-<template>
+<template> 
   <div class="page-bg">
     <div class="login-card" :style="{ height: cardHeight + 'px' }">
       <h1 class="login-title">Регистрация</h1>
@@ -7,7 +7,6 @@
 
         <!-- Email -->
         <div class="field-wrap">
-          <p class="field-label">Почта: <span class="required">*</span></p>
           <div class="field">
             <input
               v-model="email"
@@ -17,12 +16,13 @@
               @input="email = sanitizeInput(email)"
             />
           </div>
-          <p v-if="errors.email" class="error-text">{{ errors.email }}</p>
+          <transition name="fade-slide">
+            <p v-if="errors.email" class="error-text">{{ errors.email }}</p>
+          </transition>
         </div>
 
         <!-- Новый пароль -->
         <div class="field-wrap">
-          <p class="field-label">Пароль: <span class="required">*</span></p>
           <div class="field password-field">
             <input
               v-model="password"
@@ -53,7 +53,6 @@
 
         <!-- Подтверждение пароля -->
         <div class="field-wrap">
-          <p class="field-label">Повторите пароль: <span class="required">*</span></p>
           <div class="field password-field">
             <input
               v-model="confirmPassword"
@@ -67,13 +66,25 @@
               {{ showPassword.confirm ? '🙈' : '👁️' }}
             </button>
           </div>
-          <p v-if="confirmPassword && password !== confirmPassword" class="error-text" style="margin-bottom: 0;">
-            Пароли не совпадают
-          </p>
+
+          <!-- Ошибка "Пароли не совпадают" -->
+          <transition name="fade-slide">
+            <p v-if="passwordsMismatch" class="error-text" style="margin-bottom: 0;">
+              Пароли не совпадают
+            </p>
+          </transition>
         </div>
 
+        <p class="password-rules">
+          Пароль должен содержать не менее 8 символов, включая<br>
+          латинские буквы (a-z, A-Z), как минимум одну заглавную<br>
+          букву и одну цифру
+        </p>
+
         <!-- Общая ошибка -->
-        <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
+        <transition name="fade-slide">
+          <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
+        </transition>
 
         <!-- Сохранить -->
         <button
@@ -103,7 +114,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, reactive, watch } from "vue";
 import { useRouter } from "vue-router";
 import { createUser } from "@/services/api";
 
@@ -111,20 +122,21 @@ const router = useRouter();
 const email = ref("");
 const password = ref("");
 const confirmPassword = ref("");
-const showPassword = ref({ password: false, confirm: false });
+const showPassword = reactive({ password: false, confirm: false });
+const showPasswordStrength = reactive({ password: false });
 const errorMessage = ref("");
 const isSaved = ref(false);
-const showPasswordStrength = ref({ password: false });
 const passwordStrength = ref(0);
-
 const errors = ref({ email: null, password: null });
-const baseCardHeight = 640;
+
+// Базовая высота карты
+const baseCardHeight = 570;
 const cardHeight = ref(baseCardHeight);
 
-/* --- САНИТАЙЗИНГ --- */
+// --- САНИТАЙЗИНГ ---
 const sanitizeInput = (value) => value.replace(/\s/g, '');
 
-/* --- VALIDATION --- */
+// --- ВАЛИДАЦИЯ ---
 const isFormValid = computed(() => {
   return (
     email.value.includes("@") &&
@@ -134,7 +146,7 @@ const isFormValid = computed(() => {
   );
 });
 
-/* --- PASSWORD STRENGTH --- */
+// --- PASSWORD STRENGTH ---
 const updatePasswordStrength = (pass) => {
   let score = 1;
   if (pass.length >= 8) score++;
@@ -164,16 +176,10 @@ const onPasswordInput = () => {
   password.value = sanitizeInput(password.value);
   const s = updatePasswordStrength(password.value);
   passwordStrength.value = s;
-  showPasswordStrength.value.password = password.value.length > 0;
-
-  let extraHeight = 0;
-  if (showPasswordStrength.value.password) extraHeight += 70;
-  if (confirmPassword.value && password.value !== confirmPassword.value) extraHeight += 24;
-
-  cardHeight.value = baseCardHeight + extraHeight;
+  showPasswordStrength.password = password.value.length > 0;
 };
 
-/* --- Computed bars --- */
+// --- COMPUTED BARS ---
 const strengthWidth = computed(() => ({
   password: password.value ? `${passwordStrength.value * 15 + 10}%` : '10%'
 }));
@@ -194,7 +200,25 @@ const strengthLabel = computed(() => {
   return "Сильный";
 });
 
-/* --- SUBMIT --- */
+// --- PASSWORDS MISMATCH ---
+const passwordsMismatch = computed(() => confirmPassword.value && password.value !== confirmPassword.value);
+
+// --- Обновление высоты карты ---
+const updateCardHeight = () => {
+  let extraHeight = 0;
+  if (showPasswordStrength.password) extraHeight += 72; // высота блока сложности пароля
+  if (passwordsMismatch.value) extraHeight += 24; // высота ошибки "Пароли не совпадают"
+  cardHeight.value = baseCardHeight + extraHeight;
+};
+
+// Следим за изменениями пароля, подтверждения и блока сложности пароля
+watch(
+  [password, confirmPassword, () => showPasswordStrength.password],
+  updateCardHeight,
+  { immediate: true }
+);
+
+// --- SUBMIT ---
 const handleSubmit = async () => {
   if (!isFormValid.value) {
     errorMessage.value = 'Пароли не совпадают, меньше 8 символов или содержат пробелы';

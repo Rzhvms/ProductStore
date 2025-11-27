@@ -1,10 +1,10 @@
 <template>
   <div class="page-bg">
     <!-- Карточка -->
-    <div class="login-card">
+    <div class="login-card" style="height: 564px;">
       <h1 class="login-title">Восстановление пароля</h1>
 
-      <p class="contact-text" style="margin-bottom: 16px; text-align: center; font-size: 16px;">
+      <p class="helper-text">
         Введите вашу электронную почту, чтобы <br>
         получить код подтверждения и восстановить <br>
         доступ к аккаунту

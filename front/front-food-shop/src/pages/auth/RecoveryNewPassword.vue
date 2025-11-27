@@ -1,15 +1,12 @@
 <template>
   <div class="page-bg">
     <div class="login-card" :style="{ height: cardHeight + 'px' }">
-      <h1 class="login-title">Создайте новый пароль</h1>
+      <h1 class="login-title">Придумайте<br> новый пароль</h1>
 
       <form @submit.prevent="handleSubmit" class="form">
 
         <!-- Новый пароль -->
         <div class="field-wrap">
-          <p class="field-label">
-            Новый пароль: <span class="required">*</span>
-          </p>
           <div class="field password-field">
             <input
               v-model="password"
@@ -40,9 +37,6 @@
 
         <!-- Подтверждение пароля -->
         <div class="field-wrap">
-          <p class="field-label">
-            Подтверждение пароля: <span class="required">*</span>
-          </p>
           <div class="field password-field">
             <input
               v-model="confirmPassword"
@@ -66,6 +60,12 @@
         <!-- Общая ошибка -->
         <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
 
+        <p class="password-rules">
+          Пароль должен содержать не менее 8 символов, включая<br>
+          латинские буквы (a-z, A-Z), как минимум одну заглавную<br>
+          букву и одну цифру
+        </p>
+        
         <!-- Сохранить -->
         <button
           type="submit"
@@ -101,7 +101,7 @@ const showPasswordStrength = ref({ password: false });
 const passwordStrength = ref(0);
 
 // Начальная фиксированная высота карточки
-const baseCardHeight = 560;
+const baseCardHeight = 524;
 const cardHeight = ref(baseCardHeight);
 
 /* --- САНИТАЙЗИНГ --- */

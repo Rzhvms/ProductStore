@@ -160,7 +160,22 @@ const onInput = (index, event) => {
 };
 
 const onKeyDown = (index, event) => {
-  if (!/[0-9]/.test(event.key) && event.key !== "Backspace" && event.key !== "ArrowLeft" && event.key !== "ArrowRight" && event.key !== "Tab") {
+  if (event.key === "Enter") {
+    event.preventDefault();
+
+    if (isCodeComplete.value) {
+      handleSubmit();
+    }
+    return;
+  }
+
+  if (
+    !/[0-9]/.test(event.key) &&
+    event.key !== "Backspace" &&
+    event.key !== "ArrowLeft" &&
+    event.key !== "ArrowRight" &&
+    event.key !== "Tab"
+  ) {
     event.preventDefault();
   }
 };
@@ -186,7 +201,7 @@ const onBackspace = (index, event) => {
 
 .login-card {
   width: 410px;
-  height: 580px;
+  height: 540px;
   transition: height 0.3s ease;
 }
 

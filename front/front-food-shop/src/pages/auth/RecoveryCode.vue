@@ -159,7 +159,22 @@ const onInput = (index, event) => {
 };
 
 const onKeyDown = (index, event) => {
-  if (!/[0-9]/.test(event.key) && event.key !== "Backspace" && event.key !== "ArrowLeft" && event.key !== "ArrowRight" && event.key !== "Tab") {
+  if (event.key === "Enter") {
+    event.preventDefault();
+
+    if (isCodeComplete.value) {
+      handleSubmit();
+    }
+    return;
+  }
+
+  if (
+    !/[0-9]/.test(event.key) &&
+    event.key !== "Backspace" &&
+    event.key !== "ArrowLeft" &&
+    event.key !== "ArrowRight" &&
+    event.key !== "Tab"
+  ) {
     event.preventDefault();
   }
 };

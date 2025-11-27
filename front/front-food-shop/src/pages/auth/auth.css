@@ -61,7 +61,11 @@
 
 .field-wrap {
   width: 362px;
-  margin: 0 auto 12px auto;
+  margin: 0 auto;
+}
+
+.field-wrap:not(:last-of-type) {
+  margin-bottom: 12px;
 }
 
 .field {
@@ -164,6 +168,10 @@
   cursor: pointer;
 }
 
+.forgot-btn:hover {
+  text-decoration: underline;
+}
+
 .submit-btn {
   width: 362px;
   height: 48px;
@@ -202,7 +210,23 @@
 
 .contact-text {
   margin-top: 12px;
+  margin-bottom: 60px;
   font-size: 12px;
   color: #7a7a7a;
   text-align: center;
+}
+
+.password-rules {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #7a7a7a;
+  text-align: center;
+}
+
+.helper-text {
+  text-align: center;
+  margin-top: 0px;
+  font-size: 16px;
+  color: #7a7a7a;
+  margin-bottom: 32px;
 }

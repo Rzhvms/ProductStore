@@ -54,14 +54,17 @@
             <input
               class="input"
               type="text"
-              placeholder="25.10.2000"
+              placeholder="ДД.ММ.ГГГГ"
               :value="birthDate"
               @keydown="onBirthKeyDown"
               maxlength="10"
             />
           </div>
 
-          <p v-if="birthError" class="field-error">{{ birthError }}</p>
+          <!-- Плавная анимация ошибок -->
+          <transition name="fade" mode="out-in">
+            <p v-if="birthError" key="birthError" class="error-text">{{ birthError }}</p>
+          </transition>
         </div>
 
         <!-- Телефон -->
@@ -115,7 +118,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed } from "vue";
 import router from "@/router";
 
 const name = ref("");
@@ -131,22 +134,7 @@ const phoneDigits = ref("");
 const agreeTerms = ref(false);
 const agreeNews = ref(false);
 
-// Только цифры в дате рождения
-const onBirthKeyDown = async (e) => {
-  if (!/^\d$/.test(e.key) && e.key !== "Backspace") return e.preventDefault();
-
-  if (e.key === "Backspace") {
-    birthDigits.value = birthDigits.value.slice(0, -1);
-  } else {
-    if (birthDigits.value.length >= 8) return;
-    birthDigits.value += e.key;
-  }
-
-  formatBirth();
-  await validateBirthDate();
-  e.preventDefault();
-};
-
+// Форматирование даты
 const formatBirth = () => {
   const v = birthDigits.value;
   if (v.length >= 5)
@@ -157,14 +145,79 @@ const formatBirth = () => {
     birthDate.value = v;
 };
 
-// Только цифры в номере телефона
+// Проверка возраста и будущей даты
+const validateBirthDate = () => {
+  birthError.value = "";
+
+  if (birthDigits.value.length !== 8) {
+    birthError.value = "Введите дату полностью";
+    return;
+  }
+
+  const d = birthDigits.value;
+  const day = Number(d.slice(0, 2));
+  const month = Number(d.slice(2, 4)) - 1;
+  const year = Number(d.slice(4));
+
+  const userDate = new Date(year, month, day);
+
+  // Проверка корректности даты
+  if (
+    userDate.getFullYear() !== year ||
+    userDate.getMonth() !== month ||
+    userDate.getDate() !== day
+  ) {
+    birthError.value = "Некорректная дата";
+    return;
+  }
+
+  const today = new Date();
+  const minAgeDate = new Date(today.getFullYear() - 12, today.getMonth(), today.getDate());
+
+  if (userDate > today) {
+    birthError.value = "Дата рождения не может быть больше сегодняшней";
+    return;
+  }
+
+  if (userDate > minAgeDate) {
+    birthError.value = "Регистрация доступна только с 12 лет";
+  }
+};
+
+// Ввод даты рождения
+const onBirthKeyDown = (e) => {
+  if (!/^\d$/.test(e.key) && e.key !== "Backspace") {
+    e.preventDefault();
+    return;
+  }
+
+  if (e.key === "Backspace") {
+    birthDigits.value = birthDigits.value.slice(0, -1);
+  } else if (birthDigits.value.length < 8) {
+    birthDigits.value += e.key;
+  }
+
+  formatBirth();
+
+  if (birthDigits.value.length === 8) {
+    validateBirthDate();
+  } else {
+    birthError.value = "Введите дату полностью";
+  }
+
+  e.preventDefault();
+};
+
+// Ввод телефона
 const onPhoneKeyDown = (e) => {
-  if (!/^\d$/.test(e.key) && e.key !== "Backspace") return e.preventDefault();
+  if (!/^\d$/.test(e.key) && e.key !== "Backspace") {
+    e.preventDefault();
+    return;
+  }
 
   if (e.key === "Backspace") {
     phoneDigits.value = phoneDigits.value.slice(0, -1);
-  } else {
-    if (phoneDigits.value.length >= 11) return;
+  } else if (phoneDigits.value.length < 11) {
     phoneDigits.value += e.key;
   }
 
@@ -184,47 +237,7 @@ const formattedPhone = computed(() => {
   return str;
 });
 
-// Проверка даты по UTC
-const validateBirthDate = async () => {
-  birthError.value = "";
-
-  if (birthDigits.value.length !== 8) {
-    birthError.value = "Введите дату полностью";
-    return;
-  }
-
-  const d = birthDigits.value;
-  const userDate = new Date(`${d.slice(4)}-${d.slice(2,4)}-${d.slice(0,2)}T00:00:00Z`);
-
-  if (isNaN(userDate.getTime())) {
-    birthError.value = "Некорректная дата";
-    return;
-  }
-
-  try {
-    const res = await fetch("https://worldtimeapi.org/api/timezone/Etc/UTC");
-    const data = await res.json();
-    const todayUTC = new Date(data.datetime);
-
-    if (userDate >= todayUTC) {
-      birthError.value = "Дата рождения не может быть больше сегодняшней";
-      return;
-    }
-
-    const minAgeDate = new Date(todayUTC);
-    minAgeDate.setFullYear(minAgeDate.getFullYear() - 12);
-
-    if (userDate > minAgeDate) {
-      birthError.value = "Регистрация доступна только с 12 лет";
-      return;
-    }
-
-  } catch {
-    birthError.value = "Ошибка проверки даты";
-  }
-};
-
-// Проверка валидности формы
+// Валидация формы
 const isFormValid = computed(() => {
   return (
     name.value.trim() &&
@@ -237,7 +250,7 @@ const isFormValid = computed(() => {
   );
 });
 
-// Отправка
+// Отправка формы
 const handleSubmit = () => {
   if (!isFormValid.value) return;
   router.push("/admin");
@@ -246,12 +259,6 @@ const handleSubmit = () => {
 
 <style scoped>
 @import "./auth.css";
-
-.field-error {
-  color: red;
-  font-size: 12px;
-  margin-top: 4px;
-}
 
 .gender-switch {
   width: 362px;
@@ -296,5 +303,30 @@ const handleSubmit = () => {
 .submit-btn.inactive {
   background: #FFA84C;
   cursor: not-allowed;
+}
+
+.input {
+  width: 200px;
+  padding: 8px;
+  font-size: 16px;
+}
+
+.error-text {
+  color: #ff4d4f;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* Плавная анимация ошибок */
+.fade-enter-active, .fade-leave-active {
+  transition: all 0.3s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+.fade-enter-to, .fade-leave-from {
+  opacity: 1;
+  transform: translateY(0);
 }
 </style>
