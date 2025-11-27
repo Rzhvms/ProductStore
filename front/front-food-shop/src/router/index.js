@@ -4,6 +4,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Login from '../pages/auth/Login.vue'
 import Register from '../pages/auth/Register.vue'
 import ConfirmEmail from '../pages/auth/ConfirmEmail.vue'
+import AccountNotFound from '../pages/auth/AccountNotFound.vue'
 import FinishRegistration from '../pages/auth/FinishRegistration.vue'
 import RecoveryCode from '@/pages/auth/RecoveryCode.vue'
 import RecoveryNewPassword from '@/pages/auth/RecoveryNewPassword.vue'
@@ -45,6 +46,7 @@ const routes = [
   { path: '/register', component: Register },
   { path: '/confirm-email', component: ConfirmEmail },
   { path: '/recovery-code', component: RecoveryCode },
+  { path: '/account-not-found', component: AccountNotFound },
   { path: '/new-password', component: RecoveryNewPassword },
   { path: '/finish-registration', component: FinishRegistration },
   { path: '/forgot-password', component: ForgotPassword },

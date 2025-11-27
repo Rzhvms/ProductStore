@@ -6,7 +6,9 @@
       <!-- Глобальные ошибки -->
       <div v-if="globalError.length" class="global-error">
         <ul>
-          <li v-for="(err, index) in globalError" :key="index">{{ err }}</li>
+          <li v-for="(err, index) in globalError" :key="index">
+            {{ err }}
+          </li>
         </ul>
       </div>
 
@@ -33,7 +35,11 @@
               placeholder="Пароль"
               class="input"
             />
-            <button type="button" class="show-btn" @click="showPassword = !showPassword">
+            <button
+              type="button"
+              class="show-btn"
+              @click="showPassword = !showPassword"
+            >
               {{ showPassword ? '🙈' : '👁️' }}
             </button>
           </div>
@@ -42,10 +48,20 @@
         <!-- Remember + Forgot -->
         <div class="remember-forgot">
           <label class="remember">
-            <input type="checkbox" v-model="remember" class="custom-checkbox" />
+            <input
+              type="checkbox"
+              v-model="remember"
+              class="custom-checkbox"
+            />
             <span>Запомнить меня</span>
           </label>
-          <button type="button" class="forgot-btn" @click="handleForgot">Забыли пароль?</button>
+          <button
+            type="button"
+            class="forgot-btn"
+            @click="handleForgot"
+          >
+            Забыли пароль?
+          </button>
         </div>
 
         <!-- Submit -->
@@ -53,9 +69,9 @@
           type="submit" 
           class="submit-btn"
           :class="{ 'inactive-btn': !isFormValid }"
-          :disabled="!isFormValid"
+          :disabled="!isFormValid || isLoading"
         >
-          Войти
+          {{ isLoading ? "Входим..." : "Войти" }}
         </button>
       </form>
 
@@ -81,17 +97,20 @@ const email = ref("");
 const password = ref("");
 const remember = ref(false);
 const showPassword = ref(false);
+const isLoading = ref(false);
 
 const errors = ref({ email: false, password: false });
 const globalError = ref([]);
 
-// Кнопка активна только если введена корректная почта и пароль не пустой
-const isFormValid = computed(() => email.value.includes("@") && password.value.length > 0);
+const isFormValid = computed(() => 
+  email.value.includes("@") && password.value.length > 0
+);
 
 const handleSubmit = async () => {
   errors.value = { email: false, password: false };
   globalError.value = [];
 
+  // Валидация
   if (!email.value) {
     errors.value.email = true;
     globalError.value.push("Почта не указана");
@@ -107,12 +126,34 @@ const handleSubmit = async () => {
 
   if (globalError.value.length) return;
 
+  // Запрос
   try {
-    const email_response = await login(email.value, password.value);
+    isLoading.value = true;
+
+    await login(email.value, password.value);
+
     router.push("/admin");
   } catch (error) {
     console.log(error);
-    globalError.value.push(error.message);
+
+    const status = error.response?.status;
+    const message =
+      error.response?.data?.message || error.message;
+
+    // ТОЛЬКО если пользователь не найден
+    if (
+      status === 404 ||
+      message === "User not found" ||
+      message === "Аккаунт не найден"
+    ) {
+      router.push("/account-not-found");
+      return;
+    }
+
+    // Остальные ошибки показываем тут же
+    globalError.value.push(message || "Ошибка входа");
+  } finally {
+    isLoading.value = false;
   }
 };
 
@@ -128,7 +169,6 @@ const handleForgot = () => {
 <style scoped>
 @import './auth.css';
 
-/* Стили для неактивной кнопки */
 .submit-btn.inactive-btn {
   background-color: #FFA84C;
   color: white;

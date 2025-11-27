@@ -1,71 +1,82 @@
 <template>
   <div class="page-bg">
-    <div class="login-card" style="height: 832px;">
+    <div class="login-card" style="height: 920px;">
       <h1 class="login-title">Завершение регистрации</h1>
 
       <form class="form" @submit.prevent="handleSubmit">
 
         <!-- Имя -->
         <div class="field-wrap">
-          <p style="margin-top: 0px; font-weight: 600;">
-            Введите ваше имя: <span style="color:red">*</span>
+          <p class="field-label">
+            Введите ваше имя: <span class="required">*</span>
           </p>
           <div class="field">
-            <input v-model="name" type="text" placeholder="Олег" class="input" />
+            <input v-model="name" type="text" placeholder="Олег" class="input" maxlength="40" />
           </div>
         </div>
 
         <!-- Фамилия -->
         <div class="field-wrap">
-          <p style="margin-top: 4px; font-weight: 600;">
-            Введите вашу фамилию: <span style="color:red">*</span>
+          <p class="field-label">
+            Введите вашу фамилию: <span class="required">*</span>
           </p>
           <div class="field">
-            <input v-model="lastName" type="text" placeholder="Волков" class="input" />
+            <input v-model="lastName" type="text" placeholder="Волков" class="input" maxlength="40" />
           </div>
         </div>
 
         <!-- Пол -->
         <div class="field-wrap">
-          <p style="margin-top: 4px; font-weight: 600;">
-            Ваш пол: <span style="color:red">*</span>
+          <p class="field-label">
+            Ваш пол: <span class="required">*</span>
           </p>
 
           <div class="gender-switch">
             <div v-if="gender" class="gender-slider" :class="gender"></div>
 
-            <div
-              class="gender-option"
+            <div class="gender-option"
               :class="{ active: gender === 'female' }"
-              @click="gender = 'female'"
-            >
-              Женский
-            </div>
+              @click="gender = 'female'">Женский</div>
 
-            <div
-              class="gender-option"
+            <div class="gender-option"
               :class="{ active: gender === 'male' }"
-              @click="gender = 'male'"
-            >
-              Мужской
-            </div>
+              @click="gender = 'male'">Мужской</div>
           </div>
+        </div>
+
+        <!-- Дата рождения -->
+        <div class="field-wrap">
+          <p class="field-label">
+            Введите вашу дату рождения: <span class="required">*</span>
+          </p>
+
+          <div class="field">
+            <input
+              class="input"
+              type="text"
+              placeholder="25.10.2000"
+              :value="birthDate"
+              @keydown="onBirthKeyDown"
+              maxlength="10"
+            />
+          </div>
+
+          <p v-if="birthError" class="field-error">{{ birthError }}</p>
         </div>
 
         <!-- Телефон -->
         <div class="field-wrap">
-          <p style="margin-top: 4px; font-weight: 600;">
-            Введите ваш номер телефона: <span style="color:red">*</span>
+          <p class="field-label">
+            Введите ваш номер телефона: <span class="required">*</span>
           </p>
           <div class="field">
             <input
               type="tel"
               :value="formattedPhone"
-              @focus="onPhoneFocus"
-              @input="onPhoneInput($event)"
-              @keydown="onPhoneKeyDown($event)"
+              @keydown="onPhoneKeyDown"
               placeholder="+7 (999) 999-99-99"
               class="input"
+              maxlength="18"
             />
           </div>
         </div>
@@ -74,7 +85,8 @@
         <div class="field-wrap" style="margin-bottom: 0px;">
           <label class="remember" style="font-size: 12px;">
             <input type="checkbox" v-model="agreeTerms" class="custom-checkbox" />
-            Даю согласие на обработку персональных данных <span style="color:red">*</span>
+            Даю согласие на обработку персональных данных
+            <span class="required">*</span>
           </label>
 
           <label class="remember" style="margin-top: 12px; font-size: 12px;">
@@ -83,7 +95,6 @@
           </label>
         </div>
 
-        <!-- Кнопка -->
         <button
           type="submit"
           class="submit-btn"
@@ -104,31 +115,64 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import router from "@/router";
 
 const name = ref("");
 const lastName = ref("");
 const gender = ref("");
 
-const phoneDigits = ref(""); // пустая строка
+const birthDate = ref("");
+const birthDigits = ref("");
+const birthError = ref("");
+
+const phoneDigits = ref("");
+
 const agreeTerms = ref(false);
 const agreeNews = ref(false);
 
-// Валидность формы
-const isFormValid = computed(() => {
-  return (
-    name.value.trim() &&
-    lastName.value.trim() &&
-    gender.value &&
-    phoneDigits.value.length === 11 &&
-    agreeTerms.value
-  );
-});
+// Только цифры в дате рождения
+const onBirthKeyDown = async (e) => {
+  if (!/^\d$/.test(e.key) && e.key !== "Backspace") return e.preventDefault();
 
-// Форматированный телефон для отображения
+  if (e.key === "Backspace") {
+    birthDigits.value = birthDigits.value.slice(0, -1);
+  } else {
+    if (birthDigits.value.length >= 8) return;
+    birthDigits.value += e.key;
+  }
+
+  formatBirth();
+  await validateBirthDate();
+  e.preventDefault();
+};
+
+const formatBirth = () => {
+  const v = birthDigits.value;
+  if (v.length >= 5)
+    birthDate.value = `${v.slice(0,2)}.${v.slice(2,4)}.${v.slice(4)}`;
+  else if (v.length >= 3)
+    birthDate.value = `${v.slice(0,2)}.${v.slice(2)}`;
+  else
+    birthDate.value = v;
+};
+
+// Только цифры в номере телефона
+const onPhoneKeyDown = (e) => {
+  if (!/^\d$/.test(e.key) && e.key !== "Backspace") return e.preventDefault();
+
+  if (e.key === "Backspace") {
+    phoneDigits.value = phoneDigits.value.slice(0, -1);
+  } else {
+    if (phoneDigits.value.length >= 11) return;
+    phoneDigits.value += e.key;
+  }
+
+  e.preventDefault();
+};
+
 const formattedPhone = computed(() => {
-  if (!phoneDigits.value) return ""; // пока нет цифр показываем пустое поле с плейсхолдером
+  if (!phoneDigits.value) return "";
 
   const d = phoneDigits.value;
   let str = "+7";
@@ -140,46 +184,78 @@ const formattedPhone = computed(() => {
   return str;
 });
 
-// При фокусе вставляем +7, если поле пустое
-const onPhoneFocus = () => {
-  if (!phoneDigits.value) phoneDigits.value = "7";
-};
+// Проверка даты по UTC
+const validateBirthDate = async () => {
+  birthError.value = "";
 
-// Обработка ввода
-const onPhoneInput = (e) => {
-  let val = e.target.value.replace(/\D/g, "");
-  if (!val.startsWith("7")) val = "7" + val;
-  if (val.length > 11) val = val.slice(0, 11);
-  phoneDigits.value = val;
-};
-
-// Защита +7 от удаления
-const onPhoneKeyDown = (e) => {
-  if (
-    (e.key === "Backspace" || e.key === "Delete") &&
-    phoneDigits.value.length <= 1
-  ) {
-    e.preventDefault();
+  if (birthDigits.value.length !== 8) {
+    birthError.value = "Введите дату полностью";
+    return;
   }
-};
 
-// Отправка формы
-const handleSubmit = async () => {
-  if (!isFormValid.value) return;
+  const d = birthDigits.value;
+  const userDate = new Date(`${d.slice(4)}-${d.slice(2,4)}-${d.slice(0,2)}T00:00:00Z`);
+
+  if (isNaN(userDate.getTime())) {
+    birthError.value = "Некорректная дата";
+    return;
+  }
+
   try {
-    router.push("/admin");
-  } catch (err) {
-    console.error(err);
+    const res = await fetch("https://worldtimeapi.org/api/timezone/Etc/UTC");
+    const data = await res.json();
+    const todayUTC = new Date(data.datetime);
+
+    if (userDate >= todayUTC) {
+      birthError.value = "Дата рождения не может быть больше сегодняшней";
+      return;
+    }
+
+    const minAgeDate = new Date(todayUTC);
+    minAgeDate.setFullYear(minAgeDate.getFullYear() - 12);
+
+    if (userDate > minAgeDate) {
+      birthError.value = "Регистрация доступна только с 12 лет";
+      return;
+    }
+
+  } catch {
+    birthError.value = "Ошибка проверки даты";
   }
+};
+
+// Проверка валидности формы
+const isFormValid = computed(() => {
+  return (
+    name.value.trim() &&
+    lastName.value.trim() &&
+    gender.value &&
+    birthDigits.value.length === 8 &&
+    !birthError.value &&
+    phoneDigits.value.length === 11 &&
+    agreeTerms.value
+  );
+});
+
+// Отправка
+const handleSubmit = () => {
+  if (!isFormValid.value) return;
+  router.push("/admin");
 };
 </script>
 
 <style scoped>
 @import "./auth.css";
 
+.field-error {
+  color: red;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
 .gender-switch {
   width: 362px;
-  height: 56px;
+  height: 48px;
   background: #f4f4f4;
   border-radius: 18px;
   display: flex;
@@ -191,17 +267,15 @@ const handleSubmit = async () => {
   position: absolute;
   top: 4px;
   width: 50%;
-  height: 48px;
-  border-radius: 18px;
+  height: 40px;
+  border-radius: 16px;
   background: #ff7a00;
   z-index: 1;
-  transition: opacity 0.35s ease;
-  opacity: 0;
   animation: fadeIn 0.35s forwards;
 }
 
-.gender-slider.female { left: 4px; opacity: 1; }
-.gender-slider.male { right: 4px; opacity: 1; }
+.gender-slider.female { left: 4px; }
+.gender-slider.male { right: 4px; }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
@@ -215,7 +289,6 @@ const handleSubmit = async () => {
   font-weight: 500;
   color: #7a7a7a;
   cursor: pointer;
-  transition: color 0.25s ease;
 }
 
 .gender-option.active { color: white; font-weight: 600; }

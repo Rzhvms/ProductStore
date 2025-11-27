@@ -12,22 +12,31 @@
 
       <form @submit.prevent="handleSubmit" class="form">
         <div class="numbers-group">
-          <input
+          <div
             v-for="(digit, index) in code"
             :key="index"
-            type="text"
-            maxlength="1"
-            class="code-input"
-            :class="[
-              { 'code-error': codeError },
-              { 'code-success': codeSuccess },
-              { 'shake': shakeActive }
-            ]"
-            v-model="code[index]"
-            @input="onInput(index, $event)"
-            @keydown.backspace.prevent="onBackspace(index, $event)"
-            ref="inputs"
-          />
+            class="code-input-wrapper"
+            :style="{
+              marginRight: (index === 2 || index === 5) ? '0px' : '12px',
+              marginLeft: (index === 3 ? '38px' : '0px')
+            }"
+          >
+            <input
+              type="text"
+              maxlength="1"
+              class="code-input"
+              :class="[
+                { 'code-error': codeError },
+                { 'code-success': codeSuccess },
+                { 'shake': shakeActive }
+              ]"
+              v-model="code[index]"
+              @input="onInput(index, $event)"
+              @keydown="onKeyDown(index, $event)"
+              @keydown.backspace.prevent="onBackspace(index, $event)"
+              ref="inputs"
+            />
+          </div>
         </div>
 
         <p v-if="codeError" class="error-text" style="text-align: center; font-size: 16px; white-space: pre-line; margin-top: 16px; margin-bottom: 28px;">
@@ -41,14 +50,13 @@
           @click="handleResend"
         >
           <span v-if="!resendActive">Запросить код повторно</span>
-          <span v-else>Повторно можно через {{ timer }} сек.</span>
+          <span v-else>Отправить еще раз через {{ timer }} сек.</span>
         </button>
 
         <button
           type="submit"
           class="submit-btn"
           :class="{ 'inactive-btn': !isCodeComplete }"
-          :disabled="!isCodeComplete"
           style="margin-top: 16px;"
         >
           Далее
@@ -103,6 +111,7 @@ const startTimer = (seconds) => {
   timer.value = seconds;
   resendActive.value = true;
 
+  clearInterval(interval);
   interval = setInterval(() => {
     if (timer.value > 0) {
       timer.value -= 1;
@@ -115,43 +124,44 @@ const startTimer = (seconds) => {
 
 const handleResend = () => {
   if (resendActive.value) return;
-
-  // Сохраняем время последнего запроса
-  const now = Date.now();
-  localStorage.setItem("lastResendTime", now.toString());
-
-  // Заглушка для API
-  // const email = localStorage.getItem("email");
-  // sendVerificationEmail(email);
-
+  localStorage.setItem("lastResendTime", Date.now().toString());
   startTimer(60);
 };
 
+// Монтаж
 onMounted(() => {
-  // Проверяем lastResendTime при загрузке
   const last = localStorage.getItem("lastResendTime");
   if (last) {
     const elapsed = Math.floor((Date.now() - parseInt(last)) / 1000);
     if (elapsed < 60) {
       startTimer(60 - elapsed);
+    } else {
+      startTimer(60);
+      localStorage.removeItem("lastResendTime");
     }
   } else {
-    // Если пользователь только зашел и ещё ничего не нажимал
     startTimer(60);
   }
 });
 
+// Ввод кода
 const onInput = (index, event) => {
-  const val = event.target.value;
-  code.value[index] = val.replace(/\D/g, "");
+  const val = event.target.value.replace(/\D/g, ""); // только цифры
+  code.value[index] = val;
+
   if (val && index < code.value.length - 1) {
     nextTick(() => inputs.value[index + 1].focus());
   }
 
-  // Сбрасываем красный цвет при стирании
   if (codeError.value) {
     codeError.value = false;
     shakeActive.value = false;
+  }
+};
+
+const onKeyDown = (index, event) => {
+  if (!/[0-9]/.test(event.key) && event.key !== "Backspace" && event.key !== "ArrowLeft" && event.key !== "ArrowRight" && event.key !== "Tab") {
+    event.preventDefault();
   }
 };
 
@@ -164,7 +174,6 @@ const onBackspace = (index, event) => {
   } else {
     code.value[index] = "";
   }
-
   if (codeError.value) {
     codeError.value = false;
     shakeActive.value = false;
@@ -187,18 +196,21 @@ const onBackspace = (index, event) => {
 
 .numbers-group {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   margin: 16px 0;
-  width: 362px;
+}
+
+.code-input-wrapper {
+  display: inline-block;
 }
 
 .code-input {
-  width: 48px;
-  height: 48px;
+  width: 38px;
+  height: 50px;
   text-align: center;
-  font-size: 24px;
-  border-radius: 8px;
-  border: 2px solid #FFA84C;
+  font-size: 22px;
+  border-radius: 18px;
+  border: 1px solid #FFA84C;
   background-color: #F4F4F4;
   outline: none;
   transition: border-color 0.2s ease, color 0.2s ease;
@@ -236,18 +248,18 @@ const onBackspace = (index, event) => {
   height: 48px;
   margin-top: 12px;
   background: #f4f4f4;
-  color: #555555;
+  color: #999999;
   border-radius: 18px;
   border: none;
   font-size: 18px;
   font-weight: 600;
-  cursor: pointer;
+  cursor: not-allowed;
   transition: color 0.2s ease;
 }
 
-.resend-btn:disabled {
-  cursor: not-allowed;
-  color: #999999;
+.resend-btn:enabled {
+  cursor: pointer;
+  color: #555555;
 }
 
 .resend-btn:hover:enabled,

@@ -7,7 +7,9 @@
 
         <!-- Новый пароль -->
         <div class="field-wrap">
-          <p>Новый пароль: <span style="color:red">*</span></p>
+          <p class="field-label">
+            Новый пароль: <span class="required">*</span>
+          </p>
           <div class="field password-field">
             <input
               v-model="password"
@@ -25,17 +27,22 @@
           <!-- Сложность пароля -->
           <transition name="fade-slide">
             <div v-if="showPasswordStrength.password" class="password-strength-wrapper">
-              <p class="contact-text" style="font-size: 16px; text-align: left; margin-bottom: 4px;">Сложность пароля:</p>
-              <div class="password-strength">
+              <p class="contact-text" style="font-size: 16px; text-align: left; margin-bottom: 4px;">
+                Сложность пароля:
+              </p>
+              <div class="password-strength-bg">
                 <div class="strength-bar" :style="{ width: strengthWidth.password, background: strengthColor.password }"></div>
               </div>
+              <span class="strength-label" style="color: #7A7A7A;">{{ strengthLabel }}</span>
             </div>
           </transition>
         </div>
 
         <!-- Подтверждение пароля -->
         <div class="field-wrap">
-          <p>Подтверждение пароля: <span style="color:red">*</span></p>
+          <p class="field-label">
+            Подтверждение пароля: <span class="required">*</span>
+          </p>
           <div class="field password-field">
             <input
               v-model="confirmPassword"
@@ -43,6 +50,7 @@
               placeholder="Повторите пароль"
               class="input"
               maxlength="30"
+              @input="confirmPassword = sanitizeInput(confirmPassword)"
             />
             <button type="button" class="show-btn" @click="showPassword.confirm = !showPassword.confirm">
               {{ showPassword.confirm ? '🙈' : '👁️' }}
@@ -56,7 +64,7 @@
         </div>
 
         <!-- Общая ошибка -->
-        <p v-if="errorMessage" class="error-text" >{{ errorMessage }}</p>
+        <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
 
         <!-- Сохранить -->
         <button
@@ -96,10 +104,15 @@ const passwordStrength = ref(0);
 const baseCardHeight = 560;
 const cardHeight = ref(baseCardHeight);
 
+/* --- САНИТАЙЗИНГ --- */
+const sanitizeInput = (value) => value.replace(/\s/g, '');
+
+/* --- VALIDATION --- */
 const isFormValid = computed(() => {
   return (
     password.value.length >= 8 &&
-    password.value === confirmPassword.value
+    password.value === confirmPassword.value &&
+    !/\s/.test(password.value) // запрещаем пробелы
   );
 });
 
@@ -130,14 +143,14 @@ const updatePasswordStrength = (pass) => {
 };
 
 const onPasswordInput = () => {
+  password.value = sanitizeInput(password.value); // удаляем пробелы
   const s = updatePasswordStrength(password.value);
   passwordStrength.value = s;
   showPasswordStrength.value.password = password.value.length > 0;
 
-  // Расчет дополнительной высоты для слайдера и ошибки
   let extraHeight = 0;
   if (showPasswordStrength.value.password) extraHeight += 40;
-  if (confirmPassword.value && password !== confirmPassword) extraHeight += 24;
+  if (confirmPassword.value && password.value !== confirmPassword.value) extraHeight += 24;
 
   cardHeight.value = baseCardHeight + extraHeight;
 };
@@ -156,10 +169,17 @@ const strengthColor = computed(() => ({
   })()
 }));
 
+const strengthLabel = computed(() => {
+  const s = passwordStrength.value;
+  if (s <= 2) return "Слабый";
+  if (s <= 4) return "Средний";
+  return "Сильный";
+});
+
 /* --- Submit --- */
 const handleSubmit = async () => {
-  if (!isFormValid.value) {
-    errorMessage.value = 'Пароли не совпадают или меньше 8 символов';
+  if (!isFormValid.value || /\s/.test(password.value)) {
+    errorMessage.value = 'Пароли не совпадают, меньше 8 символов или содержат пробелы';
     return;
   }
 
@@ -172,8 +192,6 @@ const handleSubmit = async () => {
 
 <style scoped>
 @import './auth.css';
-
-.field-wrap p { font-weight: 600; }
 
 .password-field {
   position: relative;
@@ -190,19 +208,34 @@ const handleSubmit = async () => {
 }
 
 .password-strength-wrapper {
-  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  color: #7A7A7A;
 }
 
-.password-strength {
+.password-strength-bg {
+  position: relative;
+  width: 100%;
   height: 8px;
   border-radius: 4px;
-  background: #f4f4f4;
+  background-color: #F4F4F4;
+  margin-bottom: 4px;
 }
 
 .strength-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
   height: 100%;
   border-radius: 4px;
   transition: width 0.3s ease, background 0.3s ease;
+}
+
+.strength-label {
+  text-align: right;
+  font-size: 16px;
+  font-weight: 500;
+  color: #7A7A7A;
 }
 
 .fade-slide-enter-active, .fade-slide-leave-active {
@@ -221,11 +254,5 @@ const handleSubmit = async () => {
   background-color: #FFA84C;
   color: white;
   cursor: not-allowed;
-}
-
-.saved-message {
-  font-size: 16px;
-  font-weight: 600;
-  margin-top: 16px;
 }
 </style>
