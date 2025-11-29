@@ -11,5 +11,5 @@ public interface IChangeUserPasswordUseCase
     /// <summary>
     /// Изменяем пароль
     /// </summary>
-    Task<ChangeUserPasswordResponse> ExecuteAsync(ChangeUserPasswordRequest request);
+    Task<ChangeUserPasswordResponse> ExecuteAsync(Guid id, ChangeUserPasswordRequest request);
 }

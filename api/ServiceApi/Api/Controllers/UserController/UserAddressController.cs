@@ -1,3 +1,7 @@
+using Application.Extensions;
+using Application.UseCases.UserAddress;
+using Application.UseCases.UserAddress.Dto.Request;
+using Application.UseCases.UserAddress.Dto.Response;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,9 +15,11 @@ namespace Api.Controllers.UserController;
 [Route("api/user/address")]
 public class UserAddressController : ControllerBase
 {
-    public UserAddressController()
+    private IUserAddressUseCase _userAddressUseCase;
+    
+    public UserAddressController(IUserAddressUseCase userAddressUseCase)
     {
-        
+        _userAddressUseCase = userAddressUseCase;
     }
     
     /// <summary>
@@ -21,9 +27,10 @@ public class UserAddressController : ControllerBase
     /// </summary>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task GetUserAddressAsync()
+    public async Task<GetUserAddressResponse> GetUserAddressAsync()
     {
-        
+        var userId = User.GetUserId();
+        return await _userAddressUseCase.GetUserAddressAsync(userId);
     }
 
     /// <summary>
@@ -31,30 +38,33 @@ public class UserAddressController : ControllerBase
     /// </summary>
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
-    public async Task AddUserAddressAsync()
+    public async Task<AddUserAddressResponse> AddUserAddressAsync(AddUserAddressRequest request)
     {
-        
+        var userId = User.GetUserId();
+        return await _userAddressUseCase.AddUserAddressAsync(userId, request);
     }
 
     /// <summary>
     /// Обновить существующий адрес пользователя по идентификатору
     /// </summary>
-    [HttpPut("{id}")]
+    [HttpPatch]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task UpdateUserAddressAsync(Guid id)
+    public async Task<UpdateUserAddressResponse> UpdateUserAddressAsync(UpdateUserAddressRequest request)
     {
-        
+        var userId = User.GetUserId();
+        return await _userAddressUseCase.UpdateUserAddressAsync(userId, request);
     }
 
     /// <summary>
     /// Удалить адрес пользователя по идентификатору
     /// </summary>
-    [HttpDelete("{id}")]
+    [HttpDelete]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task DeleteUserAddressAsync(Guid id)
+    public async Task<DeleteUserAddressResponse> DeleteUserAddressAsync()
     {
-        
+        var userId = User.GetUserId();
+        return await _userAddressUseCase.DeleteUserAddressAsync(userId);
     }
 }

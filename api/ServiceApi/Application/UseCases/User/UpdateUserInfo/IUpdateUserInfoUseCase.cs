@@ -11,5 +11,5 @@ public interface IUpdateUserInfoUseCase
     /// <summary>
     /// Обновить информацию пользователя (UserModel)
     /// </summary>
-    Task<UpdateUserInfoResponse> ExecuteAsync(UpdateUserInfoRequest request);
+    Task<UpdateUserInfoResponse> ExecuteAsync(Guid id, UpdateUserInfoRequest request);
 }
