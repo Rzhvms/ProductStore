@@ -3,12 +3,12 @@ using Application.UseCases.Auth.ResendPinCode.Request;
 namespace Application.UseCases.Auth.ResendPinCode;
 
 /// <summary>
-/// Переотправка почты
+/// Переотправить письмо верификации
 /// </summary>
 public interface IResendPinCodeUseCase
 {
     /// <summary>
-    /// Выполнить сценарий
+    /// Переотправить письмо верификации
     /// </summary>
     Task ExecuteAsync(ResendPinCodeRequest request);
 }

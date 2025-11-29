@@ -119,7 +119,7 @@ public class AuthController : ControllerBase
     }
     
     /// <summary>
-    /// Переотправка 
+    /// Переотправка пинкода верификации
     /// </summary>
     [AllowAnonymous]
     [HttpPost("resend-code")]

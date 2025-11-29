@@ -9,7 +9,7 @@ namespace Application.UseCases.Auth.VerifyEmail;
 public interface IVerifyEmailUseCase
 {
     /// <summary>
-    /// 
+    /// Верификация почты
     /// </summary>
     Task<VerifyEmailResponse> ExecuteAsync(VerifyEmailRequest request);
 }

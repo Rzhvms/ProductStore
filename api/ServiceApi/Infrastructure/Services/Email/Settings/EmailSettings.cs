@@ -1,44 +1,47 @@
 namespace Infrastructure.Services.Email.Settings;
 
+/// <summary>
+/// Настройки SMTP сервера
+/// </summary>
 public class EmailSettings
 {
     /// <summary>
-    /// TODO
+    /// Хост SMTP сервера
     /// </summary>
     public string Host { get; set; } = default!;
 
     /// <summary>
-    /// TODO
+    /// Порт SMTP сервера
     /// </summary>
     public int Port { get; set; } = 465;
 
     /// <summary>
-    /// TODO
+    /// Использовать ли SSL
     /// </summary>
     public bool UseSsl { get; set; } = true;
 
     /// <summary>
-    /// TODO
+    /// Имя пользователя от чьего лица отправляем
     /// </summary>
     public string Username { get; set; } = default!;
 
     /// <summary>
-    /// TODO
+    /// Пароль SMTP сервера
     /// </summary>
     public string Password { get; set; } = default!;
 
     /// <summary>
-    /// TODO
+    /// С какого адреса отправляем письма
     /// </summary>
     public string FromAddress { get; set; } = default!;
 
     /// <summary>
-    /// TODO
+    /// От какого имени отправляем письмо
     /// </summary>
     public string FromName { get; set; } = "Server";
 
     /// <summary>
-    /// TODO
+    /// Имя получателя
     /// </summary>
     public string RecipientName { get; set; } = "client";
 }

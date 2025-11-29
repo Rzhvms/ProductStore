@@ -5,10 +5,8 @@ using Application.UseCases.Auth.ResendPinCode.Request;
 
 namespace Application.UseCases.Auth.ResendPinCode;
 
-/// <summary>
-/// Переотправить письмо верификации
-/// </summary>
-public class ResendPinCodeUseCase : IResendPinCodeUseCase
+/// <inheritdoc />
+internal class ResendPinCodeUseCase : IResendPinCodeUseCase
 {
     private readonly IEmailService _emailService;
     private readonly IAuthRepository _authRepository;
@@ -18,7 +16,8 @@ public class ResendPinCodeUseCase : IResendPinCodeUseCase
         _emailService = emailService;
         _authRepository = authRepository;
     }
-    
+
+    /// <inheritdoc />
     public async Task ExecuteAsync(ResendPinCodeRequest request)
     {
         var user = await _authRepository.GetUserByEmailAsync(request.Email);

@@ -8,7 +8,7 @@ using Microsoft.Extensions.Caching.Memory;
 namespace Application.UseCases.Auth.VerifyEmail;
 
 /// <inheritdoc />
-public class VerifyEmailUseCase : IVerifyEmailUseCase
+internal class VerifyEmailUseCase : IVerifyEmailUseCase
 {
     private readonly IMemoryCache _memoryCache;
     private readonly IAuthRepository _authRepository;
@@ -18,6 +18,8 @@ public class VerifyEmailUseCase : IVerifyEmailUseCase
         _memoryCache = memoryCache;
         _authRepository = authRepository;
     }
+
+    /// <inheritdoc />
     public async Task<VerifyEmailResponse> ExecuteAsync(VerifyEmailRequest request)
     {
         var user = await _authRepository.GetUserByEmailAsync(request.Email);
@@ -46,7 +48,6 @@ public class VerifyEmailUseCase : IVerifyEmailUseCase
 
             throw new VerifyEmailException("Invalid PIN");
         }
-
 
         // Обновляем пользователя
         user.IsEmailConfirmed = true;

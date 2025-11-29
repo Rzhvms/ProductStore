@@ -8,7 +8,7 @@ using MimeKit;
 namespace Infrastructure.Services.Email;
 
 /// <inheritdoc />
-public class EmailClient : IEmailClient
+internal class EmailClient : IEmailClient
 {
     private readonly EmailSettings _settings;
     

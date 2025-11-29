@@ -1,6 +1,5 @@
 using Infrastructure.Services.Email.Interfaces;
 using Infrastructure.Services.Email.Settings;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using MimeKit;
 
