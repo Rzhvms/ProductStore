@@ -14,29 +14,23 @@ using Microsoft.Extensions.Logging;
 namespace Application.UseCases.Auth.Register;
 
 /// <inheritdoc />
-public class CreateUserUseCase : ICreateUserUseCase
+internal class CreateUserUseCase : ICreateUserUseCase
 {
     private readonly ILogger<CreateUserUseCase> _logger;
-    private readonly IAuthTokenService _authTokenService;
     private readonly IAuthRepository _authRepository;
     private readonly ICryptographyService _cryptographyService;
     private readonly IEmailService _emailService;
-    private readonly IMemoryCache _memoryCache;
 
     public CreateUserUseCase(
         ILogger<CreateUserUseCase> logger,
-        IAuthTokenService authTokenService,
         IAuthRepository authRepository,
         ICryptographyService cryptographyService,
-        IEmailService emailService,
-        IMemoryCache memoryCache)
+        IEmailService emailService)
     {
         _logger = logger;
-        _authTokenService = authTokenService;
         _authRepository = authRepository;
         _cryptographyService = cryptographyService;
         _emailService = emailService;
-        _memoryCache = memoryCache;
     }
 
     /// <inheritdoc />
@@ -102,6 +96,4 @@ public class CreateUserUseCase : ICreateUserUseCase
             })
             .ToList();
     }
-
-    
 }
