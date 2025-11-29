@@ -66,7 +66,7 @@ public class AuthRepository : IAuthRepository
     public async Task CreateUserAsync(UserModel userModel)
     {
         var sql = $@"INSERT INTO ""{nameof(UserModel)}"" 
-                VALUES (@Id, @Email, @Phone, @Password, @Salt, @Name, @LastName, @CreateAt, @UpdateAt)";
+                VALUES (@Id, @Email, @Phone, @Password, @Salt, @Name, @LastName, @CreateAt, @UpdateAt, @IsEmailConfirmed)";
         
         await _dbConnection.ExecuteAsync(sql, new
         {
@@ -78,7 +78,8 @@ public class AuthRepository : IAuthRepository
             userModel.Name,
             userModel.LastName,
             userModel.CreateAt,
-            userModel.UpdateAt
+            userModel.UpdateAt,
+            userModel.IsEmailConfirmed
         });
         
         if (userModel.Claims != null && userModel.Claims.Any())
@@ -124,7 +125,8 @@ public class AuthRepository : IAuthRepository
                 ""{nameof(UserModel.Salt)}"" = @Salt,
                 ""{nameof(UserModel.Name)}"" = @Name,
                 ""{nameof(UserModel.LastName)}"" = @LastName,
-                ""{nameof(UserModel.UpdateAt)}"" = @UpdateAt
+                ""{nameof(UserModel.UpdateAt)}"" = @UpdateAt,
+                ""{nameof(UserModel.IsEmailConfirmed)}"" = @IsEmailConfirmed
             WHERE ""{nameof(UserModel.Id)}"" = @Id";
 
         await _dbConnection.ExecuteAsync(sql, new
@@ -136,6 +138,7 @@ public class AuthRepository : IAuthRepository
             userModel.Name,
             userModel.LastName,
             UpdateAt = DateTime.UtcNow,
+            userModel.IsEmailConfirmed,
             userModel.Id
         });
         
@@ -192,14 +195,14 @@ public class AuthRepository : IAuthRepository
                     SET ""{nameof(UserModel.Name)}"" = @Name,
                         ""{nameof(UserModel.LastName)}"" = @LastName,
                         ""{nameof(UserModel.Phone)}"" = @Phone,
-                        ""{nameof(UserModel.UpdateAt)}"" = @Now
+                        ""{nameof(UserModel.UpdateAt)}"" = @Now,
                     WHERE ""{nameof(UserModel.Id)}"" = @Id";
         
         var sqlUserProfile = $@"UPDATE ""{nameof(UserProfileModel)}""
                     SET ""{nameof(UserProfileModel.Gender)}"" = @Gender
                     WHERE ""{nameof(UserProfileModel.UserId)}"" = @UserId";
         
-        await _dbConnection.ExecuteAsync(sqlUser, new { Id = id, Name = name, LastName = lastName, Phone = phone, Now = DateTime.UtcNow });
+        await _dbConnection.ExecuteAsync(sqlUser, new { Id = id, Name = name, LastName = lastName, Phone = phone, Now = DateTime.UtcNow});
         await _dbConnection.ExecuteAsync(sqlUserProfile, new { UserId = id, Gender = gender });
     }
 }

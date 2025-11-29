@@ -1,3 +1,4 @@
+using Infrastructure.Services.Email.Exceptions;
 using Infrastructure.Services.Email.Interfaces;
 using Infrastructure.Services.Email.Settings;
 using MailKit.Net.Smtp;
@@ -21,10 +22,17 @@ public class EmailClient : IEmailClient
     {
         using var client = new SmtpClient();
 
-        await client.ConnectAsync(_settings.Host, _settings.Port, _settings.UseSsl);
-        await client.AuthenticateAsync(_settings.Username, _settings.Password);
-        await client.SendAsync(message);
-        await client.DisconnectAsync(true);
+        try
+        {
+            await client.ConnectAsync(_settings.Host, _settings.Port, _settings.UseSsl);
+            await client.AuthenticateAsync(_settings.Username, _settings.Password);
+            await client.SendAsync(message);
+            await client.DisconnectAsync(true);
+        }
+        catch (Exception ex)
+        {
+            throw new EmailSendException("Произошла ошибка:", ex);
+        }
     }
 }
 

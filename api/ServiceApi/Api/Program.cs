@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using Api.Middlewares;
 using Application;
 using FluentMigrator.Runner;
 using Infrastructure;
@@ -52,6 +53,9 @@ builder.Services.AddApplicationModule();
 
 // Добавление контроллеров и Swagger
 builder.Services.AddControllers();
+
+builder.Services.AddMemoryCache();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -112,6 +116,8 @@ builder.Services.AddAuthentication(options =>
 var app = builder.Build();
 
 // Middleware
+app.UseMiddleware<ErrorHandlingMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

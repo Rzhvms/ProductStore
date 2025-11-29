@@ -3,14 +3,12 @@ using MimeKit;
 namespace Infrastructure.Services.Email.Interfaces;
 
 /// <summary>
-/// TODO
+/// Клиент для отправки email сообщений
 /// </summary>
 public interface IEmailClient
 {
     /// <summary>
-    /// TODO
+    /// Отправить сообщение
     /// </summary>
-    /// <param name="message"></param>
-    /// <returns></returns>
     Task SendAsync(MimeMessage message);
 }

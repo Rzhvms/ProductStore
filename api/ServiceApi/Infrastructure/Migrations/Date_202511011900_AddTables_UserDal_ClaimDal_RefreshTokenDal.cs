@@ -26,7 +26,8 @@ public class Date_202511011900_AddTables_UserDal_ClaimDal_RefreshTokenDal : Migr
                 .WithColumn(nameof(UserModel.Name)).AsString(50).Nullable()
                 .WithColumn(nameof(UserModel.LastName)).AsString(50).Nullable()
                 .WithColumn(nameof(UserModel.CreateAt)).AsDateTime().NotNullable()
-                .WithColumn(nameof(UserModel.UpdateAt)).AsDateTime().Nullable();
+                .WithColumn(nameof(UserModel.UpdateAt)).AsDateTime().Nullable()
+                .WithColumn(nameof(UserModel.IsEmailConfirmed)).AsBoolean().NotNullable();
             
             Create.Index("IX_UserModel_Email_Unique").OnTable(_userTableName).OnColumn(nameof(UserModel.Email)).Unique();
         }

@@ -11,7 +11,7 @@ internal class MailHelper : IMailHelper
 {
     private static EmailSettings _settings;
 
-    private MailHelper(IOptions<EmailSettings> options)
+    public MailHelper(IOptions<EmailSettings> options)
     {
         _settings = options.Value;
     }
