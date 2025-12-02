@@ -76,7 +76,7 @@ internal class CreateUserUseCase : ICreateUserUseCase
     public async Task<ContinueRegisterResponse> ContinueRegisterAsync(ContinueRegisterRequest request)
     {
         await _authRepository.UpdateUserForFinalRegistrationAsync(request.UserId, request.Name, request.LastName,
-            request.Gender, request.Phone);
+            request.Gender, request.Phone, request.BirthDate);
         return new ContinueRegisterResponse();
     }
 

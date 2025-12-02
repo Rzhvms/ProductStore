@@ -1,3 +1,4 @@
+using Application.UseCases.UserProfile.Dto.Request;
 using Application.UseCases.UserProfile.Dto.Response;
 
 namespace Application.UseCases.UserProfile;
@@ -11,4 +12,9 @@ public interface IUserProfileUseCase
     /// Получить профиль пользователя
     /// </summary>
     Task<GetUserProfileResponse> GetUserProfileAsync(Guid userId);
+
+    /// <summary>
+    /// Обновить профиль пользователя
+    /// </summary>
+    Task<UpdateUserProfileResponse> UpdateUserProfileAsync(Guid userId, UpdateUserProfileRequest request);
 }

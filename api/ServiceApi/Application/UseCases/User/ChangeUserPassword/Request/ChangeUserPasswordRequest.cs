@@ -13,6 +13,7 @@ public record ChangeUserPasswordRequest
     /// </summary>
     [JsonPropertyName("newPassword")]
     [Required]
+    [MinLength(8)]
     public required string NewPassword { get; init; }
     
     /// <summary>
@@ -20,5 +21,6 @@ public record ChangeUserPasswordRequest
     /// </summary>
     [JsonPropertyName("oldPassword")]
     [Required]
+    [MinLength(8)]
     public required string OldPassword { get; init; }
 }

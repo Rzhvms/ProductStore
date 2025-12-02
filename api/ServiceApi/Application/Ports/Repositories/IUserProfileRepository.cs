@@ -11,4 +11,9 @@ public interface IUserProfileRepository
     /// Получить информацию о профиле пользователя
     /// </summary>
     Task<GetUserProfileModel> GetUserProfileAsync(Guid userId);
+
+    /// <summary>
+    /// Обновить информацию о пользователе
+    /// </summary>
+    Task UpdateUserProfileAsync(Guid id, GetUserProfileModel model);
 }

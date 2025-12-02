@@ -23,7 +23,6 @@
 
     <ItemGroup>
       <Folder Include="UseCases\Auth\SignOut\Request\" />
-      <Folder Include="UseCases\UserProfile\Dto\Request\" />
     </ItemGroup>
 
 </Project>

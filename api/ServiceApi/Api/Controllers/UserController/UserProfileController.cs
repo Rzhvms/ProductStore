@@ -1,5 +1,6 @@
 using Application.Extensions;
 using Application.UseCases.UserProfile;
+using Application.UseCases.UserProfile.Dto.Request;
 using Application.UseCases.UserProfile.Dto.Response;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -34,10 +35,11 @@ public class UserProfileController : ControllerBase
     /// <summary>
     /// Обновить профиль пользователя.
     /// </summary>
-    [HttpPut]
+    [HttpPatch]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task UpdateUserProfileAsync()
+    public async Task<UpdateUserProfileResponse> UpdateUserProfileAsync(UpdateUserProfileRequest request)
     {
-        
+        var userId = User.GetUserId();
+        return await _userProfileUseCase.UpdateUserProfileAsync(userId, request);
     }
 }

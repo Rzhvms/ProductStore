@@ -1,5 +1,7 @@
 using Application.Ports.Repositories;
+using Application.UseCases.UserProfile.Dto.Request;
 using Application.UseCases.UserProfile.Dto.Response;
+using Domain.ExtensionModels;
 
 namespace Application.UseCases.UserProfile;
 
@@ -28,5 +30,22 @@ internal class UserProfileUseCase : IUserProfileUseCase
             About = profile.About
         };
         return response;
+    }
+
+    /// <inheritdoc />
+    public async Task<UpdateUserProfileResponse> UpdateUserProfileAsync(Guid userId, UpdateUserProfileRequest request)
+    {
+        var model = new GetUserProfileModel()
+        {
+            Name = request.Name,
+            LastName = request.LastName,
+            BirthDate = request.BirthDate,
+            Gender = request.Gender,
+            Email = request.Email,
+            Phone = request.Phone,
+            About = request.About
+        };
+        await _repository.UpdateUserProfileAsync(userId, model);
+        return new UpdateUserProfileResponse();
     }
 }

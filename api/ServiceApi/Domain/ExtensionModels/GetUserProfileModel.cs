@@ -8,37 +8,37 @@ public record GetUserProfileModel
     /// <summary>
     /// Имя
     /// </summary>
-    public string? Name { get; init; }
+    public string? Name { get; set; }
     
     /// <summary>
     /// Фамилия
     /// </summary>
-    public string? LastName { get; init; }
+    public string? LastName { get; set; }
     
     /// <summary>
     /// Дата рождения
     /// </summary>
-    public DateTime? BirthDate { get; init; }
+    public DateTime? BirthDate { get; set; }
     
     /// <summary>
     /// Пол
     /// </summary>
-    public string? Gender { get; init; }
+    public string? Gender { get; set; }
     
     /// <summary>
     /// Почта
     /// </summary>
-    public string? Email { get; init; }
+    public string? Email { get; set; }
     
     /// <summary>
     /// Телефон
     /// </summary>
-    public string? Phone { get; init; }
+    public string? Phone { get; set; }
     
     /// <summary>
     /// О себе
     /// </summary>
-    public string? About { get; init; }
+    public string? About { get; set; }
     
     // /// <summary>
     // /// Путь до аватара

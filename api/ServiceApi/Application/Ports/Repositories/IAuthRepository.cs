@@ -30,5 +30,5 @@ public interface IAuthRepository
     /// <summary>
     /// Обновляем данный пользователя (для завершения регистрации)
     /// </summary>
-    Task UpdateUserForFinalRegistrationAsync(Guid id, string name, string lastName, string gender, string phone);
+    Task UpdateUserForFinalRegistrationAsync(Guid id, string name, string lastName, string gender, string phone, DateTime birthDate);
 }
