@@ -28,6 +28,7 @@ public static class ApplicationForStartup
         services.AddScoped<IUserAddressUseCase, UserAddressUseCase>();
         services.AddScoped<IVerifyEmailUseCase, VerifyEmailUseCase>();
         services.AddScoped<IResendPinCodeUseCase, ResendPinCodeUseCase>();
+        services.AddScoped<IUserProfileUseCase, UserProfileUseCase>();
 
         return services;
     }

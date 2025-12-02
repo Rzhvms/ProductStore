@@ -56,9 +56,10 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     [HttpPost("login")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<LoginResponse> LoginAsync(LoginRequest request)
+    public async Task<IActionResult> LoginAsync(LoginRequest request)
     {
-        return await _loginUseCase.ExecuteAsync(request);
+        var response = await _loginUseCase.ExecuteAsync(request);
+        return response is LoginErrorResponse error ? BadRequest(error) : Ok(response);
     }
 
     /// <summary>
