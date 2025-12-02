@@ -9,6 +9,7 @@ using Application.UseCases.User.ChangeUserPassword;
 using Application.UseCases.User.GetUserInfo;
 using Application.UseCases.User.UpdateUserInfo;
 using Application.UseCases.UserAddress;
+using Application.UseCases.UserProfile;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Application;

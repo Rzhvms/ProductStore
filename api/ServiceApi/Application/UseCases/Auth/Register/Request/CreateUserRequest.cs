@@ -16,19 +16,20 @@ public record CreateUserRequest
     [MaxLength(50)]
     [Required]
     [JsonPropertyName("email")]
-    public required string Email { get; set; }
+    public required string Email { get; init; }
     
     /// <summary>
     /// Пароль
     /// </summary>
     [Required]
+    [MinLength(8)]
     [JsonPropertyName("password")]
-    public required string Password { get; set; }
+    public required string Password { get; init; }
     
     /// <summary>
     /// Права
     /// </summary>
     [JsonPropertyName("claims")]
     [Required]
-    public required IList<Claim> Claims { get; set; }
+    public required IList<Claim> Claims { get; init; }
 }

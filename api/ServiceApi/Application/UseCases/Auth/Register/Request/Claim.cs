@@ -11,11 +11,11 @@ public record Claim
     /// Тип права/роли
     /// </summary>
     [JsonPropertyName("type")]
-    public string Type { get; set; }
+    public string Type { get; init; }
 
     /// <summary>
     /// Значение права/роли
     /// </summary>
     [JsonPropertyName("value")]
-    public string Value { get; set; }
+    public string Value { get; init; }
 }
