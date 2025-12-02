@@ -1,6 +1,5 @@
 using Application.Extensions;
 using Application.UseCases.Auth.CreateUser;
-using Application.UseCases.Auth.CreateUser.Request;
 using Application.UseCases.Auth.CreateUser.Response;
 using Application.UseCases.Auth.Login;
 using Application.UseCases.Auth.Login.Request;
@@ -10,8 +9,13 @@ using Application.UseCases.Auth.RefreshToken.Request;
 using Application.UseCases.Auth.RefreshToken.Response;
 using Application.UseCases.Auth.Register.Request;
 using Application.UseCases.Auth.Register.Response;
+using Application.UseCases.Auth.ResendPinCode;
+using Application.UseCases.Auth.ResendPinCode.Request;
 using Application.UseCases.Auth.SignOut;
 using Application.UseCases.Auth.SignOut.Response;
+using Application.UseCases.Auth.VerifyEmail;
+using Application.UseCases.Auth.VerifyEmail.Request;
+using Application.UseCases.Auth.VerifyEmail.Response;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -28,17 +32,22 @@ public class AuthController : ControllerBase
     private readonly IRefreshTokenUseCase _refreshTokenUseCase;
     private readonly ISignOutUseCase _signOutUseCase;
     private readonly ICreateUserUseCase _createUserUseCase;
-
+    private readonly IVerifyEmailUseCase _verifyEmailUseCase;
+    private readonly IResendPinCodeUseCase _resendPinUseCase;
     public AuthController(
         ILoginUseCase loginUseCase,
         IRefreshTokenUseCase refreshTokenUseCase,
         ISignOutUseCase signOutUseCase,
-        ICreateUserUseCase createUserUseCase)
+        ICreateUserUseCase createUserUseCase, 
+        IVerifyEmailUseCase verifyEmailUseCase, 
+        IResendPinCodeUseCase resendPinCodeUseCase)
     {
         _loginUseCase = loginUseCase;
         _refreshTokenUseCase = refreshTokenUseCase;
         _signOutUseCase = signOutUseCase;
         _createUserUseCase = createUserUseCase;
+        _verifyEmailUseCase = verifyEmailUseCase;
+        _resendPinUseCase = resendPinCodeUseCase;
     }
     
     /// <summary>
@@ -95,5 +104,28 @@ public class AuthController : ControllerBase
     public async Task<ContinueRegisterResponse> ContinueRegisterAsync(ContinueRegisterRequest request)
     {
         return await _createUserUseCase.ContinueRegisterAsync(request);
+    }
+
+    /// <summary>
+    /// Верификация почты
+    /// </summary>
+    [AllowAnonymous]
+    [HttpPost("verify-email")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<VerifyEmailResponse> SendEmailAsync(VerifyEmailRequest request)
+    {
+        var response = await _verifyEmailUseCase.ExecuteAsync(request);
+        return response;
+    }
+    
+    /// <summary>
+    /// Переотправка пинкода верификации
+    /// </summary>
+    [AllowAnonymous]
+    [HttpPost("resend-code")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task ResendCodeAsync(ResendPinCodeRequest request)
+    {
+        await _resendPinUseCase.ExecuteAsync(request);
     }
 }
