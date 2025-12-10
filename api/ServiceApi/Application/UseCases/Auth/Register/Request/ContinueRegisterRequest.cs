@@ -44,6 +44,13 @@ public record ContinueRegisterRequest : IValidatableObject
     [Required]
     public required string Gender { get; set; }
     
+    /// <summary>
+    /// Дата рождения
+    /// </summary>
+    [JsonPropertyName("birthDate")]
+    [Required]
+    public required DateTime BirthDate { get; init; }
+    
     /// <inheritdoc />
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {

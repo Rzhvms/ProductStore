@@ -1,12 +1,16 @@
 using System.Security.Cryptography;
+using Api.Middlewares;
 using Application;
 using FluentMigrator.Runner;
 using Infrastructure;
 using Infrastructure.Services.Auth.Jwt;
+using Infrastructure.Services.Email.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+
+# region Infrastructure
 
 // Конфигурация JWT
 var jwtSettingsSection = builder.Configuration.GetSection("JwtSettings");
@@ -37,18 +41,27 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Добавление слоев
+// Подключаем настройки Email
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+
 builder.Services.AddInfrastructureModule(jwtSettings, connectionString);
+# endregion 
+
+# region Application
 builder.Services.AddApplicationModule();
+# endregion
 
 // Добавление контроллеров и Swagger
 builder.Services.AddControllers();
+
+builder.Services.AddMemoryCache();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
     {
-        Title = "Auth.API",
+        Title = "ProductStore.Api",
         Version = "v1"
     });
 
@@ -103,6 +116,8 @@ builder.Services.AddAuthentication(options =>
 var app = builder.Build();
 
 // Middleware
+app.UseMiddleware<ErrorHandlingMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

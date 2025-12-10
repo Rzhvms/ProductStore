@@ -67,6 +67,11 @@ public class UserModel
     /// Связанный refresh-токен для обновления JWT.
     /// </summary>
     public RefreshTokenModel? RefreshToken { get; set; }
+
+    /// <summary>
+    /// Подтверждена ли почта
+    /// </summary>
+    public bool IsEmailConfirmed { get; set; } = false;
     
     /// <summary>
     /// Конструктор по умолчанию. Инициализирует коллекции.

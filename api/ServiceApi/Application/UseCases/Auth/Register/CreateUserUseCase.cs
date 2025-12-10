@@ -1,33 +1,36 @@
 using Application.Enums;
 using Application.Ports.Repositories;
 using Application.Ports.Services;
+using Application.Ports.Services.Email;
+using Application.UseCases.Auth.CreateUser;
 using Application.UseCases.Auth.CreateUser.Request;
 using Application.UseCases.Auth.CreateUser.Response;
 using Application.UseCases.Auth.Register.Request;
 using Application.UseCases.Auth.Register.Response;
 using Domain.User;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
-namespace Application.UseCases.Auth.CreateUser;
+namespace Application.UseCases.Auth.Register;
 
 /// <inheritdoc />
-public class CreateUserUseCase : ICreateUserUseCase
+internal class CreateUserUseCase : ICreateUserUseCase
 {
     private readonly ILogger<CreateUserUseCase> _logger;
-    private readonly IAuthTokenService _authTokenService;
     private readonly IAuthRepository _authRepository;
     private readonly ICryptographyService _cryptographyService;
+    private readonly IEmailService _emailService;
 
     public CreateUserUseCase(
         ILogger<CreateUserUseCase> logger,
-        IAuthTokenService authTokenService,
         IAuthRepository authRepository,
-        ICryptographyService cryptographyService)
+        ICryptographyService cryptographyService,
+        IEmailService emailService)
     {
         _logger = logger;
-        _authTokenService = authTokenService;
         _authRepository = authRepository;
         _cryptographyService = cryptographyService;
+        _emailService = emailService;
     }
 
     /// <inheritdoc />
@@ -59,7 +62,8 @@ public class CreateUserUseCase : ICreateUserUseCase
         };
 
         await _authRepository.CreateUserAsync(user);
-
+        
+        await _emailService.SendVerificationEmail(user.Email);
         _logger.LogInformation("Пользователь {Email} успешно создан", user.Email);
 
         return new CreateUserSuccessResponse
@@ -67,11 +71,12 @@ public class CreateUserUseCase : ICreateUserUseCase
             UserId = user.Id
         };
     }
-
+    
     /// <inheritdoc />
     public async Task<ContinueRegisterResponse> ContinueRegisterAsync(ContinueRegisterRequest request)
     {
-        await _authRepository.UpdateUserForFinalRegistrationAsync(request.UserId, request.Name, request.LastName, request.Gender, request.Phone);
+        await _authRepository.UpdateUserForFinalRegistrationAsync(request.UserId, request.Name, request.LastName,
+            request.Gender, request.Phone, request.BirthDate);
         return new ContinueRegisterResponse();
     }
 

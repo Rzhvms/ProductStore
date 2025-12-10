@@ -1,11 +1,12 @@
+using Application.Exceptions.Base;
+
 namespace Application.Exceptions;
 
 /// <summary>
 /// Кастомные ошибки при невалидном Refresh токене
 /// </summary>
-public class InvalidTokenException : Exception
+public class InvalidTokenException : BaseException
 {
-    public InvalidTokenException() { }
     public InvalidTokenException(string message) : base(message) { }
     public InvalidTokenException(string message, Exception innerException) : base(message, innerException) { }
 }

@@ -1,11 +1,15 @@
 using Application.UseCases.Auth.CreateUser;
 using Application.UseCases.Auth.Login;
 using Application.UseCases.Auth.RefreshToken;
+using Application.UseCases.Auth.Register;
+using Application.UseCases.Auth.ResendPinCode;
 using Application.UseCases.Auth.SignOut;
+using Application.UseCases.Auth.VerifyEmail;
 using Application.UseCases.User.ChangeUserPassword;
 using Application.UseCases.User.GetUserInfo;
 using Application.UseCases.User.UpdateUserInfo;
 using Application.UseCases.UserAddress;
+using Application.UseCases.UserProfile;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Application;
@@ -22,6 +26,9 @@ public static class ApplicationForStartup
         services.AddScoped<IGetUserInfoUseCase, GetUserInfoUseCase>();
         services.AddScoped<IUpdateUserInfoUseCase, UpdateUserInfoUseCase>();
         services.AddScoped<IUserAddressUseCase, UserAddressUseCase>();
+        services.AddScoped<IVerifyEmailUseCase, VerifyEmailUseCase>();
+        services.AddScoped<IResendPinCodeUseCase, ResendPinCodeUseCase>();
+        services.AddScoped<IUserProfileUseCase, UserProfileUseCase>();
 
         return services;
     }
