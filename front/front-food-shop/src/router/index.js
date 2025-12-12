@@ -29,13 +29,12 @@ import CheckoutConfirm from '../pages/checkout/Confirm.vue'
 import CheckoutPayment from '../pages/checkout/Payment.vue'
 
 // Profile
-import ProfileIndex from '../pages/profile/Index.vue'
-import ProfileMain from '../pages/profile/Main.vue'
-import ProfileSettings from '../pages/profile/Settings.vue'
+import ProfileMain from '../pages/profile/ProfilePage.vue'
+import ProfileOrders from '../pages/profile/ProfileOrders.vue'
+import ProfileHelp from '../pages/profile/ProfileHelp.vue'
 
 // Admin
 import AdminIndex from '../pages/admin/Index.vue'
-
 
 
 const routes = [
@@ -58,18 +57,16 @@ const routes = [
   { path: '/catalog/subcategory', component: Subcategory },
   { path: '/catalog/product', component: ProductCard },
 
-  // Cart
+  // Cart + Checkout
   { path: '/cart', component: Cart },
-
-  // Checkout
   { path: '/checkout/address', component: CheckoutAddress },
   { path: '/checkout/confirm', component: CheckoutConfirm },
   { path: '/checkout/payment', component: CheckoutPayment },
 
   // Profile
-  { path: '/profile', component: ProfileIndex },
-  { path: '/profile/main', component: ProfileMain },
-  { path: '/profile/settings', component: ProfileSettings },
+  { path: '/profile', component: ProfileMain },
+  { path: '/orders', component: ProfileOrders },
+  { path: '/help', component: ProfileHelp },
 
   // Admin
   { path: '/admin', component: AdminIndex },

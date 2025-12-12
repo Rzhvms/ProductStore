@@ -1,0 +1,676 @@
+/* === Общие === */
+
+body, html {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  background: #fff;
+  overflow-x: hidden;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* === HEADER === */
+.header {
+  height: 56px;
+  padding: 0 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ff7700;
+}
+
+/* === LAYOUT === */
+.container {
+  flex: 1;
+  display: flex;
+  padding: 24px 48px;
+  padding-top: 0px;
+  gap: 48px;
+  box-sizing: border-box;
+}
+
+/* === SIDEBAR === */
+.sidebar {
+  width: 322px;
+}
+
+.title {
+  font-size: 36px;
+  margin: 24px 48px;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  gap: 10px;
+  background-color: #F4F4F4;
+}
+
+.menu-item {
+  padding: 14px 18px;
+  color: #666;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.menu-item.active {
+  color: #FFFFFF;
+  font-weight: 600;
+  border-radius: 16px;
+  background: #FF7A00;
+  border: 16px;
+  padding: 14px 18px;
+}
+
+/* Кнопка выхода */
+.logout-btn {
+  margin-top: 48px;
+  width: 100%;
+  padding: 14px 16px;
+
+  background: #F4F4F4;
+  border: none;
+  border-radius: 12px;
+
+  font-size: 15px;
+  font-weight: 500;
+  color: #555555;
+  text-align: center;
+
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.logout-btn:hover {
+  background: #ffd6d6;
+  border-color: #ff8c8c;
+}
+
+/* === MAIN CONTENT === */
+.content {
+  flex: 1;
+}
+
+/* === Личные данные обновлённые === */
+
+.pd-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.pd-edit-btn {
+  color: #ff7700;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.pd-edit-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.pd-save {
+  background: #ff7700;
+  color: #fff;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.pd-cancel {
+  background: #dcdcdc;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.form-grid-3x2 {
+  display: grid;
+  gap: 48px 52px;
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 1402px;
+}
+
+.contact-us-btn {
+  margin-top: 28px;
+  padding: 12px 22px;
+  background: #ff7700;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+/* === Привязанные карты === */
+
+.cards-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.plus-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #ff7700;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+/* === Карта Лояльности === */
+.loyalty-card {
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.card-left .card-number {
+  font-size: 18px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.card-left .card-name {
+  font-size: 16px;
+  margin-bottom: 12px;
+  color: #555;
+}
+
+.status-btn {
+  background: #000;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.card-right {
+  text-align: right;
+}
+
+.card-bonus-label {
+  font-size: 14px;
+  color: #555;
+}
+
+.card-bonus-value {
+  font-size: 22px;
+  color: #ff7700;
+  margin-bottom: 6px;
+}
+
+.card-nums {
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: #777;
+}
+
+/* === Личные данные === */
+
+.personal-data {
+  margin-top: 40px;
+  margin-left: 48px;
+  margin-right: 48px;
+}
+
+.personal-data h2 {
+  color: #3C3C3C;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px 52px;
+  max-width: 720px;
+}
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-item label {
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: #444;
+}
+
+.form-item input {
+  height: 48px;
+  padding: 0 24px;
+  border: none;
+  border-radius: 16px;
+  font-size: 16px;
+  max-width: 370px;
+}
+
+.form-item input:disabled {
+  background: #f4f4f4;
+  color: #888;
+}
+
+.form-item small {
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.save-btn {
+  margin-top: 32px;
+  padding: 12px 24px;
+  background: #ff7700;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* === FOOTER === */
+.lk-footer {
+  width: 100%;
+  background: #f2f2f2;
+  padding: 36px 48px;
+  padding-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 30px;
+}
+
+.lk-footer .footer-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.lk-footer h4 {
+  color: #f57c00;
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+.lk-footer p,
+.lk-footer a {
+  margin: 6px 0;
+  opacity: 0.8;
+  font-size: 14px;
+  color: #333;
+  text-decoration: none;
+}
+
+.lk-footer a:hover {
+  opacity: 1;
+}
+
+.footer-app-box {
+  width: 171px;
+  height: 171px;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #ddd;
+}
+
+.contact-us-btn {
+  display: block;
+  margin-left: auto;
+}
+
+.gender-switch {
+  width: 100%;
+  height: 48px;
+  background: #f4f4f4;
+  border-radius: 18px;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+.gender-slider {
+  position: absolute;
+  top: 4px;
+  width: 50%;
+  height: 40px;
+  border-radius: 16px;
+  background: #ff7a00;
+  z-index: 1;
+  transition: 0.25s;
+}
+
+.gender-slider.female { left: 4px; }
+.gender-slider.male { right: 4px; }
+
+.gender-option {
+  flex: 1;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 500;
+  color: #7a7a7a;
+  cursor: pointer;
+}
+
+.gender-option.active {
+  color: white;
+  font-weight: 600;
+}
+
+.custom-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #c0c0c0;
+  border-radius: 4px;
+  position: relative;
+  cursor: pointer;
+  background: white;
+  display: inline-block;
+  vertical-align: middle;
+  transition: all 0.2s ease;
+}
+
+.custom-checkbox:hover {
+  border-color: #ff7a00;
+}
+
+.custom-checkbox:checked {
+  background: #ff7a00;
+  border-color: #ff7a00;
+}
+
+.custom-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  width: 40%;
+  height: 70%;
+  border: solid white;
+  border-width: 0 0.2em 0.2em 0;
+  transform: rotate(45deg);
+  left: 22%;
+  bottom: 20%;
+}
+
+/* --- ДОПОЛНИТЕЛЬНЫЕ НАСТРОЙКИ --- */
+.extra-settings {
+  margin-top: 40px;
+  background: #fff;
+  padding: 24px;
+  border-radius: 16px;
+  margin-left: 48px;
+}
+
+.extra-settings h2 {
+  margin-bottom: 20px;
+  font-size: 22px;
+  font-weight: 600;
+  color: #3C3C3C;
+}
+
+/* --- НАСТРОЙКИ УВЕДОМЛЕНИЙ --- */
+.notification-settings h3 {
+  font-size: 18px;
+  margin-bottom: 12px;
+  color: #555555;
+}
+
+.notif-desc {
+  color: #666;
+  margin-bottom: 14px;
+}
+
+.notif-list {
+  margin: 0 0 18px 0;
+  padding-left: 20px;
+  color: #444;
+}
+
+.notif-list li {
+  margin-bottom: 6px;
+}
+
+/* --- ЧЕКБОКСЫ --- */
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+/* твой кастомный чекбокс */
+.custom-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #c0c0c0;
+  border-radius: 4px;
+  position: relative;
+  cursor: pointer;
+  background: white;
+  display: inline-block;
+  vertical-align: middle;
+  transition: all 0.2s ease;
+}
+
+.custom-checkbox:hover {
+  border-color: #ff7a00;
+}
+
+.custom-checkbox:checked {
+  background: #ff7a00;
+  border-color: #ff7a00;
+}
+
+.custom-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  width: 40%;
+  height: 70%;
+  border: solid white;
+  border-width: 0 0.2em 0.2em 0;
+  transform: rotate(45deg);
+  left: 22%;
+  bottom: 20%;
+}
+
+/* --- УПРАВЛЕНИЕ АККАУНТОМ --- */
+
+.account-management {
+  margin-top: 20px;
+}
+
+.account-management h3 {
+  font-size: 18px;
+  margin: 0 0 20px 0;
+  color: #555555;
+  font-weight: 600;
+}
+
+.account-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* кнопки управления */
+.acc-btn {
+  padding: 14px 18px;
+  border-radius: 18px;
+  font-size: 18px;
+  font-weight: 500;
+  color: #555555;
+  cursor: pointer;
+  transition: 0.2s;
+  border: none;
+  background: #F4F4F4;
+}
+
+/* сменить пароль */
+.change-pass:hover {
+  border-color: #ff7a00;
+  color: #ff7a00;
+}
+
+/* удалить аккаунт */
+.delete-acc {
+  color: #F4F4F4;
+  background: #E63946;
+}
+
+.delete-acc:hover {
+  background: #ff4848;
+}
+
+/* Отступ для заголовка "Справочная информация" */
+.title {
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+/* Поисковая строка */
+.faq-search {
+  width: 100%;
+  height: 48px;
+  max-width: 1400px;
+  margin: 0 48px 24px 0;
+
+  background: #f4f4f4;
+  border: none;
+  border-radius: 16px;
+
+  font-size: 16px;
+  color: #444;
+
+  box-sizing: border-box;
+  padding-left: 24px;
+}
+
+.faq-search::placeholder {
+  color: #999;
+}
+
+/* Контейнер всех блоков */
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin: 0 0 48px 0;
+}
+
+/* Один элемент FAQ */
+.faq-item {
+  background: #f7f7f7;
+  border-radius: 16px;
+  padding: 4px 0;
+  overflow: hidden;
+  transition: 0.25s ease;
+  cursor: pointer;
+}
+
+/* Заголовок элемента */
+.faq-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 18px 22px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #444;
+  user-select: none;
+}
+
+/* Стрелка */
+.faq-header .arrow {
+  width: 12px;
+  height: 12px;
+  border-right: 2px solid #777;
+  border-bottom: 2px solid #777;
+  transform: rotate(45deg);
+  transition: 0.25s ease;
+}
+
+/* При открытии поворот стрелки */
+.faq-item.open .arrow {
+  transform: rotate(225deg);
+}
+
+/* Контент внутри аккордеона */
+.faq-content {
+  max-height: 0;
+  opacity: 0;
+  padding: 0 22px;
+  overflow: hidden;
+  transition: 0.3s ease;
+  color: #555;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+/* Активное состояние — контент разворачивается */
+.faq-item.open .faq-content {
+  max-height: 500px;
+  opacity: 1;
+  padding: 14px 22px 18px 22px;
+}
+
+/* Внутренние подпункты */
+.faq-subitem {
+  margin-bottom: 18px;
+}
+
+.faq-subitem:last-child {
+  margin-bottom: 0;
+}
+
+.faq-subitem h4 {
+  margin: 0 0 6px 0;
+  font-size: 15px;
+  color: #444;
+  font-weight: 600;
+}
+
+.faq-subitem p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.faq-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 48px;
+}

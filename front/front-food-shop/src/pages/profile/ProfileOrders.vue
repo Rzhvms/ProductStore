@@ -1,5 +1,5 @@
 <template>
-  <div>Страница Settings</div>
+  <div>Страница Orders</div>
 </template>
 
 <script setup>
