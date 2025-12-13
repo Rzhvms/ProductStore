@@ -1,12 +1,12 @@
-using Application.UseCases.AdminProduct.Dto.Request;
-using Application.UseCases.AdminProduct.Dto.Response;
+using Application.UseCases.Product.Dto.Request;
+using Application.UseCases.Product.Dto.Response;
 
-namespace Application.UseCases.AdminProduct;
+namespace Application.UseCases.Product;
 
 /// <summary>
 /// UseCase по управлению продуктами на админ панели
 /// </summary>
-public interface IAdminProductUseCase
+public interface IProductUseCase
 {
     /// <summary>
     /// Создать продукт
@@ -17,19 +17,24 @@ public interface IAdminProductUseCase
     /// Получить продукт
     /// </summary>
     Task<GetProductResponse> GetProductAsync(Guid id);
-
+    
     /// <summary>
     /// Получить список продуктов
     /// </summary>
-    Task<GetProductListResponse> GetProductListAsync(GetProductListRequest request);
-
+    Task<GetProductListResponse> GetProductListAsync(int pageNumber, int pageSize);
+    
+    /// <summary>
+    /// Получить список продуктов
+    /// </summary>
+    Task<GetProductListResponse> GetProductListByCategoryIdAsync(Guid categoryId, int pageNumber, int pageSize);
+    
     /// <summary>
     /// Изменить продукт
     /// </summary>
-    Task<UpdateProductResponse> UpdateProductAsync(UpdateProductRequest request);
-
+    Task<UpdateProductResponse> UpdateProductAsync(Guid id, UpdateProductRequest request);
+    
     /// <summary>
     /// Удалить продукт
     /// </summary>
-    Task<DeleteProductResponse> DeleteProductAsync(DeleteProductRequest request);
+    Task<DeleteProductResponse> DeleteProductAsync(Guid id);
 }
