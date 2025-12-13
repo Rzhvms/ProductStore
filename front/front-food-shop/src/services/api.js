@@ -1,13 +1,13 @@
 export const API_URL = "http://localhost:5282/api/";
 
 export const sendVerificationEmail = async (email) => {
-    const response = await fetch(`${API_URL}send-verification-email`, {
+    const response = await fetch(`${API_URL}verify-email`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
         },
         body: JSON.stringify({
-            Email: email,
+            "email": email,
         })
     });
 

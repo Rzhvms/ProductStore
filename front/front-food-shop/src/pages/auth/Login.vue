@@ -1,16 +1,12 @@
 <template>
   <div class="page-bg">
-    <div class="login-card">
+    <div class="login-card" :style="{ height: cardHeight + 'px' }">
       <h1 class="login-title">Вход</h1>
 
-      <!-- Глобальные ошибки -->
-      <div v-if="globalError.length" class="global-error">
-        <ul>
-          <li v-for="(err, index) in globalError" :key="index">
-            {{ err }}
-          </li>
-        </ul>
-      </div>
+      <!-- Глобальная ошибка -->
+      <transition name="fade-slide">
+        <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
+      </transition>
 
       <form @submit.prevent="handleSubmit" class="form">
 
@@ -89,7 +85,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import router from "@/router";
 import { login } from "@/services/api";
 
@@ -100,33 +96,41 @@ const showPassword = ref(false);
 const isLoading = ref(false);
 
 const errors = ref({ email: false, password: false });
-const globalError = ref([]);
+const errorMessage = ref("");
 
+// --- Динамическая высота ---
+const baseCardHeight = 508;
+const cardHeight = ref(baseCardHeight);
+
+watch(errorMessage, () => {
+  cardHeight.value = baseCardHeight + (errorMessage.value ? 60 : 0);
+}, { immediate: true });
+
+// --- Валидация формы ---
 const isFormValid = computed(() => 
   email.value.includes("@") && password.value.length > 0
 );
 
+// --- SUBMIT ---
 const handleSubmit = async () => {
   errors.value = { email: false, password: false };
-  globalError.value = [];
+  errorMessage.value = "";
 
-  // Валидация
   if (!email.value) {
     errors.value.email = true;
-    globalError.value.push("Почта не указана");
+    errorMessage.value = "Почта не указана";
   } else if (!email.value.includes("@")) {
     errors.value.email = true;
-    globalError.value.push("Неверный формат почты");
+    errorMessage.value = "Неверный формат почты";
   }
 
   if (!password.value) {
     errors.value.password = true;
-    globalError.value.push("Пароль не указан");
+    errorMessage.value = "Пароль не указан";
   }
 
-  if (globalError.value.length) return;
+  if (errorMessage.value) return;
 
-  // Запрос
   try {
     isLoading.value = true;
 
@@ -134,13 +138,10 @@ const handleSubmit = async () => {
 
     router.push("/admin");
   } catch (error) {
-    console.log(error);
-
     const status = error.response?.status;
     const message =
       error.response?.data?.message || error.message;
 
-    // ТОЛЬКО если пользователь не найден
     if (
       status === 404 ||
       message === "User not found" ||
@@ -150,20 +151,15 @@ const handleSubmit = async () => {
       return;
     }
 
-    // Остальные ошибки показываем тут же
-    globalError.value.push(message || "Ошибка входа");
+    errorMessage.value = message || "Ошибка входа";
   } finally {
     isLoading.value = false;
   }
 };
 
-const handleRegister = () => {
-  router.push("/register");
-};
-
-const handleForgot = () => {
-  router.push("/forgot-password");
-};
+// --- Навигация ---
+const handleRegister = () => router.push("/register");
+const handleForgot = () => router.push("/forgot-password");
 </script>
 
 <style scoped>
@@ -175,8 +171,32 @@ const handleForgot = () => {
   cursor: not-allowed;
 }
 
+.error-text {
+  color: #ff3333;
+  font-size: 16px;
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+
 .submit-btn:enabled:hover {
   background-color: #ff7a00;
   color: white;
+}
+
+.fade-slide-enter-active, .fade-slide-leave-active {
+  transition: all 0.3s ease;
+}
+.fade-slide-enter-from, .fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+.fade-slide-enter-to, .fade-slide-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Перекрываем фиксированную высоту для динамики */
+.login-card {
+  min-height: 508px;
 }
 </style>
