@@ -74,6 +74,7 @@
 <script setup>
 import { ref, computed, nextTick, onMounted } from "vue";
 import router from "@/router";
+import { sendVerificationEmail } from "@/services/api";
 
 const code = ref(["", "", "", "", "", ""]);
 const codeError = ref(false);
@@ -89,14 +90,16 @@ let interval = null;
 
 const isCodeComplete = computed(() => code.value.every(d => d !== ""));
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
   const enteredCode = code.value.join("");
-  if (enteredCode === "123456") {
+  const email = localStorage.getItem("email");
+  try {
+    const response = await sendVerificationEmail(email, enteredCode);
     codeError.value = false;
     codeSuccess.value = true;
     shakeActive.value = false;
     router.push("/new-password");
-  } else {
+  } catch (error) {
     codeError.value = true;
     codeErrorText.value = "Неверный код подтверждения\nПопробуйте еще раз или запросите код\nповторно";
     codeSuccess.value = false;

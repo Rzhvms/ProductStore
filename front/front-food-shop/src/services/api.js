@@ -1,13 +1,34 @@
-export const API_URL = "http://localhost:5282/api/";
+const API_URL = "http://localhost:5282/api/";
 
-export const sendVerificationEmail = async (email) => {
-    const response = await fetch(`${API_URL}verify-email`, {
-        method: "GET",
+export const resendPinCode = async (email) => {
+    const response = await fetch(`${API_URL}auth/resend-code`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            "email": email
+        })
+    });
+
+    if (!response.ok) {
+        const data = await response.json();
+        if (data?.error === "User not found") {
+            throw new Error("Пользователь не найден");
+        }
+        throw new Error("Не удалось получить код подтверждения");
+    }
+};
+
+export const sendVerificationEmail = async (email, pin) => {
+    const response = await fetch(`${API_URL}auth/verify-email`, {
+        method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
         body: JSON.stringify({
             "email": email,
+            "pin": pin
         })
     });
 
@@ -40,7 +61,7 @@ export const createUser = async (email, password, claims) => {
     return data;
 };
 
-export const finishRegister = async (userId, name, lastName, phone, gender) => {
+export const finishRegister = async (userId, name, lastName, phone, gender, birthdate) => {
     const response = await fetch(`${API_URL}auth/register`, {
         method: "PATCH",
         headers: {
@@ -51,7 +72,8 @@ export const finishRegister = async (userId, name, lastName, phone, gender) => {
             "name": name,
             "lastName": lastName,
             "phone": phone,
-            "gender": gender
+            "gender": gender,
+            "birthDate": birthdate
         })
     });
 
@@ -75,10 +97,16 @@ export const login = async (email, password) => {
         })
     });
 
+    const data = await response.json();
     if (!response.ok) {
+        const message = data?.message;
+        if (message === "UserDoesNotExist") {
+            throw new Error("Аккаунт не найден");
+        } else if (message === "CredentialsAreNotValid") {
+            throw new Error("Неверный пароль");
+        }
         throw new Error("Не удалось войти в систему");
     }
 
-    const data = await response.json();
     return data;
 };

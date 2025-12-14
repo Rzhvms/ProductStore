@@ -133,26 +133,14 @@ const handleSubmit = async () => {
 
   try {
     isLoading.value = true;
-
-    await login(email.value, password.value);
-
+    const response = await login(email.value, password.value);
     router.push("/admin");
   } catch (error) {
-    const status = error.response?.status;
-    const message =
-      error.response?.data?.message || error.message;
-
-    if (
-      status === 404 ||
-      message === "User not found" ||
-      message === "Аккаунт не найден"
-    ) {
+    if (error.message === "Аккаунт не найден") {
       router.push("/account-not-found");
       return;
     }
-
-    errorMessage.value = message || "Ошибка входа";
-  } finally {
+    errorMessage.value = error.message;
     isLoading.value = false;
   }
 };

@@ -9,7 +9,6 @@ import FinishRegistration from '../pages/auth/FinishRegistration.vue'
 import RecoveryCode from '@/pages/auth/RecoveryCode.vue'
 import RecoveryNewPassword from '@/pages/auth/RecoveryNewPassword.vue'
 import ForgotPassword from '../pages/auth/ForgotPassword.vue'
-import ForgotPasswordOptions from '../pages/auth/ForgotPasswordOptions.vue'
 
 // Home
 import Home from '../pages/home/Index.vue'
@@ -50,7 +49,6 @@ const routes = [
   { path: '/new-password', component: RecoveryNewPassword },
   { path: '/finish-registration', component: FinishRegistration },
   { path: '/forgot-password', component: ForgotPassword },
-  { path: '/forgot-password-options', component: ForgotPasswordOptions },
 
   // Catalog
   { path: '/catalog', component: CatalogIndex },

@@ -233,7 +233,8 @@ const handleSubmit = async () => {
     const claims = [{ type: "role", value: "user" }];
     const response = await createUser(email.value, password.value, claims);
     if (response.userId) {
-      localStorage.setItem("UserId", response.userId);
+      localStorage.setItem("email", email.value);
+      localStorage.setItem("userId", response.userId);
       setTimeout(() => router.push("/confirm-email"), 500);
     }
   } catch (err) {
