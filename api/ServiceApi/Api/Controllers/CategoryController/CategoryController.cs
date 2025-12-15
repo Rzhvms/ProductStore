@@ -47,7 +47,7 @@ public class CategoryController : ControllerBase
     [HttpGet("list")]
     public async Task<List<GetCategoryResponse>> GetCategoryListAsync()
     {
-        var response = (await _categoryUseCase.GetCategoryListAsync()).ToList();
+        var response = await _categoryUseCase.GetCategoryListAsync();
         return response;
     }
 

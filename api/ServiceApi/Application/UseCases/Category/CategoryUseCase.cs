@@ -1,3 +1,4 @@
+using Application.Exceptions;
 using Application.Ports.Repositories;
 using Application.UseCases.Category.Dto.Request;
 using Application.UseCases.Category.Dto.Response;
@@ -26,8 +27,10 @@ internal class CategoryUseCase : ICategoryUseCase
     public async Task<GetCategoryResponse> GetCategoryAsync(Guid id)
     {
         var category = await _categoryRepository.GetCategoryAsync(id);
-        if (category == null) 
-            throw new ArgumentNullException(nameof(category));
+        if (category == null)
+        {
+            throw new InvalidCategoryException(nameof(category));
+        }
             
         return new GetCategoryResponse()
         {
@@ -38,7 +41,7 @@ internal class CategoryUseCase : ICategoryUseCase
     }
 
     /// <inheritdoc/>
-    public async Task<IEnumerable<GetCategoryResponse>> GetCategoryListAsync()
+    public async Task<List<GetCategoryResponse>> GetCategoryListAsync()
     {
         var categoryList = await _categoryRepository.GetCategoryListAsync();
         var categoryResponse = categoryList.Select(x => new GetCategoryResponse()
@@ -47,7 +50,7 @@ internal class CategoryUseCase : ICategoryUseCase
             CategoryName = x.Name,
             ParentCategoryId = x.ParentId
         });
-        return categoryResponse;
+        return categoryResponse.ToList();
     }
 
     /// <inheritdoc/>

@@ -21,7 +21,7 @@ public interface ICategoryUseCase
     /// <summary>
     /// Получить список категорий
     /// </summary>
-    Task<IEnumerable<GetCategoryResponse>> GetCategoryListAsync();
+    Task<List<GetCategoryResponse>> GetCategoryListAsync();
     
     /// <summary>
     /// Обновить категорию
