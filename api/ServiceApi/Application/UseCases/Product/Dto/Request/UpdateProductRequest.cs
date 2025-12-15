@@ -1,24 +1,13 @@
-using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Nodes;
 
-namespace Domain.Product;
+namespace Application.UseCases.Product.Dto.Request;
 
-/// <summary>
-/// Продукт
-/// </summary>
-public record ProductModel
+public record UpdateProductRequest
 {
-    /// <summary>
-    /// Айди продукта
-    /// </summary>
-    public Guid Id { get; init; }
-    
     /// <summary>
     /// Название продукта
     /// </summary>
-    [MaxLength(150)]
-    [Required]
-    public required string Name { get; init; }
+    public string Name { get; init; }
     
     /// <summary>
     /// Id поставщика продукта
@@ -28,27 +17,22 @@ public record ProductModel
     /// <summary>
     /// Категория
     /// </summary>
-    public Guid? CategoryId { get; init; }
+    public Guid CategoryId { get; init; }
     
     /// <summary>
     /// Описание продукта
     /// </summary>
-    [MaxLength(1000)]
     public string? Description { get; init; }
     
     /// <summary>
     /// Цена
     /// </summary>
-    [Required]
-    [Range(0, double.MaxValue)]
-    public required decimal Price { get; init; }
+    public decimal Price { get; init; }
     
     /// <summary>
     /// Количество
     /// </summary>
-    [Required]
-    [Range(0, int.MaxValue)]
-    public required int Quantity { get; init; }
+    public int Quantity { get; init; }
     
     /// <summary>
     /// Характеристики товара
