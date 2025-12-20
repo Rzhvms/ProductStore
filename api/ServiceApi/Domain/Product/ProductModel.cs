@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Nodes;
 
 namespace Domain.Product;
 
@@ -25,6 +26,11 @@ public record ProductModel
     public Guid? ProviderId { get; init; }
     
     /// <summary>
+    /// Категория
+    /// </summary>
+    public Guid? CategoryId { get; init; }
+    
+    /// <summary>
     /// Описание продукта
     /// </summary>
     [MaxLength(1000)]
@@ -43,4 +49,9 @@ public record ProductModel
     [Required]
     [Range(0, int.MaxValue)]
     public required int Quantity { get; init; }
+    
+    /// <summary>
+    /// Характеристики товара
+    /// </summary>
+    public JsonObject? Characteristics { get; init; }
 }

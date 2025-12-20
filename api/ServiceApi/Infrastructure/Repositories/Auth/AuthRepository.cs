@@ -66,7 +66,7 @@ public class AuthRepository : IAuthRepository
     public async Task CreateUserAsync(UserModel userModel)
     {
         var sql = $@"INSERT INTO ""{nameof(UserModel)}"" 
-                VALUES (@Id, @Email, @Phone, @Password, @Salt, @Name, @LastName, @CreateAt, @UpdateAt)";
+                VALUES (@Id, @Email, @Phone, @Password, @Salt, @Name, @LastName, @CreateAt, @UpdateAt, @IsEmailConfirmed)";
         
         await _dbConnection.ExecuteAsync(sql, new
         {
@@ -78,8 +78,12 @@ public class AuthRepository : IAuthRepository
             userModel.Name,
             userModel.LastName,
             userModel.CreateAt,
-            userModel.UpdateAt
+            userModel.UpdateAt,
+            userModel.IsEmailConfirmed
         });
+
+        var insertToProfileSql = $@"INSERT INTO ""{nameof(UserProfileModel)}"" VALUES (@Id, @UserId)";
+        await _dbConnection.ExecuteAsync(insertToProfileSql, new { Id = Guid.NewGuid(), UserId = userModel.Id });
         
         if (userModel.Claims != null && userModel.Claims.Any())
         {
@@ -124,7 +128,8 @@ public class AuthRepository : IAuthRepository
                 ""{nameof(UserModel.Salt)}"" = @Salt,
                 ""{nameof(UserModel.Name)}"" = @Name,
                 ""{nameof(UserModel.LastName)}"" = @LastName,
-                ""{nameof(UserModel.UpdateAt)}"" = @UpdateAt
+                ""{nameof(UserModel.UpdateAt)}"" = @UpdateAt,
+                ""{nameof(UserModel.IsEmailConfirmed)}"" = @IsEmailConfirmed
             WHERE ""{nameof(UserModel.Id)}"" = @Id";
 
         await _dbConnection.ExecuteAsync(sql, new
@@ -136,6 +141,7 @@ public class AuthRepository : IAuthRepository
             userModel.Name,
             userModel.LastName,
             UpdateAt = DateTime.UtcNow,
+            userModel.IsEmailConfirmed,
             userModel.Id
         });
         
@@ -186,7 +192,7 @@ public class AuthRepository : IAuthRepository
     }
 
     /// <inheritdoc />
-    public async Task UpdateUserForFinalRegistrationAsync(Guid id, string name, string lastName, string gender, string phone)
+    public async Task UpdateUserForFinalRegistrationAsync(Guid id, string name, string lastName, string gender, string phone, DateTime birthDate)
     {
         var sqlUser = $@"UPDATE ""{nameof(UserModel)}""
                     SET ""{nameof(UserModel.Name)}"" = @Name,
@@ -196,10 +202,10 @@ public class AuthRepository : IAuthRepository
                     WHERE ""{nameof(UserModel.Id)}"" = @Id";
         
         var sqlUserProfile = $@"UPDATE ""{nameof(UserProfileModel)}""
-                    SET ""{nameof(UserProfileModel.Gender)}"" = @Gender
+                    SET ""{nameof(UserProfileModel.Gender)}"" = @Gender, ""{nameof(UserProfileModel.BirthDate)}"" = @BirthDate
                     WHERE ""{nameof(UserProfileModel.UserId)}"" = @UserId";
         
         await _dbConnection.ExecuteAsync(sqlUser, new { Id = id, Name = name, LastName = lastName, Phone = phone, Now = DateTime.UtcNow });
-        await _dbConnection.ExecuteAsync(sqlUserProfile, new { UserId = id, Gender = gender });
+        await _dbConnection.ExecuteAsync(sqlUserProfile, new { UserId = id, Gender = gender, BirthDate = birthDate });
     }
 }

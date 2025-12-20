@@ -1,3 +1,7 @@
+using Application.Extensions;
+using Application.UseCases.UserProfile;
+using Application.UseCases.UserProfile.Dto.Request;
+using Application.UseCases.UserProfile.Dto.Response;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,9 +15,10 @@ namespace Api.Controllers.UserController;
 [Route("api/user/profile")]
 public class UserProfileController : ControllerBase
 {
-    public UserProfileController()
+    private readonly IUserProfileUseCase _userProfileUseCase;
+    public UserProfileController(IUserProfileUseCase userProfileUseCase)
     {
-        
+        _userProfileUseCase = userProfileUseCase;
     }
     
     /// <summary>
@@ -21,18 +26,20 @@ public class UserProfileController : ControllerBase
     /// </summary>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task GetUserProfileAsync()
+    public async Task<GetUserProfileResponse> GetUserProfileAsync()
     {
-        
+        var userId = User.GetUserId();
+        return await _userProfileUseCase.GetUserProfileAsync(userId);
     }
     
     /// <summary>
     /// Обновить профиль пользователя.
     /// </summary>
-    [HttpPut]
+    [HttpPatch]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task UpdateUserProfileAsync()
+    public async Task<UpdateUserProfileResponse> UpdateUserProfileAsync(UpdateUserProfileRequest request)
     {
-        
+        var userId = User.GetUserId();
+        return await _userProfileUseCase.UpdateUserProfileAsync(userId, request);
     }
 }

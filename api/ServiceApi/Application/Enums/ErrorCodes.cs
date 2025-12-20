@@ -8,35 +8,35 @@ public enum ErrorCodes
     /// <summary>
     /// Произошла непредвиденная ошибка на сервере.
     /// </summary>
-    AnUnexpectedErrorOcurred = 100,
+    AnUnexpectedErrorOcurred = 40000,
 
     /// <summary>
     /// Учетные данные пользователя неверны (неправильный пароль или email).
     /// </summary>
-    CredentialsAreNotValid = 101,
+    CredentialsAreNotValid = 40001,
 
     /// <summary>
     /// Access-токен недействителен (невалидный, просрочен или некорректный).
     /// </summary>
-    AccessTokenIsNotValid = 102,
+    AccessTokenIsNotValid = 40002,
 
     /// <summary>
     /// Refresh-токен не активен (был отозван или заблокирован).
     /// </summary>
-    RefreshTokenIsNotActive = 103,
+    RefreshTokenIsNotActive = 40003,
 
     /// <summary>
     /// Срок действия refresh-токена истек.
     /// </summary>
-    RefreshTokenHasExpired = 104,
+    RefreshTokenHasExpired = 40004,
 
     /// <summary>
     /// Refresh-токен некорректный (не совпадает с ожидаемым значением).
     /// </summary>
-    RefreshTokenIsNotCorrect = 105,
+    RefreshTokenIsNotCorrect = 40005,
 
     /// <summary>
     /// Пользователь с указанными учетными данными не существует.
     /// </summary>
-    UserDoesNotExist = 106
+    UserDoesNotExist = 40006
 }
