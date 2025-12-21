@@ -1,3 +1,4 @@
+using Application.Exceptions;
 using Application.Ports.Repositories;
 using Application.UseCases.Cart.Dto.Response;
 
@@ -22,6 +23,9 @@ public class CartUseCase : ICartUseCase
     /// <inheritdoc/>
     public async Task AddOrUpdateItemAsync(Guid userId, CartItemDto item)
     {
+        if (item.Quantity <= 0) 
+            throw new InvalidCartException("Quantity must be >= 1.");
+        
         await _cartRepository.AddOrUpdateItemAsync(userId, item);
     }
 

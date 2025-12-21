@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Application.UseCases.Cart.Dto.Request;
 
 /// <summary>
@@ -8,7 +10,8 @@ public record AddOrUpdateCartItemRequest
     /// <summary>
     /// Id продукта
     /// </summary>
-    public Guid ProductId { get; init; }
+    [Required]
+    public required Guid ProductId { get; init; }
 
     /// <summary>
     /// Количество

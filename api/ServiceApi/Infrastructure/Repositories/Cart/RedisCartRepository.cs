@@ -11,7 +11,7 @@ public class RedisCartRepository : ICartRepository
 {
     private readonly IDatabase _database;
     private readonly IProductRepository _productRepository;
-    private const int CartTtlHours = 24;
+    private const int CartTtlHours = 48;
     private readonly JsonSerializerOptions _jsonOptions;
 
     public RedisCartRepository(IConnectionMultiplexer redis, IProductRepository productRepository)

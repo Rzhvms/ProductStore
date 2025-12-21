@@ -27,11 +27,10 @@ public class CartController : ControllerBase
     /// </summary>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<GetCartResponse>> GetCartAsync()
+    public async Task<GetCartResponse> GetCartAsync()
     {
         var userId = User.GetUserId();
-        var cart = await _cartUseCase.GetCartAsync(userId);
-        return Ok(cart);
+        return await _cartUseCase.GetCartAsync(userId);
     }
 
     /// <summary>
@@ -40,47 +39,32 @@ public class CartController : ControllerBase
     [HttpPost("items")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> AddOrUpdateItemAsync([FromBody] AddOrUpdateCartItemRequest request)
+    public async Task AddOrUpdateItemAsync([FromBody] AddOrUpdateCartItemRequest request)
     {
         var userId = User.GetUserId();
-        
-        if (request.ProductId == Guid.Empty) 
-            return BadRequest("ProductId is required.");
-        
-        if (request.Quantity <= 0) 
-            return BadRequest("Quantity must be >= 1.");
-
         var item = new CartItemDto { ProductId = request.ProductId, Quantity = request.Quantity };
         await _cartUseCase.AddOrUpdateItemAsync(userId, item);
-
-        return Ok();
     }
 
     /// <summary>
     /// Удалить позицию из корзины по productId.
     /// </summary>
     [HttpDelete("items/{productId:guid}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> RemoveItemAsync([FromRoute] Guid productId)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task RemoveItemAsync([FromRoute] Guid productId)
     {
         var userId = User.GetUserId();
-
         await _cartUseCase.RemoveItemAsync(userId, productId);
-        return NoContent();
     }
 
     /// <summary>
     /// Очистить корзину.
     /// </summary>
     [HttpDelete]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> ClearCartAsync()
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task ClearCartAsync()
     {
         var userId = User.GetUserId();
-
         await _cartUseCase.ClearCartAsync(userId);
-        return NoContent();
     }
 }
