@@ -674,3 +674,13 @@ body, html {
   margin: 0 auto;
   padding: 0 48px;
 }
+
+.gender-switch {
+  transition: opacity 0.3s ease;
+}
+
+.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+  cursor: not-allowed;
+}

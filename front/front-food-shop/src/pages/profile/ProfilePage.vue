@@ -59,7 +59,7 @@
 
         <div class="form-item">
           <label>Пол</label>
-          <div class="gender-switch">
+          <div class="gender-switch" :class="{ disabled: !isEditing }">
             <div v-if="form.gender" class="gender-slider" :class="form.gender"></div>
 
             <div
@@ -98,19 +98,19 @@
           <li>Рекомендации и сервисные напоминания</li>
         </ul>
 
-        <div class="checkbox-group">
+        <div class="checkbox-group" :class="{ disabled: !isEditing }">
           <label class="checkbox-item">
-            <input type="checkbox" class="custom-checkbox" v-model="form.notifEmail" />
+            <input type="checkbox" class="custom-checkbox" v-model="form.notifEmail" :disabled="!isEditing" />
             Email-уведомления
           </label>
 
           <label class="checkbox-item">
-            <input type="checkbox" class="custom-checkbox" v-model="form.notifSMS" />
+            <input type="checkbox" class="custom-checkbox" v-model="form.notifSMS" :disabled="!isEditing" />
             SMS-уведомления
           </label>
 
           <label class="checkbox-item">
-            <input type="checkbox" class="custom-checkbox" v-model="form.notifPush" />
+            <input type="checkbox" class="custom-checkbox" v-model="form.notifPush" :disabled="!isEditing" />
             Push-уведомления
           </label>
         </div>
@@ -131,6 +131,7 @@
 
 <script>
 import ProfileLayout from "./ProfileLayout.vue";
+import { getUser, updateUser } from "@/services/api";
 
 export default {
   name: "ProfilePage",
@@ -141,17 +142,37 @@ export default {
       isEditing: false,
       original: {},
       form: {
-        name: "Олег",
-        surname: "Волков",
-        birth: "25.01.2005",
-        email: "example@gmail.com",
-        phone: "8 999-999-99-99",
-        gender: "male",
+        name: "",
+        surname: "",
+        birth: "",
+        email: "",
+        phone: "",
+        gender: "",
         notifEmail: true,
         notifSMS: false,
         notifPush: true
       }
     };
+  },
+
+  async created() {
+    const idToken = localStorage.getItem("idToken");
+    const user = await getUser(idToken);
+    const notifJson = JSON.parse(user.about) || {};
+    this.form.name = user.name;
+    this.form.surname = user.lastName;
+    const date = new Date(user.birthDate);
+    const day = date.getDate();
+    let month = date.getMonth() + 1;
+    if (month < 10) month = `0${month}`;
+    const year = date.getFullYear();
+    this.form.birth = `${day}.${month}.${year}`;
+    this.form.email = user.email;
+    this.form.phone = user.phone;
+    this.form.gender = user.gender;
+    this.form.notifEmail = (notifJson && notifJson.email) ? notifJson.email : false;
+    this.form.notifSMS = (notifJson && notifJson.sms) ? notifJson.sms : false;
+    this.form.notifPush = (notifJson && notifJson.push) ? notifJson.push : false;
   },
 
   methods: {
@@ -160,6 +181,31 @@ export default {
       this.isEditing = true;
     },
     saveChanges() {
+      const idToken = localStorage.getItem("idToken");
+      const notifJson = {
+        email: this.form.notifEmail,
+        sms: this.form.notifSMS,
+        push: this.form.notifPush
+      };
+      const name = this.form.name;
+      const lastName = this.form.surname;
+      const birth = this.form.birth;
+      let birthDate = birth.split(".");
+      birthDate = birthDate[2] + "-" + birthDate[1] + "-" + birthDate[0];
+      const birthDateObj = new Date(birthDate).toISOString();
+      const email = this.form.email;
+      const phone = this.form.phone;
+      const gender = this.form.gender;
+      const json = { 
+        name: name,
+        lastName: lastName,
+        email: email,
+        phone: phone,
+        gender: gender,
+        birthDate: birthDateObj,
+        about: JSON.stringify(notifJson)
+       };
+      updateUser(idToken, json);
       this.isEditing = false;
     },
     cancelEdit() {

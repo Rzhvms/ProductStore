@@ -82,3 +82,38 @@ export const login = async (email, password) => {
     const data = await response.json();
     return data;
 };
+
+export const getUser = async (idToken) => {
+    const response = await fetch(`${API_URL}user/profile`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${idToken}`
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error("Не удалось получить данные пользователя");
+    }
+
+    const data = await response.json();
+    return data;
+};
+
+export const updateUser = async (idToken, json) => {
+    const response = await fetch(`${API_URL}user/profile`, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${idToken}`
+        },
+        body: JSON.stringify(json)
+    });
+
+    if (!response.ok) {
+        throw new Error("Не удалось обновить данные пользователя");
+    }
+
+    const data = await response.json();
+    return data;
+};
