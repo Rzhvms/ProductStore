@@ -7,6 +7,7 @@ using FluentMigrator.Runner;
 using Infrastructure.Migrations;
 using Infrastructure.Repositories.Product;
 using Infrastructure.Repositories.Auth;
+using Infrastructure.Repositories.Cart;
 using Infrastructure.Repositories.Category;
 using Infrastructure.Repositories.User;
 using Infrastructure.Services.Auth.Cryptography;
@@ -56,6 +57,7 @@ public static class InfraForStartup
         services.AddScoped<IUserProfileRepository, UserProfileRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<ICartRepository, RedisCartRepository>();
 
         // FluentMigrator
         services.AddFluentMigratorCore()

@@ -6,6 +6,7 @@ using Application.UseCases.Auth.Register;
 using Application.UseCases.Auth.ResendPinCode;
 using Application.UseCases.Auth.SignOut;
 using Application.UseCases.Auth.VerifyEmail;
+using Application.UseCases.Cart;
 using Application.UseCases.Category;
 using Application.UseCases.Product;
 using Application.UseCases.User.ChangeUserPassword;
@@ -35,6 +36,7 @@ public static class ApplicationForStartup
         services.AddScoped<IUserProfileUseCase, UserProfileUseCase>();
         services.AddScoped<ICategoryUseCase, CategoryUseCase>();
         services.AddScoped<IProductUseCase, ProductUseCase>();
+        services.AddScoped<ICartUseCase, CartUseCase>();
         
         SqlMapper.AddTypeHandler(new JsonObjectTypeHandler());
 
