@@ -7,10 +7,18 @@ using Infrastructure.Services.Auth.Jwt;
 using Infrastructure.Services.Email.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
 # region Infrastructure
+
+var redisConnStr = builder.Configuration.GetValue<string>("Redis:ConnectionString") ?? "localhost:6379";
+
+// Регистрируем IConnectionMultiplexer как Singleton
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+    ConnectionMultiplexer.Connect(redisConnStr)
+);
 
 // Конфигурация JWT
 var jwtSettingsSection = builder.Configuration.GetSection("JwtSettings");
