@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 // Auth pages
 import Login from '../pages/auth/Login.vue'
@@ -34,6 +35,7 @@ import ProfileSettings from '../pages/profile/Settings.vue'
 
 // Admin
 import AdminIndex from '../pages/admin/Index.vue'
+import { meta } from 'eslint-plugin-vue'
 
 
 
@@ -41,14 +43,14 @@ const routes = [
   { path: '/', component: Home },
 
   // Auth
-  { path: '/login', component: Login },
-  { path: '/register', component: Register },
-  { path: '/confirm-email', component: ConfirmEmail },
-  { path: '/recovery-code', component: RecoveryCode },
-  { path: '/account-not-found', component: AccountNotFound },
-  { path: '/new-password', component: RecoveryNewPassword },
-  { path: '/finish-registration', component: FinishRegistration },
-  { path: '/forgot-password', component: ForgotPassword },
+  { path: '/login', component: Login, meta: { requiresAuth: false } },
+  { path: '/register', component: Register, meta: { requiresAuth: false } },
+  { path: '/confirm-email', component: ConfirmEmail, meta: { requiresAuth: false } },
+  { path: '/recovery-code', component: RecoveryCode, meta: { requiresAuth: false } },
+  { path: '/account-not-found', component: AccountNotFound, meta: { requiresAuth: false } },
+  { path: '/new-password', component: RecoveryNewPassword, meta: { requiresAuth: false } },
+  { path: '/finish-registration', component: FinishRegistration, meta: { requiresAuth: false } },
+  { path: '/forgot-password', component: ForgotPassword, meta: { requiresAuth: false } },
 
   // Catalog
   { path: '/catalog', component: CatalogIndex },
@@ -57,25 +59,36 @@ const routes = [
   { path: '/catalog/product', component: ProductCard },
 
   // Cart
-  { path: '/cart', component: Cart },
+  { path: '/cart', component: Cart, meta: { requiresAuth: true } },
 
   // Checkout
-  { path: '/checkout/address', component: CheckoutAddress },
-  { path: '/checkout/confirm', component: CheckoutConfirm },
-  { path: '/checkout/payment', component: CheckoutPayment },
+  { path: '/checkout/address', component: CheckoutAddress, meta: { requiresAuth: true } },
+  { path: '/checkout/confirm', component: CheckoutConfirm, meta: { requiresAuth: true } },
+  { path: '/checkout/payment', component: CheckoutPayment, meta: { requiresAuth: true } },
 
   // Profile
-  { path: '/profile', component: ProfileIndex },
-  { path: '/profile/main', component: ProfileMain },
-  { path: '/profile/settings', component: ProfileSettings },
+  { path: '/profile', component: ProfileIndex, meta: { requiresAuth: true } },
+  { path: '/profile/main', component: ProfileMain, meta: { requiresAuth: true } },
+  { path: '/profile/settings', component: ProfileSettings, meta: { requiresAuth: true } },
 
   // Admin
-  { path: '/admin', component: AdminIndex },
+  { path: '/admin', component: AdminIndex, meta: { requiresAuth: true } },
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes
 })
+
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore();
+  const isAuthenticated = authStore.isAuthenticated;
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    return next({ name: 'Login' });
+  } else if (!to.meta.requiresAuth && isAuthenticated) {
+    return next({ name: 'Home' });
+  }
+  next();
+});
 
 export default router

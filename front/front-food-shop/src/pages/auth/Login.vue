@@ -89,12 +89,6 @@ import { ref, computed, watch, onMounted } from "vue";
 import router from "@/router";
 import { login } from "@/services/api";
 
-onMounted(() => {
-  const accessToken = sessionStorage.getItem("accessToken");
-  if (accessToken) {
-    
-
-
 const email = ref("");
 const password = ref("");
 const remember = ref(false);
