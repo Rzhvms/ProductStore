@@ -30,9 +30,11 @@ public class Date_202511170100_AddTables : Migration
                 .WithColumn(nameof(ProductModel.Id)).AsGuid().PrimaryKey()
                 .WithColumn(nameof(ProductModel.Name)).AsString(150).NotNullable()
                 .WithColumn(nameof(ProductModel.ProviderId)).AsGuid().Nullable()
+                .WithColumn(nameof(ProductModel.CategoryId)).AsGuid().Nullable()
                 .WithColumn(nameof(ProductModel.Description)).AsString().Nullable()
                 .WithColumn(nameof(ProductModel.Price)).AsDecimal().NotNullable()
-                .WithColumn(nameof(ProductModel.Quantity)).AsInt32().NotNullable();
+                .WithColumn(nameof(ProductModel.Quantity)).AsInt32().NotNullable()
+                .WithColumn(nameof(ProductModel.Characteristics)).AsCustom("jsonb").Nullable();
         }
         
         // Поставщик

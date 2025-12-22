@@ -13,7 +13,6 @@ public class Date_202511182200_AddTables_CategoryProductPayment : Migration
 {
     private readonly string _paymentTb = nameof(PaymentModel);
     private readonly string _categoryTb = nameof(CategoryModel);
-    private readonly string _productCategoryTb = nameof(ProductCategoryModel);
     private readonly string _productImageTb = nameof(ProductImageModel);
     private readonly string _productReviewTb = nameof(ProductReviewModel);
     
@@ -44,14 +43,6 @@ public class Date_202511182200_AddTables_CategoryProductPayment : Migration
                 .WithColumn(nameof(CategoryModel.Id)).AsGuid().PrimaryKey()
                 .WithColumn(nameof(CategoryModel.Name)).AsString(100).NotNullable()
                 .WithColumn(nameof(CategoryModel.ParentId)).AsGuid().Nullable();
-        }
-        
-        if (!Schema.Table(_productCategoryTb).Exists())
-        {
-            Create.Table(_productCategoryTb)
-                .WithColumn(nameof(ProductCategoryModel.Id)).AsGuid().PrimaryKey()
-                .WithColumn(nameof(ProductCategoryModel.ProductId)).AsGuid().NotNullable()
-                .WithColumn(nameof(ProductCategoryModel.CategoryId)).AsGuid().NotNullable();
         }
         
         if (!Schema.Table(_productImageTb).Exists())
@@ -89,16 +80,6 @@ public class Date_202511182200_AddTables_CategoryProductPayment : Migration
             .ToTable(_categoryTb).PrimaryColumn(nameof(CategoryModel.Id))
             .OnDeleteOrUpdate(System.Data.Rule.Cascade);
         
-        Create.ForeignKey("FK_ProductCategory_Product")
-            .FromTable(_productCategoryTb).ForeignColumn(nameof(ProductCategoryModel.ProductId))
-            .ToTable(nameof(ProductModel)).PrimaryColumn(nameof(ProductModel.Id))
-            .OnDeleteOrUpdate(System.Data.Rule.Cascade);
-        
-        Create.ForeignKey("FK_ProductCategory_Category")
-            .FromTable(_productCategoryTb).ForeignColumn(nameof(ProductCategoryModel.CategoryId))
-            .ToTable(_categoryTb).PrimaryColumn(nameof(CategoryModel.Id))
-            .OnDeleteOrUpdate(System.Data.Rule.Cascade);
-        
         Create.ForeignKey("FK_ProductImage_Product")
             .FromTable(_productImageTb).ForeignColumn(nameof(ProductImageModel.ProductId))
             .ToTable(nameof(ProductModel)).PrimaryColumn(nameof(ProductModel.Id))
@@ -113,6 +94,11 @@ public class Date_202511182200_AddTables_CategoryProductPayment : Migration
             .FromTable(_productReviewTb).ForeignColumn(nameof(ProductReviewModel.ProductId))
             .ToTable(nameof(ProductModel)).PrimaryColumn(nameof(ProductModel.Id))
             .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+
+        Create.ForeignKey("FK_Product_Category")
+            .FromTable(nameof(ProductModel)).ForeignColumn(nameof(ProductModel.CategoryId))
+            .ToTable(_categoryTb).PrimaryColumn(nameof(CategoryModel.Id))
+            .OnDeleteOrUpdate(System.Data.Rule.Cascade);
     }
 
     /// <inheritdoc />
@@ -121,8 +107,6 @@ public class Date_202511182200_AddTables_CategoryProductPayment : Migration
         Delete.ForeignKey("FK_ProductReview_Product").OnTable(_productReviewTb);
         Delete.ForeignKey("FK_ProductReview_User").OnTable(_productReviewTb);
         Delete.ForeignKey("FK_ProductImage_Product").OnTable(_productImageTb);
-        Delete.ForeignKey("FK_ProductCategory_Category").OnTable(_productCategoryTb);
-        Delete.ForeignKey("FK_ProductCategory_Product").OnTable(_productCategoryTb);
         Delete.ForeignKey("FK_CategoryParent_CategoryId").OnTable(_categoryTb);
         Delete.ForeignKey("FK_Payment_User").OnTable(_paymentTb);
         Delete.ForeignKey("FK_Payment_Order").OnTable(_paymentTb);
@@ -135,11 +119,6 @@ public class Date_202511182200_AddTables_CategoryProductPayment : Migration
         if (Schema.Table(_productImageTb).Exists())
         {
             Delete.Table(_productImageTb);
-        }
-        
-        if (Schema.Table(_productCategoryTb).Exists())
-        {
-            Delete.Table(_productCategoryTb);
         }
         
         if (Schema.Table(_categoryTb).Exists())
