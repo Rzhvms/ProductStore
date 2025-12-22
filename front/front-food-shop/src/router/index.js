@@ -32,6 +32,9 @@ import ProfileSettings from '../pages/profile/Settings.vue'
 
 // Admin
 import AdminIndex from '../pages/admin/Index.vue'
+import AdminGoods from '../pages/admin/AdminGoods.vue'
+import AdminCategories from '../pages/admin/AdminCategories.vue'
+import AdminUsers from '../pages/admin/AdminUsers.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -65,6 +68,9 @@ const routes = [
 
   // Admin
   { path: '/admin', component: AdminIndex },
+  { path: '/admin_goods', component: AdminGoods },
+  { path: '/admin_categories', component: AdminCategories },
+  { path: '/admin_users', component: AdminUsers },
 ]
 
 const router = createRouter({
