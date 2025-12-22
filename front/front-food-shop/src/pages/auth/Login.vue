@@ -85,9 +85,15 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import router from "@/router";
 import { login } from "@/services/api";
+
+onMounted(() => {
+  const accessToken = sessionStorage.getItem("accessToken");
+  if (accessToken) {
+    
+
 
 const email = ref("");
 const password = ref("");
@@ -134,6 +140,14 @@ const handleSubmit = async () => {
   try {
     isLoading.value = true;
     const response = await login(email.value, password.value);
+    const accessToken = response.accessToken;
+    const refreshToken = response.refreshToken;
+    sessionStorage.setItem("accessToken", accessToken);
+    if (remember.value) {
+      localStorage.setItem("refreshToken", refreshToken);
+    } else {
+      sessionStorage.setItem("refreshToken", refreshToken);
+    }
     router.push("/admin");
   } catch (error) {
     if (error.message === "Аккаунт не найден") {
