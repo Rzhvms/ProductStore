@@ -50,7 +50,7 @@ public class UserAdminController : ControllerBase
     /// <summary>
     /// Получить базовую информацию о пользователе (UserModel)
     /// </summary>
-    [HttpGet("base-info")]
+    [HttpGet("base")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<GetUserInfoResponse> GetUserInfoAsync(Guid id)
     {
@@ -60,7 +60,7 @@ public class UserAdminController : ControllerBase
     /// <summary>
     /// Изменить базовую информацию о пользователе (UserModel) (Phone, Name, LastName)
     /// </summary>
-    [HttpPatch("base-info")]
+    [HttpPatch("base")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<UpdateUserInfoResponse> UpdateUserInfoAsync(Guid id, UpdateUserInfoRequest request)
     {
@@ -70,7 +70,7 @@ public class UserAdminController : ControllerBase
     /// <summary>
     /// Изменить пароль
     /// </summary>
-    [HttpPatch("base-info/password")] 
+    [HttpPatch("base/password")] 
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ChangeUserPasswordResponse> ChangeUserPasswordAsync(Guid id, ChangeUserPasswordRequest request)
     {
@@ -80,7 +80,7 @@ public class UserAdminController : ControllerBase
     /// <summary>
     /// Получить профиль пользователя
     /// </summary>
-    [HttpGet("profile-info")]
+    [HttpGet("profile")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<GetUserProfileResponse> GetUserProfileAsync(Guid userId)
     {
@@ -90,7 +90,7 @@ public class UserAdminController : ControllerBase
     /// <summary>
     /// Обновить профиль пользователя.
     /// </summary>
-    [HttpPatch("profile-info")]
+    [HttpPatch("profile")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<UpdateUserProfileResponse> UpdateUserProfileAsync(Guid userId, UpdateUserProfileRequest request)
     {
@@ -100,7 +100,7 @@ public class UserAdminController : ControllerBase
     /// <summary>
     /// Получить адрес пользователя
     /// </summary>
-    [HttpGet("address-info")]
+    [HttpGet("address")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<GetUserAddressResponse> GetUserAddressAsync(Guid userId)
     {
@@ -110,7 +110,7 @@ public class UserAdminController : ControllerBase
     /// <summary>
     /// Добавить новый адрес пользователя
     /// </summary>
-    [HttpPost("address-info")]
+    [HttpPost("address")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     public async Task<AddUserAddressResponse> AddUserAddressAsync(Guid userId, AddUserAddressRequest request)
     {
@@ -120,7 +120,7 @@ public class UserAdminController : ControllerBase
     /// <summary>
     /// Обновить существующий адрес пользователя по идентификатору
     /// </summary>
-    [HttpPatch("address-info")]
+    [HttpPatch("address")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<UpdateUserAddressResponse> UpdateUserAddressAsync(Guid userId, UpdateUserAddressRequest request)
@@ -131,7 +131,7 @@ public class UserAdminController : ControllerBase
     /// <summary>
     /// Удалить адрес пользователя по идентификатору
     /// </summary>
-    [HttpDelete("address-info")]
+    [HttpDelete("address")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<DeleteUserAddressResponse> DeleteUserAddressAsync(Guid userId)
