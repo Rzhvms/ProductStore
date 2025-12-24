@@ -259,9 +259,14 @@ const handleSubmit = async () => {
   const month = Number(d.slice(2, 4)) - 1;
   const year = Number(d.slice(4));
   const userDate = new Date(year, month, day);
+  let notif = {
+    email: agreeNews.value,
+    sms: agreeNews.value,
+    push: agreeNews.value
+  };
   try {
     const userId = localStorage.getItem("userId");
-    const response = await finishRegister(userId, name.value, lastName.value, phoneDigits.value, gender.value, userDate);
+    const response = await finishRegister(userId, name.value, lastName.value, phoneDigits.value, gender.value, userDate, JSON.stringify(notif));
     router.push("/admin");
   } catch (error) {
     console.log(error);

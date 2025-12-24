@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
-import { login as loginApi, refreshToken } from '@/services/api'
+import axios from 'axios'
+import { login as loginApi, refreshToken, logout } from '@/services/api'
 import router from '@/router';
 
 export const useAuthStore = defineStore('auth', {
@@ -11,10 +12,18 @@ export const useAuthStore = defineStore('auth', {
         isAuthenticated: (state) => !!state.accessToken,
     },
     actions: {
-        async login(email, password) {
+        async login(email, password, remember) {
             try {
                 const data = await loginApi(email, password);
                 this.setToken(data.accessToken);
+                const refToken = data.refreshToken;
+                if (remember) {
+                    localStorage.setItem('refreshToken', refToken);
+                    sessionStorage.removeItem('refreshToken');
+                } else {
+                    sessionStorage.setItem('refreshToken', refToken);
+                    localStorage.removeItem('refreshToken');
+                }
                 this.startRefreshTimer();
                 return true;
             } catch (error) {
@@ -30,7 +39,7 @@ export const useAuthStore = defineStore('auth', {
             } catch (error) {
                 console.error(error);
                 this.logoutRe();
-                router.push({ name: 'Login' });
+                router.push('/login');
             }
         },
         setToken(accessToken) {
@@ -47,14 +56,14 @@ export const useAuthStore = defineStore('auth', {
                 this.accessToken = null;
                 sessionStorage.removeItem('accessToken');
                 this.stopRefreshTimer();
-                router.push({ name: 'Login' });
+                router.push('/login');
             }
         },
         startRefreshTimer() {
             this.stopRefreshTimer();
             const time = 40 * 60 * 1000;
             this.refreshTimer = setInterval(() => {
-                this.refreshToken();
+                this.refreshTokenRe();
             }, time);
         },
         stopRefreshTimer() {

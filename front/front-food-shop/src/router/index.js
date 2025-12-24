@@ -35,7 +35,6 @@ import ProfileSettings from '../pages/profile/Settings.vue'
 
 // Admin
 import AdminIndex from '../pages/admin/Index.vue'
-import { meta } from 'eslint-plugin-vue'
 
 
 
@@ -43,14 +42,14 @@ const routes = [
   { path: '/', component: Home },
 
   // Auth
-  { path: '/login', component: Login, meta: { requiresAuth: false } },
-  { path: '/register', component: Register, meta: { requiresAuth: false } },
-  { path: '/confirm-email', component: ConfirmEmail, meta: { requiresAuth: false } },
-  { path: '/recovery-code', component: RecoveryCode, meta: { requiresAuth: false } },
-  { path: '/account-not-found', component: AccountNotFound, meta: { requiresAuth: false } },
-  { path: '/new-password', component: RecoveryNewPassword, meta: { requiresAuth: false } },
-  { path: '/finish-registration', component: FinishRegistration, meta: { requiresAuth: false } },
-  { path: '/forgot-password', component: ForgotPassword, meta: { requiresAuth: false } },
+  { path: '/login', component: Login, meta: { guestOnly: true } },
+  { path: '/register', component: Register, meta: { guestOnly: true } },
+  { path: '/confirm-email', component: ConfirmEmail, meta: { guestOnly: true } },
+  { path: '/recovery-code', component: RecoveryCode, meta: { guestOnly: true } },
+  { path: '/account-not-found', component: AccountNotFound, meta: { guestOnly: true } },
+  { path: '/new-password', component: RecoveryNewPassword, meta: { guestOnly: true } },
+  { path: '/finish-registration', component: FinishRegistration, meta: { guestOnly: true } },
+  { path: '/forgot-password', component: ForgotPassword, meta: { guestOnly: true } },
 
   // Catalog
   { path: '/catalog', component: CatalogIndex },
@@ -84,9 +83,9 @@ router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
   const isAuthenticated = authStore.isAuthenticated;
   if (to.meta.requiresAuth && !isAuthenticated) {
-    return next({ name: 'Login' });
-  } else if (!to.meta.requiresAuth && isAuthenticated) {
-    return next({ name: 'Home' });
+    return next('/login');
+  } else if (to.meta.guestOnly && isAuthenticated) {
+    return next('/');
   }
   next();
 });

@@ -1,8 +1,8 @@
-import api from './instance';
+import api from '../api/instance';
 
 export const resendPinCode = async (email) => {
     try {
-        await api.post('auth/resend-pin-code', { email });
+        await api.post('auth/resend-code', { email });
     } catch (error) {
         const data = error.response?.data;
         if (data?.error === "User not found") {
@@ -30,7 +30,7 @@ export const createUser = async (email, password, claims) => {
     }
 };
 
-export const finishRegister = async (userId, name, lastName, phone, gender, birthdate) => {
+export const finishRegister = async (userId, name, lastName, phone, gender, birthDate, about) => {
     try {
         const response = await api.patch(`auth/register`, { 
             userId,
@@ -38,7 +38,8 @@ export const finishRegister = async (userId, name, lastName, phone, gender, birt
             lastName,
             phone,
             gender,
-            birthDate: birthdate
+            birthDate,
+            about
         });
         return response.data;
     } catch (error) {
@@ -63,7 +64,7 @@ export const login = async (email, password) => {
 };
 
 export const refreshToken = async () => {
-    const refreshToken = localStorage.getItem("refreshToken");
+    const refreshToken = localStorage.getItem("refreshToken") || sessionStorage.getItem("refreshToken") || null;
     return api.post('auth/refresh-token', { refreshToken });
 };
 
