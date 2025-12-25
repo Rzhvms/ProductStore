@@ -4,7 +4,7 @@
       class="login-card"
       :class="{ 'login-card-error': codeError }"
     >
-      <h1 class="login-title">Подтвердите<br>вашу почту</h1>
+      <h1 class="login-title">Восстановление<br>пароля</h1>
       <p class="contact-text" style="margin-bottom: 16px; font-size: 16px;">
         Мы отправили код подтверждения<br>
         на вашу почту
@@ -95,12 +95,11 @@ const handleSubmit = () => {
     codeError.value = false;
     codeSuccess.value = true;
     shakeActive.value = false;
-    router.push("/finish-registration");
+    router.push("/new-password");
   } else {
     codeError.value = true;
     codeErrorText.value = "Неверный код подтверждения\nПопробуйте еще раз или запросите код\nповторно";
     codeSuccess.value = false;
-
     shakeActive.value = false;
     setTimeout(() => (shakeActive.value = true), 50);
   }
@@ -201,7 +200,7 @@ const onBackspace = (index, event) => {
 
 .login-card {
   width: 410px;
-  height: 540px;
+  height: 580px;
   transition: height 0.3s ease;
 }
 

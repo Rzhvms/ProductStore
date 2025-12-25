@@ -20,14 +20,14 @@ public record ContinueRegisterRequest : IValidatableObject
     /// </summary>
     [JsonPropertyName("name")]
     [Required]
-    public required string Name { get; init; }
+    public required string Name { get; set; }
     
     /// <summary>
     /// Фамилия
     /// </summary>
     [JsonPropertyName("lastName")]
     [Required]
-    public required string LastName { get; init; }
+    public required string LastName { get; set; }
     
     /// <summary>
     /// Номер телефона
@@ -35,14 +35,14 @@ public record ContinueRegisterRequest : IValidatableObject
     [MaxLength(20)]
     [JsonPropertyName("phone")]
     [Required]
-    public required string Phone { get; init; }
+    public required string Phone { get; set; }
     
     /// <summary>
     /// Пол
     /// </summary>
     [JsonPropertyName("gender")]
     [Required]
-    public required string Gender { get; init; }
+    public required string Gender { get; set; }
     
     /// <summary>
     /// Дата рождения
