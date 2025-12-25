@@ -1,0 +1,232 @@
+.page-bg {
+  width: 100vw;
+  height: 100vh;
+  background: #f4f4f4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Card */
+.login-card {
+  width: 410px;
+  height: 508px;
+  background: white;
+  border-radius: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Title */
+.login-title {
+  margin-top: 40px;
+  margin-bottom: 32px;
+  font-size: 36px;
+  font-weight: 600;
+  color: #3c3c3c;
+  text-align: center;
+}
+
+/* Errors */
+.global-error {
+  color: red;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.error-text {
+  color: #ff3333;
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+/* Form */
+.form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Fields */
+.field-label {
+  margin-top: 4px;
+  font-weight: 600;
+  color: #555555;
+  font-size: 18px;
+}
+
+.field-wrap {
+  width: 362px;
+  margin: 0 auto;
+}
+
+.field-wrap:not(:last-of-type) {
+  margin-bottom: 12px;
+}
+
+.field {
+  height: 48px;
+  background: #f4f4f4;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  border: none;
+}
+
+.field-error {
+  border: 1px solid red !important;
+}
+
+.input {
+  flex: 1;
+  background: transparent;
+  outline: none;
+  border: none;
+  font-size: 16px;
+}
+
+/**/
+.required {
+  color: red;
+}
+
+/* Show/hide button */
+.show-btn {
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Remember + forgot */
+.remember-forgot {
+  width: 362px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  color: #3c3c3c;
+  user-select: none;
+}
+
+/* Кастомный чекбокс */
+.custom-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #c0c0c0;
+  border-radius: 4px;
+  position: relative;
+  cursor: pointer;
+  background: white;
+  display: inline-block;
+  vertical-align: middle;
+  transition: all 0.2s ease;
+}
+
+.custom-checkbox:hover {
+  border-color: #ff7a00;
+}
+
+.custom-checkbox:checked {
+  background: #ff7a00;
+  border-color: #ff7a00;
+}
+
+.custom-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  width: 40%;
+  height: 70%;
+  border: solid white;
+  border-width: 0 0.2em 0.2em 0;
+  transform: rotate(45deg);
+  left: 22%;
+  bottom: 20%;
+}
+
+/* Buttons */
+.forgot-btn {
+  background: none;
+  border: none;
+  color: #ff7a00;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.forgot-btn:hover {
+  text-decoration: underline;
+}
+
+.submit-btn {
+  width: 362px;
+  height: 48px;
+  background: #ff7a00;
+  color: white;
+  border-radius: 18px;
+  border: none;
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 32px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.submit-btn:hover {
+  background: #FFA84C;
+}
+
+.submit-btn.hover-light {
+  background: #ffa84c;
+  color: white;
+}
+
+.create-btn {
+  width: 362px;
+  height: 48px;
+  margin-top: 12px;
+  background: #f4f4f4;
+  color: #555555;
+  border-radius: 18px;
+  border: none;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.contact-text {
+  margin-top: 12px;
+  margin-bottom: 60px;
+  font-size: 12px;
+  color: #7a7a7a;
+  text-align: center;
+}
+
+.password-rules {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #7a7a7a;
+  text-align: center;
+}
+
+.helper-text {
+  text-align: center;
+  margin-top: 0px;
+  font-size: 16px;
+  color: #7a7a7a;
+  margin-bottom: 32px;
+}
