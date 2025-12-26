@@ -1,434 +1,396 @@
 <template>
-  <div class="admin-panel">
-    <!-- Хедер -->
-    <header class="header">
-      <div class="logo-area">
-        <div class="logo-icon">
-          <!-- Лого -->
-          <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M4 6h16M4 12h16M4 18h8" stroke="black" stroke-linecap="round" />
-            <circle cx="12" cy="12" r="10" stroke="black" />
-          </svg>
+  <AdminLayout>
+    <template #default>
+      <div class="admin-content gray-panel">
+
+        <!-- Верхняя панель: поиск + кнопка добавления -->
+        <div class="top-panel">
+          <input 
+            type="text" 
+            placeholder="Поиск категории или подкатегории..." 
+            v-model="searchTerm"
+          />
+          <button class="add-category-btn" @click="showAddCategoryDialog = true">Добавить категорию</button>
         </div>
-        <h1 class="brand-name">FANTECH — PANEL</h1>
-      </div>
-      <button class="user-btn">Никнейм</button>
-    </header>
 
-    <div class="content-wrapper">
-      <!-- Сайдбар -->
-      <aside class="sidebar">
-        <nav>
-          <ul>
-            <li v-for="item in menuItems" :key="item.name">
-              <button 
-                class="nav-item" 
-                :class="{ active: item.active }"
-              >
-                {{ item.name }}
-              </button>
-            </li>
-          </ul>
-        </nav>
-      </aside>
+        <!-- Таблица категорий -->
+        <div class="users-grid">
+          <div class="grid-header-row">
+            <div class="header-cell">#</div>
+            <div class="header-cell">Категория</div>
+            <div class="header-cell">Подкатегории</div>
+            <div class="header-cell">Действия</div>
+          </div>
 
-      <!-- Основной контент -->
-      <main class="main-content">
-        
-        <!-- Верхняя панель управления -->
-        <div class="top-bar">
-          <div class="filters-container">
-            <!-- Поиск -->
-            <div class="filter-group">
-              <label>Поиск:</label>
-              <input type="text" placeholder="По ключевому имени:" v-model="filters.search" />
-            </div>
+          <div 
+            class="grid-data-row" 
+            v-for="(cat, index) in filteredCategories" 
+            :key="cat.id"
+          >
+            <div class="data-cell">{{ index + 1 }}</div>
 
-            <!-- Бренд -->
-            <div class="filter-group">
-              <label>Бренд:</label>
-              <input type="text" placeholder="Введите название бренда:" v-model="filters.brand" />
-            </div>
-
-            <!-- Стоимость -->
-            <div class="filter-group price-group">
-              <label>Стоимость, ₽</label>
-              <div class="price-inputs">
-                <input type="number" placeholder="От" v-model="filters.priceFrom" />
-                <span class="dash">—</span>
-                <input type="number" placeholder="До" v-model="filters.priceTo" />
+            <!-- Категория -->
+            <div class="data-cell col-name">
+              <div v-if="editingCategory === cat.id">
+                <input v-model="newCategoryName" @keyup.enter="confirmEditCategory(cat)" />
+                <button class="small-btn" @click="confirmEditCategory(cat)">Сохранить</button>
+                <button class="small-btn" @click="cancelEditCategory">Отмена</button>
+              </div>
+              <div v-else class="category-row">
+                <span>{{ cat.name }}</span>
+                <div class="category-actions">
+                  <button class="small-btn" @click="startEditCategory(cat)">Редактировать</button>
+                  <button class="small-btn delete-btn" @click="confirmDeleteCategory(cat)">✕</button>
+                </div>
               </div>
             </div>
-          </div>
 
-          <button class="action-btn">Редактировать</button>
-        </div>
-
-        <!-- Рабочая область с категориями -->
-        <div class="categories-workspace">
-          
-          <!-- Левая колонка: Список родительских категорий -->
-          <div class="category-list-card">
-            <ul>
-              <li 
-                v-for="(cat, index) in parentCategories" 
-                :key="index"
-                class="cat-item"
-                :class="{ 'cat-active': cat.name === 'Электроника' }"
-              >
-                <span>{{ cat.name }}</span>
-                <!-- Стрелочка для активного элемента -->
-                <svg v-if="cat.name === 'Электроника'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="9 18 15 12 9 6"></polyline>
-                </svg>
-              </li>
-            </ul>
-          </div>
-
-          <!-- Правая колонка: Сетка подкатегорий -->
-          <div class="subcategories-grid">
-            <div class="sub-card" v-for="card in subCategoryCards" :key="card.title">
-              <h3 class="card-title">{{ card.title }}</h3>
+            <!-- Подкатегории -->
+            <div class="data-cell col-email">
               <ul class="sub-list">
-                <li v-for="link in card.items" :key="link">{{ link }}</li>
+                <li v-for="(sub, subIndex) in cat.subCategories" :key="sub">
+                  <span class="sub-name">{{ sub }}</span>
+                  <button class="small-btn delete-btn" @click="confirmDeleteSub(cat.id, subIndex, sub)">✕</button>
+                </li>
+                <li v-if="addingSubCategory === cat.id" class="sub-input-row">
+                  <input v-model="newSubName" placeholder="Название подкатегории" @keyup.enter="confirmAddSub(cat)" />
+                  <button class="small-btn" @click="confirmAddSub(cat)">Добавить</button>
+                  <button class="small-btn" @click="cancelAddSub">Отмена</button>
+                </li>
               </ul>
             </div>
-          </div>
 
+            <div class="data-cell">
+              <button class="order-btn" v-if="addingSubCategory !== cat.id" @click="startAddSub(cat)">
+                Добавить подкатегорию
+              </button>
+            </div>
+          </div>
         </div>
-      </main>
-    </div>
-  </div>
+
+        <!-- Модалка удаления -->
+        <div v-if="showDeleteDialog" class="modal-overlay">
+          <div class="modal-content">
+            <p>Удалить "{{ deleteTarget.name }}"?</p>
+            <div class="modal-actions">
+              <button class="small-btn" @click="performDelete">Да</button>
+              <button class="small-btn" @click="cancelDelete">Отмена</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Модалка добавления категории -->
+        <div v-if="showAddCategoryDialog" class="modal-overlay">
+          <div class="modal-content">
+            <h3>Добавить категорию</h3>
+            <input v-model="newCategoryName" placeholder="Название категории" />
+
+            <h4>Подкатегории</h4>
+            <ul class="sub-list">
+              <li v-for="(sub, index) in newCategorySub" :key="index">
+                <span class="sub-name">{{ sub }}</span>
+                <button class="small-btn delete-btn" @click="newCategorySub.splice(index, 1)">✕</button>
+              </li>
+              <li class="sub-input-row">
+                <input v-model="newSubName" placeholder="Название подкатегории" @keyup.enter="addNewCategorySub" />
+                <button class="small-btn" @click="addNewCategorySub">Добавить</button>
+              </li>
+            </ul>
+
+            <div class="modal-actions">
+              <button class="small-btn" @click="addCategory">Сохранить</button>
+              <button class="small-btn" @click="cancelAddCategory">Отмена</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </template>
+  </AdminLayout>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref, computed } from 'vue';
+import AdminLayout from './AdminLayout.vue';
+import './admin.css'; 
 
-// Меню навигации
-const menuItems = ref([
-  { name: 'На страницу магазина', active: false },
-  { name: 'Новости', active: false },
-  { name: 'Товары', active: false },
-  { name: 'Категории', active: true }, // Активный пункт
-  { name: 'Бренды', active: false },
-  { name: 'Пользователи', active: false },
-  { name: 'Статистика', active: false },
+const searchTerm = ref('');
+const editingCategory = ref(null);
+const newCategoryName = ref('');
+const addingSubCategory = ref(null);
+const newSubName = ref('');
+
+const parentCategories = ref([
+  { id: 1, name: 'Электроника', subCategories: ['Телефоны', 'Ноутбуки'] },
+  { id: 2, name: 'Одежда', subCategories: ['Футболки', 'Штаны'] },
+  { id: 3, name: 'Книги', subCategories: ['Фантастика', 'Наука'] },
 ]);
 
-// Состояние фильтров
-const filters = reactive({
-  search: '',
-  brand: '',
-  priceFrom: null,
-  priceTo: null
+const showDeleteDialog = ref(false);
+const deleteTarget = ref({ type: '', catId: null, subIndex: null, name: '' });
+
+const showAddCategoryDialog = ref(false);
+const newCategorySub = ref([]);
+
+const filteredCategories = computed(() => {
+  if (!searchTerm.value) return parentCategories.value;
+  return parentCategories.value.filter(cat =>
+    cat.name.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
+    cat.subCategories.some(sub => sub.toLowerCase().includes(searchTerm.value.toLowerCase()))
+  );
 });
 
-// Данные для левого списка (Родительские категории)
-const parentCategories = ref([
-  { name: 'Категория 1' },
-  { name: 'Категория 2' },
-  { name: 'Категория 3' },
-  { name: 'Электроника' }, // Активная
-  { name: 'Категория 5' },
-  { name: 'Категория 6' },
-  { name: 'Категория 7' },
-]);
+// Категории
+function startEditCategory(cat) {
+  editingCategory.value = cat.id;
+  newCategoryName.value = cat.name;
+}
+function confirmEditCategory(cat) {
+  if (newCategoryName.value.trim()) cat.name = newCategoryName.value.trim();
+  editingCategory.value = null;
+}
+function cancelEditCategory() {
+  editingCategory.value = null;
+}
 
-// Данные для карточек справа
-const subCategoryCards = ref([
-  {
-    title: 'Телефоны',
-    items: ['Бюджетные', 'Камера-фоны', 'Тяжелый люкс', 'Аксессуары']
-  },
-  {
-    title: 'Компьютеры',
-    items: ['Для офисной работы', 'Для игр', 'High-end сборки']
-  },
-  {
-    title: 'Наушники и колонки',
-    items: ['Полноразмерные', 'IEM-наушники', 'Саунд-бары', 'Вкладыши', 'TWS-наушники', 'Умные колонки']
-  },
-  {
-    title: 'Ноутбуки',
-    items: ['Под-категория 2', 'Под-категория 3', 'Под-категория 4', 'Под-категория 5', 'Под-категория 6', 'Под-категория 7']
-  },
-  {
-    title: 'Телевизоры',
-    items: ['Под-категория 2', 'Под-категория 3', 'Под-категория 4', 'Под-категория 5', 'Под-категория 6', 'Под-категория 7']
+// Удаление
+function confirmDeleteCategory(cat) {
+  deleteTarget.value = { type: 'category', catId: cat.id, name: cat.name };
+  showDeleteDialog.value = true;
+}
+function confirmDeleteSub(catId, subIndex, subName) {
+  deleteTarget.value = { type: 'sub', catId, subIndex, name: subName };
+  showDeleteDialog.value = true;
+}
+function performDelete() {
+  const target = deleteTarget.value;
+  if (target.type === 'category') {
+    const index = parentCategories.value.findIndex(c => c.id === target.catId);
+    if (index > -1) parentCategories.value.splice(index, 1);
+  } else if (target.type === 'sub') {
+    const cat = parentCategories.value.find(c => c.id === target.catId);
+    if (cat) cat.subCategories.splice(target.subIndex, 1);
   }
-]);
+  showDeleteDialog.value = false;
+}
+function cancelDelete() {
+  showDeleteDialog.value = false;
+}
+
+// Подкатегории
+function startAddSub(cat) {
+  addingSubCategory.value = cat.id;
+  newSubName.value = '';
+}
+function confirmAddSub(cat) {
+  if (!newSubName.value.trim()) return;
+  const category = parentCategories.value.find(c => c.id === cat.id);
+  if (category) category.subCategories.push(newSubName.value.trim());
+  addingSubCategory.value = null;
+}
+function cancelAddSub() {
+  addingSubCategory.value = null;
+}
+
+// Подкатегории в модалке добавления категории
+function addNewCategorySub() {
+  if (!newSubName.value.trim()) return;
+  newCategorySub.value.push(newSubName.value.trim());
+  newSubName.value = '';
+}
+
+// Добавление новой категории
+function addCategory() {
+  if (!newCategoryName.value.trim()) return;
+  const newId = Math.max(...parentCategories.value.map(c => c.id), 0) + 1;
+  parentCategories.value.push({
+    id: newId,
+    name: newCategoryName.value.trim(),
+    subCategories: [...newCategorySub.value],
+  });
+  newCategoryName.value = '';
+  newCategorySub.value = [];
+  showAddCategoryDialog.value = false;
+}
+
+function cancelAddCategory() {
+  newCategoryName.value = '';
+  newCategorySub.value = [];
+  newSubName.value = '';
+  showAddCategoryDialog.value = false;
+}
 </script>
 
 <style scoped>
-/* Сброс и шрифты */
-.admin-panel {
-  font-family: 'Inter', 'Roboto', sans-serif; /* Более современный шрифт */
-  color: #000;
-  background-color: #fff;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+/* === Поверх глобальных стилей для admincategories === */
+
+/* Верхняя панель */
+.top-panel {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 25px !important;
+}
+.top-panel input {
+  flex: 1 !important;
+  padding: 10px !important;
+  border-radius: 6px !important;
+  border: 1px solid #ddd !important;
+  font-size: 14px !important;
+  margin-right: 10px !important;
+}
+.add-category-btn {
+  padding: 10px 20px !important;
+  background: #FF7A00 !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+}
+.add-category-btn:hover {
+  background: #e06600 !important;
 }
 
-/* --- HEADER --- */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 40px;
-  border-bottom: 1px solid #eee;
+/* Таблица: исправленная сетка */
+.users-grid .grid-header-row,
+.users-grid .grid-data-row {
+  display: grid !important;
+  grid-template-columns: 60px 2fr 3fr 1fr !important; /* действия шире */
+  gap: 15px !important;
+  align-items: center !important;
+}
+.grid-data-row {
+  padding: 12px 10px !important;
+  border-bottom: 1px solid #eee !important;
+  background: rgba(255,255,255,0.7) !important;
+  border-radius: 6px !important;
+}
+.header-cell {
+  background: #fff !important;
+  padding: 12px 10px !important;
+  border-radius: 6px !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+  text-align: center !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
+  text-transform: uppercase !important;
+}
+.data-cell {
+  font-size: 14px !important;
+  text-align: center !important;
 }
 
-.logo-area {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+/* Категории и подкатегории */
+.category-row {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
 }
-
-.brand-name {
-  font-size: 20px;
-  font-weight: 700;
-  text-transform: uppercase;
-  margin: 0;
-  letter-spacing: 0.5px;
+.category-actions {
+  display: flex !important;
+  gap: 8px !important;
 }
-
-.user-btn {
-  background: white;
-  border: 1px solid #000;
-  padding: 8px 25px;
-  font-weight: 600;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.user-btn:hover {
-  background: #000;
-  color: #fff;
-}
-
-/* --- LAYOUT --- */
-.content-wrapper {
-  display: flex;
-  flex: 1;
-  padding: 30px 40px;
-  gap: 40px;
-  background-color: #fff;
-}
-
-/* --- SIDEBAR --- */
-.sidebar {
-  width: 240px;
-  flex-shrink: 0;
-  background-color: #f6f6f6; /* Светло-серый фон сайдбара */
-  border-radius: 8px;
-  padding: 20px 0;
-  height: fit-content;
-  min-height: 400px;
-}
-
-.sidebar ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.nav-item {
-  width: 100%;
-  text-align: left;
-  background: transparent;
-  border: none;
-  padding: 12px 25px;
-  font-weight: 700;
-  font-size: 14px;
-  cursor: pointer;
-  color: #000;
-}
-
-/* Активный пункт меню (Категории) */
-.nav-item.active {
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  border-radius: 6px;
-  margin: 0 10px;
-  width: calc(100% - 20px); /* Отступы по бокам */
-}
-
-.nav-item:not(.active):hover {
-  opacity: 0.7;
-}
-
-/* --- MAIN CONTENT --- */
-.main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-}
-
-/* --- TOP BAR (FILTERS) --- */
-.top-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 20px;
-}
-
-.filters-container {
-  background-color: #f6f6f6;
-  padding: 20px;
-  border-radius: 12px;
-  display: flex;
-  gap: 30px;
-  flex: 1;
-  flex-wrap: wrap;
-}
-
-.filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.filter-group label {
-  font-weight: 700;
-  font-size: 14px;
-}
-
-.filter-group input {
-  padding: 10px 15px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 13px;
-  outline: none;
-  background: #fff;
-  min-width: 200px;
-}
-
-.price-inputs {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.price-inputs input {
-  min-width: 60px;
-  width: 80px;
-}
-
-.action-btn {
-  background: #fff;
-  border: 1px solid #000;
-  padding: 12px 25px;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  height: fit-content;
-  align-self: center; /* Центрируем по вертикали относительно блока фильтров */
-}
-
-.action-btn:hover {
-  background: #000;
-  color: #fff;
-}
-
-/* --- WORKSPACE (GRID) --- */
-.categories-workspace {
-  display: grid;
-  grid-template-columns: 240px 1fr; /* Левая колонка фикс, правая резина */
-  gap: 30px;
-  align-items: start;
-}
-
-/* Левая карточка (список) */
-.category-list-card {
-  background: #f6f6f6;
-  border-radius: 8px;
-  padding: 15px 10px;
-  /* box-shadow: 0 4px 12px rgba(0,0,0,0.08); */
-}
-
-.category-list-card ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.cat-item {
-  padding: 12px 20px;
-  font-weight: 700;
-  font-size: 14px;
-  cursor: pointer;
-  margin-bottom: 5px;
-  border-radius: 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-/* Активная категория (Электроника) */
-.cat-item.cat-active {
-  background: #fff;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-
-/* Правая сетка подкатегорий */
-.subcategories-grid {
-  display: grid;
-  /* Адаптивная сетка: колонки мин 200px */
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 20px;
-}
-
-.sub-card {
-  background: #f6f6f6; /* Светлый фон как на макете */
-  border-radius: 8px;
-  padding: 20px;
-  /* box-shadow: 0 2px 8px rgba(0,0,0,0.05); */
-  height: fit-content;
-}
-
-.card-title {
-  margin: 0 0 15px 0;
-  font-size: 15px;
-  font-weight: 800;
-}
-
-.sub-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
 .sub-list li {
-  margin-bottom: 12px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  color: #000;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-bottom: 5px !important;
+  font-size: 14px !important;
+}
+.sub-name {
+  flex-grow: 1 !important;
+}
+.sub-input-row {
+  display: flex !important;
+  gap: 8px !important;
+  margin-top: 5px !important;
+}
+.sub-input-row input {
+  flex: 1 !important;
+  padding: 6px 10px !important;
+  border-radius: 4px !important;
+  border: 1px solid #ddd !important;
+}
+.sub-input-row .small-btn {
+  padding: 4px 8px !important;
+}
+.small-btn {
+  background: #fff !important;
+  border: 1px solid #ddd !important;
+  border-radius: 4px !important;
+  padding: 2px 6px !important;
+  font-size: 12px !important;
+  cursor: pointer !important;
+}
+.small-btn:hover {
+  background: #ff7a00 !important;
+  color: #fff !important;
+}
+.order-btn {
+  background: #fff !important;
+  border: none !important;
+  padding: 8px 15px !important;
+  border-radius: 20px !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
+  width: 100% !important;
+}
+.order-btn:hover {
+  background: #FF7A00 !important;
+  color: #fff !important;
 }
 
-.sub-list li:hover {
-  text-decoration: underline;
+/* Модалки */
+.modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: rgba(0,0,0,0.3) !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  z-index: 1000 !important;
+}
+.modal-content {
+  background: #fff !important;
+  padding: 25px 30px !important;
+  border-radius: 12px !important;
+  text-align: center !important;
+  max-width: 500px !important;
+  width: 100% !important;
+}
+.modal-content h3 {
+  margin-bottom: 15px !important;
+}
+.modal-content h4 {
+  margin: 10px 0 !important;
+}
+.modal-actions {
+  margin-top: 20px !important;
+}
+.modal-actions .small-btn {
+  margin: 0 8px !important;
 }
 
-/* Адаптивность */
-@media (max-width: 1024px) {
-  .categories-workspace {
-    grid-template-columns: 1fr; /* Одна колонка на узких экранах */
+/* Адаптив */
+@media (max-width: 1100px) {
+  .top-panel {
+    flex-direction: column !important;
+    align-items: stretch !important;
   }
-  .filters-container {
-    flex-direction: column;
-    align-items: stretch;
+  .top-panel input {
+    margin-bottom: 10px !important;
+    margin-right: 0 !important;
   }
-  .filters-container input {
-    width: 100%;
-  }
-  .top-bar {
-    flex-direction: column;
+  .users-grid .grid-header-row,
+  .users-grid .grid-data-row {
+    grid-template-columns: 50px 1fr 1fr 1fr !important;
+    font-size: 12px !important;
   }
 }
 </style>
