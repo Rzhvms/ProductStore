@@ -36,9 +36,10 @@ import ProfileHelp from '../pages/profile/ProfileHelp.vue'
 // Admin
 import AdminIndex from '../pages/admin/Index.vue'
 
+import App from '../App.vue'
 
 const routes = [
-  { path: '/', component: Home },
+  { path: '/', component: App },
 
   // Auth
   { path: '/login', component: Login },
