@@ -136,7 +136,7 @@ const handleSubmit = async () => {
   try {
     isLoading.value = true;
     await authStore.login(email.value, password.value, remember.value);
-    router.push("/admin");
+    router.push("/");
   } catch (error) {
     if (error.message === "Аккаунт не найден") {
       router.push("/account-not-found");

@@ -91,6 +91,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import router from '@/router';
+import { changePassword } from '@/services/api';
 
 const password = ref('');
 const confirmPassword = ref('');
@@ -178,20 +179,25 @@ const strengthLabel = computed(() => {
 
 /* --- Submit --- */
 const handleSubmit = async () => {
-  if (!isFormValid.value || /\s/.test(password.value)) {
-    errorMessage.value = 'Пароли не совпадают, меньше 8 символов или содержат пробелы';
+  if (!isFormValid.value) {
+    errorMessage.value = 'Пароли не совпадают';
     return;
   }
 
-  isSaved.value = true;
-  errorMessage.value = '';
-
-  setTimeout(() => router.push('/login'), 5000);
+  const token = sessionStorage.getItem('token');
+  try {
+    const response = await changePassword(password.value, token);
+    sessionStorage.removeItem('token');
+    router.push('/login');
+  } catch (error) {
+    errorMessage.value = error.message;
+  }
 };
 </script>
 
 <style scoped>
 @import './auth.css';
+
 
 .password-field {
   position: relative;

@@ -74,7 +74,7 @@
 <script setup>
 import { ref, computed, nextTick, onMounted } from "vue";
 import router from "@/router";
-import { sendVerificationEmail } from "@/services/api";
+import { verifyEmail } from "@/services/api";
 
 const code = ref(["", "", "", "", "", ""]);
 const codeError = ref(false);
@@ -94,7 +94,9 @@ const handleSubmit = async () => {
   const enteredCode = code.value.join("");
   const email = localStorage.getItem("email");
   try {
-    const response = await sendVerificationEmail(email, enteredCode);
+    const response = await verifyEmail(email, enteredCode);
+    const token = response.accessToken;
+    sessionStorage.setItem("token", token);
     codeError.value = false;
     codeSuccess.value = true;
     shakeActive.value = false;
