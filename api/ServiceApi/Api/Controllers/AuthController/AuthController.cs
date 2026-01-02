@@ -1,4 +1,6 @@
 using Application.Extensions;
+using Application.UseCases.Auth.ChangePassword;
+using Application.UseCases.Auth.ChangePassword.Request;
 using Application.UseCases.Auth.CreateUser;
 using Application.UseCases.Auth.CreateUser.Response;
 using Application.UseCases.Auth.Login;
@@ -37,6 +39,7 @@ public class AuthController : ControllerBase
     private readonly IVerifyEmailUseCase _verifyEmailUseCase;
     private readonly IResendPinCodeUseCase _resendPinUseCase;
     private readonly IRestoreForgotPasswordUseCase _restoreForgotPasswordUseCase;
+    private readonly IChangePasswordUseCase _changePasswordUseCase;
     
     public AuthController(
         ILoginUseCase loginUseCase,
@@ -45,7 +48,8 @@ public class AuthController : ControllerBase
         ICreateUserUseCase createUserUseCase, 
         IVerifyEmailUseCase verifyEmailUseCase, 
         IResendPinCodeUseCase resendPinCodeUseCase,
-        IRestoreForgotPasswordUseCase restoreForgotPasswordUseCase)
+        IRestoreForgotPasswordUseCase restoreForgotPasswordUseCase,
+        IChangePasswordUseCase changePasswordUseCase)
     {
         _loginUseCase = loginUseCase;
         _refreshTokenUseCase = refreshTokenUseCase;
@@ -54,6 +58,7 @@ public class AuthController : ControllerBase
         _verifyEmailUseCase = verifyEmailUseCase;
         _resendPinUseCase = resendPinCodeUseCase;
         _restoreForgotPasswordUseCase = restoreForgotPasswordUseCase;
+        _changePasswordUseCase = changePasswordUseCase;
     }
     
     /// <summary>
@@ -141,8 +146,21 @@ public class AuthController : ControllerBase
     /// </summary>
     [AllowAnonymous]
     [HttpPost("confirm-operation")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<RestoreForgotPasswordResponse> RestoreForgotPasswordAsync(VerifyEmailRequest request)
     {
         return await _restoreForgotPasswordUseCase.ExecuteAsync(request);
+    }
+    
+    /// <summary>
+    /// Изменение пароля (забыли пароль)
+    /// </summary>
+    [Authorize]
+    [HttpPost("change-password")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task ChangePasswordAsync(ChangePasswordRequest request)
+    {
+        var userId = User.GetUserId();
+        await _changePasswordUseCase.ExecuteAsync(userId, request);
     }
 }
