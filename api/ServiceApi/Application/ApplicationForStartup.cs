@@ -1,4 +1,5 @@
 using Application.TypeHandlers;
+using Application.UseCases.Auth.ChangePassword;
 using Application.UseCases.Auth.CreateUser;
 using Application.UseCases.Auth.Login;
 using Application.UseCases.Auth.RefreshToken;
@@ -39,6 +40,7 @@ public static class ApplicationForStartup
         services.AddScoped<IProductUseCase, ProductUseCase>();
         services.AddScoped<ICartUseCase, CartUseCase>();
         services.AddScoped<IRestoreForgotPasswordUseCase, RestoreForgotPasswordUseCase>();
+        services.AddScoped<IChangePasswordUseCase, ChangePasswordUseCase>();
         
         SqlMapper.AddTypeHandler(new JsonObjectTypeHandler());
 
