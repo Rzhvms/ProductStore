@@ -10,7 +10,7 @@
             :class="{ active: currentView === 'categories' }"
             @click="goHome"
           >
-            Категории
+            Каталог
           </span>
           <span v-if="selectedCategory" class="separator">›</span>
           <span 
@@ -45,6 +45,7 @@
               <div class="control-box search-box-styled">
                 <img src="../../assets/search-normal.svg" />
                 <input type="text" placeholder="Поиск..." v-model="searchQuery">
+                <img src="../../assets/close-circle.svg" class="clear-circle" @click="searchQuery = ''" />
               </div>
 
               <div class="control-box dropdown-wrapper">
@@ -55,7 +56,7 @@
                 >
                   <img v-if="!(showSortDropdown || sortOption)" src="../../assets/drop down button.svg" />
                   <img v-else src="../../assets/drop down button(1).svg" />
-                  <span>{{ sortOption ? sortLabel : 'Сортировка' }}</span>
+                  <span>{{ buttonSortLabel }}</span>
                 </button>
                 
                 <div v-if="showSortDropdown" class="custom-dropdown-menu sort-menu-design">
@@ -75,6 +76,7 @@
                 </button>
                 <div v-if="showAddMenu" class="custom-dropdown-menu right-align">
                   <div class="dd-item" @click="openCategoryModal">Добавить категорию</div>
+                  <div class="dd-divider"></div>
                   <div class="dd-item" @click="openSubSidebar">Добавить подкатегорию</div>
                 </div>
               </div>
@@ -110,8 +112,11 @@
         <!-- ================================================== -->
         <!-- VIEW 2: ПОДКАТЕГОРИИ -->
         <!-- ================================================== -->
-        <div v-else-if="currentView === 'subcategories' && selectedCategory">
-          
+        <div v-else-if="currentView === 'subcategories' && selectedCategory" style="display: flex; flex-direction: column;">
+          <button class="icon-btn danger" title="Удалить категорию" @click="promptDelete('category', selectedCategory)">
+            <span>Удалить категорию</span>
+            <img src="../../assets/trash.svg" style="filter: invert(25%) sepia(82%) saturate(1764%) hue-rotate(334deg) brightness(106%) contrast(86%)"/>
+          </button>
           <div class="sub-view-card header-card">
             <div class="card-left">
               <img src="../../assets/folder-open.svg" alt="Logo" class="icon-orange" />
@@ -120,9 +125,6 @@
             <div class="header-card-actions">
               <button class="icon-btn" title="Редактировать" @click="openRenameDialog('category', selectedCategory)">
                 <img src="../../assets/edit.svg" alt="edit" />
-              </button>
-              <button class="icon-btn danger" title="Удалить категорию" @click="promptDelete('category', selectedCategory)">
-                <img src="../../assets/trash.svg" />
               </button>
             </div>
           </div>
@@ -134,27 +136,43 @@
                 <h2 class="card-subtitle">Список подкатегорий</h2>
               </div>
               <div class="card-actions">
-                <div class="card-search">
+                <div class="search-box-styled card">
                   <img src="../../assets/search-normal.svg" alt="search" class="search-icon" />
                   <input type="text" placeholder="Поиск..." v-model="searchQuery">
+                  <img src="../../assets/close-circle.svg" class="clear-circle" @click="searchQuery = ''" />
                 </div>
-                <button class="card-add-btn" @click="openAddSubDialog">
+
+                <div class="control-box dropdown-wrapper card">
+                  <button class="sort-btn-styled card" :class="{ 'is-active': showSortDropdown || sortOption }" @click.stop="showSortDropdown = !showSortDropdown">
+                    <img v-if="!(showSortDropdown || sortOption)" src="../../assets/drop down button.svg" />
+                    <img v-else src="../../assets/drop down button(1).svg" />
+                    <span class="sort-btn-text">{{ buttonSortLabel }}</span>
+                  </button>
+                  <div v-if="showSortDropdown" class="custom-dropdown-menu sort-menu-design right-align">
+                    <div class="sort-group-label">По алфавиту</div>
+                    <div class="sort-item" @click="setSortOption('name-asc')"><div class="radio-indicator" :class="{ selected: sortOption === 'name-asc' }"></div><span class="sort-text">От А до Я</span></div>
+                    <div class="sort-item" @click="setSortOption('name-desc')"><div class="radio-indicator" :class="{ selected: sortOption === 'name-desc' }"></div><span class="sort-text">От Я до А</span></div>
+                    <div class="dd-divider"></div>
+                    <div class="sort-group-label">По количеству<br>товаров</div>
+                    <div class="sort-item" @click="setSortOption('count-desc')"><div class="radio-indicator" :class="{ selected: sortOption === 'count-desc' }"></div><span class="sort-text">Сначала больше</span></div>
+                    <div class="sort-item" @click="setSortOption('count-asc')"><div class="radio-indicator" :class="{ selected: sortOption === 'count-asc' }"></div><span class="sort-text">Сначала меньше</span></div>
+                  </div>
+                </div>
+                <button class="add-circle-btn card" @click="openAddSubDialog">
                   <img src="../../assets/add-circle.svg" />
                 </button>
               </div>
             </div>
-
+            <div v-if="sortOption" class="card-filters-row">
+               <span class="filter-tag">{{ sortLabel }} <button class="tag-remove" @click="sortOption = ''">×</button></span>
+            </div>
             <div class="card-list-body">
-              <div v-for="(sub, index) in sortedSubcategories" :key="index" class="card-list-item" @click="goToSubcategory(sub)">
-                
-                <!-- Название слева -->
+              <div v-for="(sub, index) in visibleSubcategories" :key="index" class="card-list-item" @click="goToSubcategory(sub)">
                 <span class="sub-text">{{ sub }}</span>
-                
-                <!-- Мета данные (счетчик + удаление) справа -->
                 <div class="row-meta">
                   <span class="meta-badge" title="Количество товаров">{{ getProductCount(sub) }}</span>
-                  <button class="icon-btn danger" @click.stop="promptDelete('subcategory-item', sub)">
-                    <img src="../../assets/trash.svg" />
+                  <button class="expand-arrow-btn card" @click="goToSubcategory(sub)">
+                    <img src="../../assets/arrow-down.svg" />
                   </button>
                 </div>
                 
@@ -162,7 +180,7 @@
               <div v-if="sortedSubcategories.length === 0" class="card-empty">Подкатегории не найдены</div>
             </div>
 
-            <div class="card-footer" v-if="sortedSubcategories.length > 0">
+            <div class="card-footer" v-if="visibleSubCount < sortedSubcategories.length">
               <span class="show-more-text">Посмотреть ещё</span>
             </div>
           </div>
@@ -171,8 +189,11 @@
         <!-- ================================================== -->
         <!-- VIEW 3: ТОВАРЫ -->
         <!-- ================================================== -->
-        <div v-else-if="currentView === 'products' && selectedSubcategory">
-          
+        <div v-else-if="currentView === 'products' && selectedSubcategory" style="display: flex; flex-direction: column;">
+          <button class="icon-btn danger" title="Удалить подкатегорию" @click="promptDelete('subcategory-page', selectedSubcategory)">
+            <span>Удалить подкатегорию</span>
+            <img src="../../assets/trash.svg" style="filter: invert(25%) sepia(82%) saturate(1764%) hue-rotate(334deg) brightness(106%) contrast(86%)"/>
+          </button>
           <div class="sub-view-card header-card">
             <div class="card-left">
               <img src="../../assets/folder-open.svg" alt="Logo" class="icon-orange" />
@@ -182,48 +203,44 @@
                <button class="icon-btn" title="Переименовать подкатегорию" @click="openRenameDialog('subcategory', selectedSubcategory)">
                 <img src="../../assets/edit.svg" alt="edit" />
               </button>
-              <button class="icon-btn danger" title="Удалить подкатегорию" @click="promptDelete('subcategory-page', selectedSubcategory)">
-                <img src="../../assets/trash.svg" />
-              </button>
             </div>
           </div>
 
           <div class="sub-view-card list-card">
             <div class="card-header-row">
               <div class="card-left">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="icon-orange">
-                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line>
-                </svg>
+                <img src="../../assets/box.svg" alt="Logo" class="icon-orange" />
                 <h2 class="card-subtitle">Список товаров</h2>
               </div>
               <div class="card-actions">
-                <div class="card-search">
+                <div class="search-box-styled card">
                   <img src="../../assets/search-normal.svg" alt="search" class="search-icon" />
                   <input type="text" placeholder="Поиск товара..." v-model="searchQuery">
+                  <img src="../../assets/close-circle.svg" class="clear-circle" @click="searchQuery = ''" />
                 </div>
                 
                 <div class="control-box dropdown-wrapper">
-                  <button class="card-sort-btn" :class="{ 'is-active': showSortDropdown || sortOption }" @click.stop="showSortDropdown = !showSortDropdown">
+                  <button class="sort-btn-styled card" :class="{ 'is-active': showSortDropdown || sortOption }" @click.stop="showSortDropdown = !showSortDropdown">
                     <img v-if="!(showSortDropdown || sortOption)" src="../../assets/drop down button.svg" />
                     <img v-else src="../../assets/drop down button(1).svg" />
-                    <span class="sort-btn-text">{{ sortOption ? sortLabel : 'Сортировка' }}</span>
+                    <span class="sort-btn-text">{{ buttonSortLabel }}</span>
                   </button>
                   <div v-if="showSortDropdown" class="custom-dropdown-menu sort-menu-design right-align">
+                    <div class="sort-group-label">По алфавиту</div>
+                    <div class="sort-item" @click="setSortOption('name-asc')"><div class="radio-indicator" :class="{ selected: sortOption === 'name-asc' }"></div><span class="sort-text">От А до Я</span></div>
+                    <div class="sort-item" @click="setSortOption('name-desc')"><div class="radio-indicator" :class="{ selected: sortOption === 'name-desc' }"></div><span class="sort-text">От Я до А</span></div>
+                    <div class="dd-divider"></div>
                     <div class="sort-group-label">Цена</div>
                     <div class="sort-item" @click="setSortOption('price-asc')"><div class="radio-indicator" :class="{ selected: sortOption === 'price-asc' }"></div><span class="sort-text">Сначала дешевле</span></div>
                     <div class="sort-item" @click="setSortOption('price-desc')"><div class="radio-indicator" :class="{ selected: sortOption === 'price-desc' }"></div><span class="sort-text">Сначала дороже</span></div>
                     <div class="dd-divider"></div>
                     <div class="sort-group-label">Рейтинг</div>
                     <div class="sort-item" @click="setSortOption('rating-desc')"><div class="radio-indicator" :class="{ selected: sortOption === 'rating-desc' }"></div><span class="sort-text">Высокий рейтинг</span></div>
-                     <div class="sort-item" @click="setSortOption('rating-asc')"><div class="radio-indicator" :class="{ selected: sortOption === 'rating-asc' }"></div><span class="sort-text">Низкий рейтинг</span></div>
-                    <div class="dd-divider"></div>
-                    <div class="sort-group-label">По алфавиту</div>
-                    <div class="sort-item" @click="setSortOption('name-asc')"><div class="radio-indicator" :class="{ selected: sortOption === 'name-asc' }"></div><span class="sort-text">От А до Я</span></div>
-                    <div class="sort-item" @click="setSortOption('name-desc')"><div class="radio-indicator" :class="{ selected: sortOption === 'name-desc' }"></div><span class="sort-text">От Я до А</span></div>
+                    <div class="sort-item" @click="setSortOption('rating-asc')"><div class="radio-indicator" :class="{ selected: sortOption === 'rating-asc' }"></div><span class="sort-text">Низкий рейтинг</span></div>
                   </div>
                 </div>
 
-                <button class="card-add-btn" @click="showAddProductDialog = true">
+                <button class="add-circle-btn card" @click="showAddProductDialog = true">
                   <img src="../../assets/add-circle.svg" />
                 </button>
               </div>
@@ -234,24 +251,55 @@
             </div>
 
             <div class="card-list-body">
-              <div v-for="prod in sortedProducts" :key="prod.id" class="card-list-item product-item">
-                <div class="prod-col-name"><span class="sub-text item-main-text">{{ prod.name }}</span></div>
-                <div class="prod-col-rating">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFC107" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                  <span class="rating-val">{{ prod.rating }}</span>
+              <div v-for="prod in visibleProducts" :key="prod.id" class="card-list-item product-item">
+                <div class="prod-col-name">
+                  <span class="sub-text item-main-text">{{ prod.name }}</span>
                 </div>
-                <div class="prod-col-price"><span class="price-val">{{ formatPrice(prod.price) }} ₽</span></div>
-                <div class="prod-col-action">
-                  <button class="icon-btn danger" @click.stop="promptDelete('product', prod.id)">
-                    <img src="../../assets/trash.svg" />
-                  </button>
-                </div>
+                
+                <div class="rat-pri-del">
+                  <div class="prod-col-rating">
+                    <div class="stars-wrapper">
+                      <svg v-for="i in 5" :key="i" class="star-icon" width="18" height="18" viewBox="0 0 24 24">
+                        <defs>
+                          <linearGradient :id="'grad-' + prod.id + '-' + i">
+                            <stop offset="0%" stop-color="#FF7A00" />
+                            <stop 
+                              :offset="calculateOffset(prod.rating, i)" 
+                              stop-color="#FF7A00" 
+                            />
+                            <stop 
+                              :offset="calculateOffset(prod.rating, i)" 
+                              stop-color="#E5E7EB" 
+                            />
+                            <stop offset="100%" stop-color="#E5E7EB" />
+                          </linearGradient>
+                        </defs>
+                        <path 
+                          :fill="'url(#grad-' + prod.id + '-' + i + ')'"
+                          d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" 
+                        />
+                      </svg>
+                    </div>
+                    <span class="rating-val-orange">{{ prod.rating }}</span>
+                  </div>
+
+                  <div class="prod-col-price">
+                    <span class="price-val">{{ formatPrice(prod.price) }} ₽</span>
+                  </div>
+                  
+                  <div class="prod-col-action">
+                    <button class="icon-btn danger card" @click.stop="promptDelete('product', prod.id)">
+                      <img src="../../assets/trash.svg" />
+                    </button>
+                  </div>
+                </div>  
               </div>
-              <div v-if="sortedProducts.length === 0" class="card-empty">Товары не найдены</div>
+              
+              <div v-if="visibleProducts.length === 0" class="card-empty">Товары не найдены</div>
             </div>
             
-            <div class="card-footer" v-if="sortedProducts.length > 0">
-              <span class="show-more-text">Показать все товары</span>
+            <div class="card-footer" v-if="visibleCount < sortedProducts.length">
+              <span class="show-more-text" @click="showMoreProducts">Показать ещё</span>
             </div>
           </div>
         </div>
@@ -263,11 +311,11 @@
         <!-- 1. Добавить категорию (Global) -->
         <div v-if="showAddCategoryDialog" class="modal-overlay blur-overlay" @click.self="showAddCategoryDialog = false">
           <div class="modal-content centered-modal">
-            <h3 class="modal-title-center">Новая категория</h3>
-            <input v-model="newCategoryName" placeholder="Название категории" class="gray-input" @keyup.enter="addCategory"/>
+            <h3 class="modal-title-center">Название категории</h3>
+            <input v-model="newCategoryName" placeholder="Введите новое название" class="gray-input" @keyup.enter="addCategory"/>
             <div class="modal-actions-center">
               <button class="btn-gray" @click="showAddCategoryDialog = false">Отмена</button>
-              <button class="btn-orange" @click="addCategory">Добавить</button>
+              <button class="btn-orange" @click="addCategory">Сохранить</button>
             </div>
           </div>
         </div>
@@ -300,11 +348,10 @@
         <!-- 4. Подтверждение удаления -->
         <div v-if="showDeleteConfirmDialog" class="modal-overlay blur-overlay" @click.self="showDeleteConfirmDialog = false">
           <div class="modal-content centered-modal">
-            <div class="delete-icon-wrapper">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-            </div>
-            <h3 class="modal-title-center">Удалить элемент?</h3>
-            <p class="modal-text">Это действие необратимо. Содержимое (товары или подкатегории) также будет удалено.</p>
+            <h3 class="modal-title-center" v-if="currentView==='subcategories'">Удалить категорию</h3>
+            <h3 class="modal-title-center" v-else-if="currentView==='products'">Удалить подкатегорию</h3>
+            <p class="modal-text" v-if="currentView==='subcategories'">Вы дейсвительно хотите удалить категорию вместе со всеми подкатегориями и товарами без возможности восстановления?</p>
+            <p class="modal-text" v-else-if="currentView==='products'">Вы дейсвительно хотите удалить подкатегорию вместе со всеми товарами без возможности восстановления?</p>
             <div class="modal-actions-center">
               <button class="btn-gray" @click="showDeleteConfirmDialog = false">Отмена</button>
               <button class="btn-red" @click="confirmDelete">Удалить</button>
@@ -331,7 +378,8 @@
                   <div class="select-list">
                     <label v-for="cat in filteredParentCategories" :key="cat.id" class="select-option">
                       <input type="radio" name="parentCategory" :value="cat.id" v-model="selectedParentId"/>
-                      <span class="radio-custom"></span><span class="option-text">{{ cat.name }}</span>
+                      <div class="radio-indicator" :class="{ selected: selectedParentId === cat.id }"></div> 
+                      <span class="option-text">{{ cat.name }}</span>
                     </label>
                     <div v-if="filteredParentCategories.length === 0" class="empty-select">Ничего не найдено</div>
                   </div>
@@ -399,6 +447,9 @@ const selectedCategory = ref(null);
 const selectedSubcategory = ref(null);
 const searchQuery = ref('');
 const expandedCategoryIds = ref(new Set());
+const itemsPerPage = 5;
+const visibleCount = ref(itemsPerPage);
+const visibleSubCount = ref(itemsPerPage);
 
 // Modals State
 const showAddMenu = ref(false);
@@ -454,6 +505,18 @@ const sortedCategories = computed(() => {
   return items;
 });
 
+const visibleProducts = computed(() => {
+  return sortedProducts.value.slice(0, visibleCount.value);
+});
+
+const visibleSubcategories = computed(() => {
+  return filteredSubcategories.value.slice(0, visibleSubCount.value);
+});
+
+function showMoreProducts() { visibleCount.value += itemsPerPage; }
+
+function showMoreSubcategories() { visibleSubCount.value += itemsPerPage; }
+
 const filteredSubcategories = computed(() => {
   if (!selectedCategory.value) return [];
   const subs = selectedCategory.value.subCategories;
@@ -497,13 +560,21 @@ const sortLabel = computed(() => {
   return labels[sortOption.value] || 'Сортировка';
 });
 
+const buttonSortLabel = computed(() => {
+  if (!sortOption.value) return 'Сортировка';
+  if (sortOption.value === 'name-asc' || sortOption.value === 'name-desc') return 'По алфавиту';
+  if (sortOption.value === 'count-asc' || sortOption.value === 'count-desc') return 'По количеству';
+  if (sortOption.value === 'price-asc' || sortOption.value === 'price-desc') return 'По цене';
+  if (sortOption.value === 'rating-asc' || sortOption.value === 'rating-desc') return 'По рейтингу';
+});
+
 // === ACTIONS ===
 
 // --- Nav ---
 function goHome() { currentView.value = 'categories'; selectedCategory.value = null; selectedSubcategory.value = null; searchQuery.value = ''; sortOption.value = ''; }
-function goToCategory(cat) { selectedCategory.value = cat; selectedSubcategory.value = null; currentView.value = 'subcategories'; searchQuery.value = ''; sortOption.value = ''; }
+function goToCategory(cat) { selectedCategory.value = cat; selectedSubcategory.value = null; currentView.value = 'subcategories'; searchQuery.value = ''; sortOption.value = ''; visibleSubCount.value = itemsPerPage; }
 function goToSubcategoryFromInline(cat, subName) { selectedCategory.value = cat; selectedSubcategory.value = subName; currentView.value = 'products'; searchQuery.value = ''; sortOption.value = ''; }
-function goToSubcategory(subName) { selectedSubcategory.value = subName; currentView.value = 'products'; searchQuery.value = ''; sortOption.value = ''; }
+function goToSubcategory(subName) { selectedSubcategory.value = subName; currentView.value = 'products'; searchQuery.value = ''; sortOption.value = ''; visibleCount.value = itemsPerPage; }
 function toggleExpand(id) { if (expandedCategoryIds.value.has(id)) expandedCategoryIds.value.delete(id); else expandedCategoryIds.value.add(id); }
 
 // --- Add Category ---
@@ -618,6 +689,12 @@ function setSortOption(option) { sortOption.value = option; showSortDropdown.val
 function formatPrice(p) { return p.toLocaleString('ru-RU'); }
 function handleGlobalClick(event) { if (!event.target.closest('.add-menu-wrapper')) showAddMenu.value = false; if (!event.target.closest('.dropdown-wrapper')) showSortDropdown.value = false; }
 
+const calculateOffset = (rating, index) => {
+  if (rating >= index) return '100%';
+  if (rating <= index - 1) return '0%';
+  return ((rating % 1) * 100) + '%';
+};
+
 onMounted(() => document.addEventListener('click', handleGlobalClick));
 onUnmounted(() => document.removeEventListener('click', handleGlobalClick));
 </script>
@@ -626,8 +703,8 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick));
 .admin-wrapper { padding: 20px 40px; min-height: 80vh; font-family: 'Segoe UI', sans-serif; }
 .breadcrumbs { font-size: 14px; color: #9E9E9E; margin-bottom: 25px; }
 .crumb-link { cursor: pointer; transition: color 0.2s; }
-.crumb-link:hover { color: #FF7A00; }
-.crumb-link.active { color: #333; font-weight: 500; cursor: default; }
+.crumb-link:hover { color: #FFA84C; }
+.crumb-link.active { color: #FF7A00; font-weight: 500; cursor: default; }
 .separator { margin: 0 8px; color: #CCC; }
 
 /* === Headers === */
@@ -638,49 +715,58 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick));
 
 /* === Controls === */
 .control-box { position: relative; }
-.search-box-styled { display: flex; align-items: center; background-color: #F3F4F6; border-radius: 8px; padding: 0 12px; height: 40px; min-width: 200px; }
+.search-box-styled { display: flex; align-items: center; background-color: #f9f9f9; border-radius: 16px; padding: 12px 24px; min-width: 200px; }
 .search-box-styled input { border: none; background: transparent; outline: none; font-size: 14px; color: #374151; margin-left: 8px; width: 100%; }
+.search-box-styled.card { background-color: #ffffff; }
+.search-box-styled.card:hover { background-color: #F3F4F6; }
 
-.sort-btn-styled { display: flex; align-items: center; gap: 8px; background-color: #F3F4F6; border: none; border-radius: 8px; padding: 0 16px; height: 40px; font-size: 14px; color: #4B5563; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+.sort-btn-styled { position: relative; z-index: 10000; justify-content: center; min-width: 210px; display: flex; align-items: center; gap: 8px; background-color: #f9f9f9; border: none; border-radius: 16px; padding: 12px 18px; font-size: 14px; color: #4B5563; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
 .sort-btn-styled.is-active { background-color: #FF7A00; color: white; }
 .sort-btn-styled.is-active svg { stroke: white; }
+.sort-btn-styled.card { background-color: #ffffff; }
+.sort-btn-styled.card:hover { background-color: #F3F4F6; }
+.sort-btn-styled.card.is-active { background-color: #FF7A00; color: white; }
 
-.add-circle-btn { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background-color: #F3F4F6; border: none; cursor: pointer; color: #6B7280; transition: background 0.2s; }
+
+.add-circle-btn { display: flex; align-items: center; justify-content: center; border-radius: 16px; background-color: #f9f9f9; border: none; cursor: pointer; color: #6B7280; transition: background 0.2s; padding: 12px 18px; }
 .add-circle-btn:hover { background-color: #E5E7EB; }
-
+.add-circle-btn.card { background-color: #ffffff; }
+.add-circle-btn.card:hover { background-color: #F3F4F6; }
 /* === Dropdown Menu === */
-.custom-dropdown-menu { position: absolute; top: calc(100% + 8px); right: 0; background: white; border: 1px solid #E5E7EB; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); min-width: 200px; padding: 6px 0; z-index: 9999; }
+.custom-dropdown-menu { min-width: 210px; position: absolute; top: calc(100% + 8px); border: 1px solid #E5E7EB; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 6px 0; z-index: 9999; background-color: #f6f6f6; }
 .custom-dropdown-menu.right-align { right: 0; left: auto; }
-.custom-dropdown-menu.sort-menu-design { width: 240px; padding: 16px 0; background: #F9FAFB; top: calc(100% + 10px); }
+.custom-dropdown-menu.sort-menu-design { padding: 16px 0; background: #FFF; top: calc(100% - 10px); }
 
-.dd-item { padding: 10px 16px; font-size: 14px; color: #374151; cursor: pointer; }
+.dd-item { padding: 10px 16px; font-size: 16px; color: #374151; cursor: pointer; }
 .dd-item:hover { background-color: #FFF7ED; color: #FF7A00; }
 .sort-item { display: flex; align-items: center; gap: 12px; padding: 8px 20px; cursor: pointer; }
 .sort-item:hover { background-color: #F3F4F6; }
-.sort-text { font-size: 15px; color: #374151; }
-.sort-group-label { padding: 0 20px; margin-bottom: 12px; font-size: 14px; color: #6B7280; line-height: 1.4; }
+.sort-text { color: #555555; }
+.sort-group-label { padding: 0 20px; margin-bottom: 12px; color: #555; line-height: 24px; }
 .sort-group-label:not(:first-child) { margin-top: 12px; }
-.dd-divider { height: 1px; background-color: #E5E7EB; margin: 12px 20px; }
+.dd-divider { height: 1px; background-color: #dddddd; margin: 0 auto; width: 83%;}
 .radio-indicator { width: 20px; height: 20px; border-radius: 50%; background-color: #E5E7EB; position: relative; flex-shrink: 0; }
 .radio-indicator.selected { background-color: #FF7A00; }
 .radio-indicator.selected::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; background-color: white; border-radius: 50%; }
 
 /* === List Styles (View 1) === */
-.list-container { background: #fff; border-radius: 12px; border: 1px solid #E5E7EB; overflow: hidden; }
+.list-container { background: #fff; overflow: hidden; }
 .list-header { display: flex; justify-content: space-between; padding: 12px 20px; background: #F9FAFB; color: #6B7280; font-size: 12px; text-transform: uppercase; font-weight: 600; border-bottom: 1px solid #E5E7EB; }
-.list-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #F3F4F6; background: #dddddd; transition: background-color 0.2s ease; }
-.list-row:hover, .list-row.row-expanded { background-color: #f9f9f9; }
+.list-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 8px; border-bottom: 1px solid #dddddd; background: #ffffff; transition: background-color 0.2s ease; }
+.list-row:hover { background-color: #f9f9f9; }
 .list-row.clickable:hover .item-text, .clickable-area:hover .item-text { color: #FF7A00; }
 .row-main { display: flex; align-items: center; gap: 12px; flex-grow: 1; cursor: pointer; }
-.item-text { font-size: 15px; color: #333; font-weight: 500; }
+.item-text { color: #7a7a7a; font-weight: 500; }
 .row-meta { display: flex; align-items: center; gap: 12px; }
-.meta-badge { background: #fff; color: #6B7280; padding: 4px 10px; border-radius: 12px; font-size: 13px; font-weight: 500; }
+.meta-badge { background: #f9f9f9; color: #7a7a7a; padding: 4px 10px; border-radius: 12px; font-size: 13px; font-weight: 500; }
 .expand-arrow-btn { background: transparent; border: none; cursor: pointer; padding: 8px; border-radius: 50%; color: #9CA3AF; display: flex; align-items: center; justify-content: center; transition: all 0.2s; margin-left: 8px; }
 .expand-arrow-btn:hover { background-color: rgba(255,255,255,0.5); color: #333; }
 .expand-arrow-btn.is-expanded { transform: rotate(180deg); color: #FF7A00; }
-.inline-subcategories { background-color: #dddddd; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
-.inline-sub-row { padding: 12px 20px 12px 54px; font-size: 14px; color: #555; cursor: pointer; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; justify-content:space-between; transition: background 0.2s; background-color: #dddddd; }
+.expand-arrow-btn.card { transform: rotate(270deg); }
+.inline-subcategories { box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+.inline-sub-row { padding: 16px 8px; padding-right: 66px; padding-left: 48px; color: #7a7a7a; cursor: pointer; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; justify-content:space-between; transition: background 0.2s; }
 .inline-sub-row:hover { background-color: #f9f9f9; color: #FF7A00; }
+.inline-sub-row:hover span { background-color: #FFffff; }
 .inline-empty { padding: 12px 20px 12px 54px; font-size: 13px; color: #888; background: #dddddd; }
 
 /* === Sub View Cards (View 2 & 3) === */
@@ -694,7 +780,9 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick));
 .card-subtitle { font-size: 16px; font-weight: 600; color: #4B5563; margin: 0; }
 .icon-btn { background: none; border: none; cursor: pointer; padding: 6px; color: #9CA3AF; transition: color 0.2s; border-radius: 6px; }
 .icon-btn:hover { color: #374151; background: rgba(0,0,0,0.05); }
+.icon-btn.danger { align-self: flex-end; display: flex; align-items: center; gap: 8px; background-color: #f9f9f9; border: none; border-radius: 16px; color: #E63946; transition: color 0.2s; margin-bottom: 20px; font-size: 16px; font-weight: 400; padding: 12px 18px; }
 .icon-btn.danger:hover { color: #EF4444; background: rgba(239, 68, 68, 0.1); }
+.icon-btn.danger.card { margin: 0;}
 
 .card-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 16px; }
 .card-actions { display: flex; align-items: center; gap: 12px; }
@@ -711,6 +799,8 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick));
 .card-list-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid #E5E7EB; cursor: pointer; transition: padding-left 0.2s; }
 .card-list-item:hover { padding-left: 8px; }
 .card-list-item:hover .sub-text { color: #111827; }
+.card-list-item.product-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid #E5E7EB; cursor: pointer; transition: padding-left 0.2s; }
+.rat-pri-del { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 50%; }
 .sub-text { font-size: 14px; color: #4B5563; }
 .delete-icon-btn { background: none; border: none; cursor: pointer; color: #9CA3AF; padding: 4px; transition: color 0.2s; }
 .delete-icon-btn:hover { color: #EF4444; }
@@ -732,48 +822,49 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick));
 .tag-remove { background: none; border: none; color: #FF7A00; font-size: 16px; cursor: pointer; }
 
 /* === Common & Modal === */
-.gray-input { width: 100%; background-color: #F3F4F6; border: none; border-radius: 12px; padding: 14px 16px; font-size: 14px; color: #333; outline: none; }
+.gray-input { background-color: #F9F9F9; border: none; border-radius: 16px; padding: 12px 24px; font-size: 14px; color: #333; outline: none; }
 .btn-gray { background: #F9FAFB; color: #374151; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 500; cursor: pointer; font-size: 14px; }
 .btn-gray:hover { background: #F3F4F6; }
 .btn-orange { background: #FF7A00; color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 14px; }
 .btn-orange:hover { background: #E56D00; }
 .btn-red { background: #EF4444; color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 14px; }
 .btn-red:hover { background: #DC2626; }
-.mb-4 { margin-bottom: 16px; }
+.mb-4 { margin-bottom: 16px; width: -webkit-fill-available; }
 
 .blur-overlay { background: rgba(0, 0, 0, 0.2); backdrop-filter: blur(2px); z-index: 1000; position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;}
-.centered-modal { width: 440px; padding: 40px; text-align: center; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); background: white;}
-.modal-title-center { font-size: 20px; margin-bottom: 10px; font-weight: 600; }
+.centered-modal { display: flex; flex-direction: column; gap: 32px; width: 400px; padding: 40px; text-align: center; border-radius: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); background: white;}
+.modal-title-center { font-size: 24px; margin-bottom: 10px; font-weight: 600; }
 .modal-hint-center { font-size: 14px; color: #6B7280; margin-bottom: 24px; }
-.modal-text { font-size: 14px; color: #6B7280; margin-bottom: 20px; line-height: 1.5; }
-.modal-actions-center { margin-top: 30px; display: flex; justify-content: center; gap: 12px; }
+.modal-text { font-size: 16px; color: #6B7280; margin-bottom: 20px; line-height: 1.5; }
+.modal-actions-center { display: flex; justify-content: center; gap: 12px; width: 100%; }
+.modal-actions-center button { width: 50%; }
 .delete-icon-wrapper { width: 60px; height: 60px; border-radius: 50%; background: #FEE2E2; display: flex; justify-content: center; align-items: center; margin: 0 auto 20px auto; }
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); display: flex; justify-content: center; align-items: center; z-index: 999; }
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); display: flex; justify-content: center; align-items: center; z-index: 10001; }
 .modal-content:not(.centered-modal) { background: white; padding: 30px; border-radius: 16px; width: 400px; max-width: 90%; }
 .full-input { width: 100%; padding: 12px 14px; border: 1px solid #E0E0E0; border-radius: 8px; font-size: 14px; }
 .btn-primary { background: #FF7A00; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
 .btn-secondary { background: #F3F4F6; color: #333; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
 .modal-actions { margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end; }
 
-.sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.3); z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.3); z-index: 10000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
 .sidebar-overlay.open { opacity: 1; pointer-events: auto; }
-.sidebar-panel { position: absolute; top: 0; right: 0; width: 480px; height: 100%; background: white; padding: 40px; box-shadow: -10px 0 30px rgba(0,0,0,0.05); transform: translateX(100%); transition: transform 0.3s; display: flex; flex-direction: column; box-sizing: border-box; }
+.sidebar-panel { position: absolute; top: 0; right: 0; width: 480px; height: 100%; background: white; padding: 40px; box-shadow: -10px 0 30px rgba(0,0,0,0.05); transform: translateX(100%); transition: transform 0.3s; display: flex; flex-direction: column; box-sizing: border-box; gap: 32px; }
 .sidebar-overlay.open .sidebar-panel { transform: translateX(0); }
-.sidebar-title { font-size: 24px; margin: 0 0 40px 0; font-weight: 600; }
-.sidebar-form { flex-grow: 1; }
-.sidebar-actions { display: flex; justify-content: flex-end; gap: 12px; }
+.sidebar-title { font-size: 24px; margin: 0; font-weight: 600; text-align: center;}
+.sidebar-actions { display: flex; gap: 12px; width: 100%; }
+.sidebar-actions button { width: 50%; }
 
 /* Custom Select */
 .custom-select-container { border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden; }
-.select-header { background-color: #F9FAFB; padding: 14px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #6B7280; }
+.select-header { background-color: #F6F6F6; padding: 14px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #6B7280; }
 .select-header.is-open { background-color: #FF7A00; color: white; border-radius: 12px 12px 0 0; }
 .select-header.is-open .select-arrow { transform: rotate(180deg); color: white; }
-.select-body { border: 1px solid #E5E7EB; border-top: none; border-radius: 0 0 12px 12px; padding: 16px; background: white; }
+.select-body { border: 1px solid #E5E7EB; border-top: none; border-radius: 0 0 12px 12px; padding: 16px; background: #f9f9f9; }
 .select-search-wrapper { position: relative; margin-bottom: 12px; }
 .search-icon-sm { position: absolute; left: 0; top: 2px; }
-.select-search-input { width: 100%; border: none; border-bottom: 1px solid #E5E7EB; padding: 4px 0 8px 24px; font-size: 14px; outline: none; }
+.select-search-input { background: #f9f9f9; width: 100%; border: none; border-bottom: 1px solid #E5E7EB; padding: 4px 0 8px 24px; font-size: 14px; outline: none; }
 .select-list { max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px; }
-.select-option { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; color: #4B5563; }
+.select-option { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; color: #4B5563; border-bottom: 1px solid #dddddd; padding: 10px;}
 .select-option input { display: none; }
 .radio-custom { width: 18px; height: 18px; border-radius: 50%; background: #E5E7EB; position: relative; transition: all 0.2s; }
 .select-option input:checked + .radio-custom { background: #FF7A00; border: 4px solid #FFD8B3; }
@@ -787,5 +878,47 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick));
   .prod-col-rating, .prod-col-price, .prod-col-action { grid-row: 2; }
   .prod-col-name { grid-column: 1 / -1; }
   .sort-btn-text { display: none; }
+}
+
+.stars-wrapper {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.star-icon {
+  /* Убираем жесткий fill, так как используем градиент из шаблона */
+  filter: drop-shadow(0px 1px 1px rgba(0,0,0,0.05));
+}
+
+.rating-val-orange {
+  margin-left: 8px;
+  font-weight: 700;
+  color: #FF7A00;
+  font-size: 14px;
+}
+
+.show-more-text {
+  cursor: pointer;
+  color: #FF7A00;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+.show-more-text:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+/* Корректировка кнопки "Показать еще" */
+.show-more-text {
+  display: inline-block;
+  padding: 8px 16px;
+  /* Можно добавить фон, если хочется кнопку, или оставить текстом */
+  user-select: none;
+}
+
+.clear-circle {
+  cursor: pointer;
 }
 </style>
