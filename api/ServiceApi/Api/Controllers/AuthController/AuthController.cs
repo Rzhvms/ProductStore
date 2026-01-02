@@ -11,6 +11,8 @@ using Application.UseCases.Auth.Register.Request;
 using Application.UseCases.Auth.Register.Response;
 using Application.UseCases.Auth.ResendPinCode;
 using Application.UseCases.Auth.ResendPinCode.Request;
+using Application.UseCases.Auth.RestoreForgotPassword;
+using Application.UseCases.Auth.RestoreForgotPassword.Response;
 using Application.UseCases.Auth.SignOut;
 using Application.UseCases.Auth.SignOut.Response;
 using Application.UseCases.Auth.VerifyEmail;
@@ -34,13 +36,16 @@ public class AuthController : ControllerBase
     private readonly ICreateUserUseCase _createUserUseCase;
     private readonly IVerifyEmailUseCase _verifyEmailUseCase;
     private readonly IResendPinCodeUseCase _resendPinUseCase;
+    private readonly IRestoreForgotPasswordUseCase _restoreForgotPasswordUseCase;
+    
     public AuthController(
         ILoginUseCase loginUseCase,
         IRefreshTokenUseCase refreshTokenUseCase,
         ISignOutUseCase signOutUseCase,
         ICreateUserUseCase createUserUseCase, 
         IVerifyEmailUseCase verifyEmailUseCase, 
-        IResendPinCodeUseCase resendPinCodeUseCase)
+        IResendPinCodeUseCase resendPinCodeUseCase,
+        IRestoreForgotPasswordUseCase restoreForgotPasswordUseCase)
     {
         _loginUseCase = loginUseCase;
         _refreshTokenUseCase = refreshTokenUseCase;
@@ -48,6 +53,7 @@ public class AuthController : ControllerBase
         _createUserUseCase = createUserUseCase;
         _verifyEmailUseCase = verifyEmailUseCase;
         _resendPinUseCase = resendPinCodeUseCase;
+        _restoreForgotPasswordUseCase = restoreForgotPasswordUseCase;
     }
     
     /// <summary>
@@ -128,5 +134,15 @@ public class AuthController : ControllerBase
     public async Task ResendCodeAsync(ResendPinCodeRequest request)
     {
         await _resendPinUseCase.ExecuteAsync(request);
+    }
+
+    /// <summary>
+    /// Прохождение аутентификации для изменения пароля
+    /// </summary>
+    [AllowAnonymous]
+    [HttpPost("confirm-operation")]
+    public async Task<RestoreForgotPasswordResponse> RestoreForgotPasswordAsync(VerifyEmailRequest request)
+    {
+        return await _restoreForgotPasswordUseCase.ExecuteAsync(request);
     }
 }
