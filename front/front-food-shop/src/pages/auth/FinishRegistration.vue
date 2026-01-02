@@ -120,6 +120,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import router from "@/router";
+import { finishRegister } from "@/services/api";
 
 const name = ref("");
 const lastName = ref("");
@@ -251,9 +252,25 @@ const isFormValid = computed(() => {
 });
 
 // Отправка формы
-const handleSubmit = () => {
+const handleSubmit = async () => {
   if (!isFormValid.value) return;
-  router.push("/admin");
+  const d = birthDigits.value;
+  const day = Number(d.slice(0, 2));
+  const month = Number(d.slice(2, 4)) - 1;
+  const year = Number(d.slice(4));
+  const userDate = new Date(year, month, day);
+  let notif = {
+    email: agreeNews.value,
+    sms: agreeNews.value,
+    push: agreeNews.value
+  };
+  try {
+    const userId = localStorage.getItem("userId");
+    const response = await finishRegister(userId, name.value, lastName.value, phoneDigits.value, gender.value, userDate, JSON.stringify(notif));
+    router.push("/admin");
+  } catch (error) {
+    console.log(error);
+  }
 };
 </script>
 

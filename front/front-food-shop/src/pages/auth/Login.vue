@@ -85,9 +85,11 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import router from "@/router";
-import { login } from "@/services/api";
+import { useAuthStore } from "@/stores/auth";
+
+const authStore = useAuthStore();
 
 const email = ref("");
 const password = ref("");
@@ -133,26 +135,14 @@ const handleSubmit = async () => {
 
   try {
     isLoading.value = true;
-
-    await login(email.value, password.value);
-
-    router.push("/admin");
+    await authStore.login(email.value, password.value, remember.value);
+    router.push("/");
   } catch (error) {
-    const status = error.response?.status;
-    const message =
-      error.response?.data?.message || error.message;
-
-    if (
-      status === 404 ||
-      message === "User not found" ||
-      message === "Аккаунт не найден"
-    ) {
+    if (error.message === "Аккаунт не найден") {
       router.push("/account-not-found");
       return;
     }
-
-    errorMessage.value = message || "Ошибка входа";
-  } finally {
+    errorMessage.value = error.message;
     isLoading.value = false;
   }
 };

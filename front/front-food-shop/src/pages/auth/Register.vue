@@ -90,11 +90,14 @@
         <button
           type="submit"
           class="submit-btn"
-          :class="{ 'inactive-btn': !isFormValid || isSaved }"
-          :disabled="!isFormValid || isSaved"
+          :class="{
+            'inactive-btn': !isFormValid || isLoading,
+            'error-btn': !!submissionError  
+          }"
+          :disabled="!isFormValid || isLoading"
           style="margin-top: 12px;"
         >
-          {{ isSaved ? 'Аккаунт создан!' : 'Далее' }}
+          {{ buttonText }}
         </button>
 
       </form>
@@ -125,7 +128,8 @@ const confirmPassword = ref("");
 const showPassword = reactive({ password: false, confirm: false });
 const showPasswordStrength = reactive({ password: false });
 const errorMessage = ref("");
-const isSaved = ref(false);
+const isLoading = ref(false);
+const submissionError = ref(null);
 const passwordStrength = ref(0);
 const errors = ref({ email: null, password: null });
 
@@ -171,6 +175,16 @@ const updatePasswordStrength = (pass) => {
   if (isSequence) score = Math.max(1, score - 2);
   return Math.min(score, 6);
 };
+
+const buttonText = computed(() => {
+  if (submissionError.value) return submissionError.value;
+  if (isLoading.value) return "Создание аккаунта...";
+  return "Далее";
+});
+
+watch([email, password, confirmPassword], () => {
+  if (submissionError.value) submissionError.value = null;
+});
 
 const onPasswordInput = () => {
   password.value = sanitizeInput(password.value);
@@ -226,18 +240,31 @@ const handleSubmit = async () => {
   }
 
   errors.value = { email: null, password: null };
-  isSaved.value = true;
+  isLoading.value = true;
   errorMessage.value = '';
+  submissionError.value = null;
 
   try {
     const claims = [{ type: "role", value: "user" }];
     const response = await createUser(email.value, password.value, claims);
-    if (response.userId) {
-      localStorage.setItem("UserId", response.userId);
-      setTimeout(() => router.push("/confirm-email"), 500);
+    if (response && response.userId) {
+      localStorage.setItem("email", email.value);
+      localStorage.setItem("userId", response.userId);
+      router.push("/confirm-email");
+    } else {
+      throw new Error(response.message);
     }
   } catch (err) {
     console.log(err);
+    let msg = "Не удалось создать аккаунт";
+    if (err.response && err.response.data && err.response.data.message) {
+      msg = err.response.data.message;
+    } else if (err.message) {
+      msg = err.message;
+    }
+    submissionError.value = msg;
+  } finally {
+    isLoading.value = false;
   }
 };
 
@@ -259,6 +286,11 @@ const handleLogin = () => router.push("/login");
   border: none;
   background: transparent;
   cursor: pointer;
+}
+
+.submit-btn.error-btn {
+  background-color: #E63946;
+  color: white;
 }
 
 .password-strength-wrapper {
