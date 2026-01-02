@@ -43,6 +43,7 @@ services:
     build:
       context: ./front/front-food-shop
       dockerfile: Dockerfile
+      network: host
     container_name: web
     ports:
       - "${WEB_PORT_EXTERNAL}:80"
