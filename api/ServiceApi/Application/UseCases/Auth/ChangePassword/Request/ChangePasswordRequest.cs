@@ -11,5 +11,6 @@ public record ChangePasswordRequest
     /// Пароль
     /// </summary>
     [Required]
+    [MinLength(8)]
     public required string Password { get; init; }
 }
