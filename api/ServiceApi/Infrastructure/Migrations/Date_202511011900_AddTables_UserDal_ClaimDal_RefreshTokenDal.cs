@@ -36,7 +36,7 @@ public class Date_202511011900_AddTables_UserDal_ClaimDal_RefreshTokenDal : Migr
         {
             Create.Table(_claimTableName)
                 .WithColumn(nameof(ClaimModel.Id)).AsGuid().PrimaryKey()
-                .WithColumn(nameof(ClaimModel.UserId)).AsGuid().ForeignKey("fk_UserDal_ClaimId_ClaimDal", _userTableName, nameof(UserModel.Id))
+                .WithColumn(nameof(ClaimModel.UserId)).AsGuid()
                 .WithColumn(nameof(ClaimModel.Type)).AsString().Nullable()
                 .WithColumn(nameof(ClaimModel.Value)).AsString().Nullable();
         }
@@ -45,15 +45,28 @@ public class Date_202511011900_AddTables_UserDal_ClaimDal_RefreshTokenDal : Migr
         {
             Create.Table(_tokenTableName)
                 .WithColumn(nameof(RefreshTokenModel.Id)).AsGuid().PrimaryKey()
-                .WithColumn(nameof(RefreshTokenModel.UserId)).AsGuid().ForeignKey("fk_UserDal_RefreshToken_RefreshTokenDal", _userTableName, nameof(UserModel.Id))
+                .WithColumn(nameof(RefreshTokenModel.UserId)).AsGuid()
                 .WithColumn(nameof(RefreshTokenModel.Value)).AsString().Nullable()
                 .WithColumn(nameof(RefreshTokenModel.Active)).AsBoolean().Nullable()
                 .WithColumn(nameof(RefreshTokenModel.ExpirationDate)).AsDateTime().Nullable();
         }
+        
+        Create.ForeignKey("fk_UserDal_ClaimId_ClaimDal")
+            .FromTable(_claimTableName).ForeignColumn(nameof(ClaimModel.UserId))
+            .ToTable(_userTableName).PrimaryColumn(nameof(UserModel.Id))
+            .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+        
+        Create.ForeignKey("fk_UserDal_RefreshToken_RefreshTokenDal")
+            .FromTable(_tokenTableName).ForeignColumn(nameof(RefreshTokenModel.UserId))
+            .ToTable(_userTableName).PrimaryColumn(nameof(UserModel.Id))
+            .OnDeleteOrUpdate(System.Data.Rule.Cascade);
     }
 
     public override void Down()
     {
+        Delete.ForeignKey("fk_UserDal_ClaimId_ClaimDal").OnTable(_claimTableName);
+        Delete.ForeignKey("fk_UserDal_RefreshToken_RefreshTokenDal").OnTable(_tokenTableName);
+        
         if (Schema.Table(_userTableName).Exists() && Schema.Table(_userTableName).Index("IX_UserModel_Email_Unique").Exists())
         {
             Delete.Index("IX_UserModel_Email_Unique").OnTable(_userTableName);

@@ -2,6 +2,7 @@ using Application.Extensions;
 using Application.UseCases.User.ChangeUserPassword;
 using Application.UseCases.User.ChangeUserPassword.Request;
 using Application.UseCases.User.ChangeUserPassword.Response;
+using Application.UseCases.User.DeleteUser;
 using Application.UseCases.User.GetUserInfo;
 using Application.UseCases.User.GetUserInfo.Request;
 using Application.UseCases.User.GetUserInfo.Response;
@@ -24,15 +25,18 @@ public class UserController : ControllerBase
     private readonly IGetUserInfoUseCase _getUserInfoUseCase;
     private readonly IUpdateUserInfoUseCase _updateUserInfoUseCase;
     private readonly IChangeUserPasswordUseCase _changeUserPasswordUseCase;
+    private readonly IDeleteUserUseCase _deleteUserUseCase;
     
     public UserController(
         IGetUserInfoUseCase getUserInfoUseCase,
         IUpdateUserInfoUseCase updateUserInfoUseCase,
-        IChangeUserPasswordUseCase changeUserPasswordUseCase)
+        IChangeUserPasswordUseCase changeUserPasswordUseCase,
+        IDeleteUserUseCase deleteUserUseCase)
     {
         _getUserInfoUseCase = getUserInfoUseCase;
         _updateUserInfoUseCase = updateUserInfoUseCase;
         _changeUserPasswordUseCase = changeUserPasswordUseCase;
+        _deleteUserUseCase = deleteUserUseCase;
     }
 
     /// <summary>
@@ -66,5 +70,16 @@ public class UserController : ControllerBase
     {
         var id = User.GetUserId();
         return await _changeUserPasswordUseCase.ExecuteAsync(id, request);
+    }
+
+    /// <summary>
+    /// Удаление пользователя
+    /// </summary>
+    [HttpDelete]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task DeleteUserAsync()
+    {
+        var id = User.GetUserId();
+        await _deleteUserUseCase.ExecuteAsync(id);
     }
 }

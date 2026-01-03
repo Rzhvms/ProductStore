@@ -87,4 +87,13 @@ internal class UserRepository : IUserRepository
         
         await _dbConnection.ExecuteAsync(sql, new { Id = id, PasswordHash = passwordHash, Salt = salt, Time = now });
     }
+
+    /// <inheritdoc />
+    public async Task DeleteUserAsync(Guid id)
+    {
+        var sql = $@"DELETE FROM ""{nameof(UserModel)}""
+                    WHERE ""{nameof(UserModel.Id)}"" = @Id";
+        
+        await _dbConnection.ExecuteAsync(sql, new { Id = id });
+    }
 }
