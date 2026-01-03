@@ -45,7 +45,6 @@ export const useAuthStore = defineStore('auth', {
         setToken(accessToken) {
             this.accessToken = accessToken;
             sessionStorage.setItem('accessToken', accessToken);
-            axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
         },
         async logoutRe() {
             try {

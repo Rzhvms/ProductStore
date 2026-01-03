@@ -89,3 +89,34 @@ export const refreshToken = async () => {
 export const logout = async () => {
     return api.post('auth/sign-out');
 };
+
+export const getUser = async () => {
+    try {
+        const response = await api.get('user/profile');
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить данные пользователя");
+    }
+};
+
+export const updateUser = async (json) => {
+    try {
+        const response = await api.patch('user/profile', json);
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось обновить данные пользователя");
+    }
+};
+
+export const updatePassword = async (oldPassword, newPassword) => {
+    try {
+        const response = await api.patch('user/me/password', { oldPassword, newPassword });
+        const data = response.data;
+        if (!data.isSuccess) {
+            throw new Error(data.message);
+        }
+        return data;
+    } catch (error) {
+        throw new Error("Не удалось изменить пароль: " + error.message);
+    }
+};
