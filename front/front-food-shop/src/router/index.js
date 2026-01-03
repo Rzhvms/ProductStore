@@ -35,6 +35,7 @@ import ProfileHelp from '../pages/profile/ProfileHelp.vue'
 
 // Admin
 import AdminIndex from '../pages/admin/Index.vue'
+import ProfilePage from '../pages/profile/ProfilePage.vue'
 
 
 const routes = [
@@ -65,9 +66,9 @@ const routes = [
   { path: '/checkout/payment', component: CheckoutPayment, meta: { requiresAuth: true } },
 
   // Profile
-  { path: '/profile', component: ProfileIndex, meta: { requiresAuth: true } },
-  { path: '/profile/main', component: ProfileMain, meta: { requiresAuth: true } },
-  { path: '/profile/settings', component: ProfileSettings, meta: { requiresAuth: true } },
+  { path: '/profile', component: ProfilePage, meta: { requiresAuth: true } },
+  { path: '/profile/help', component: ProfileHelp, meta: { requiresAuth: true } },
+  { path: '/profile/orders', component: ProfileOrders, meta: { requiresAuth: true } },
 
   // Admin
   { path: '/admin', component: AdminIndex, meta: { requiresAuth: true } },

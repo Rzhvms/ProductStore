@@ -26,7 +26,7 @@
           </router-link>
 
           <router-link
-            to="/orders"
+            to="/profile/orders"
             class="menu-item"
             active-class="active"
           >
@@ -34,14 +34,14 @@
           </router-link>
 
           <router-link
-            to="/help"
+            to="/profile/help"
             class="menu-item"
             active-class="active"
           >
             Справочная информация
           </router-link>
         </nav>
-        <button class="logout-btn">Выйти из аккаунта</button>
+        <button class="logout-btn" @click="authStore.logoutRe">Выйти из аккаунта</button>
       </div>
 
       <!-- MAIN CONTENT -->
@@ -100,8 +100,16 @@
 </template>
 
 <script>
+import { useAuthStore } from '@/stores/auth';
+
 export default {
   name: "ProfileLayout",
+  setup() {
+    const authStore = useAuthStore();
+    return { 
+      authStore 
+    };
+  }
 };
 </script>
 
