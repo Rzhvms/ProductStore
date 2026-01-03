@@ -16,6 +16,7 @@ import Home from '../pages/home/Index.vue'
 
 // Catalog
 import CatalogIndex from '../pages/catalog/Index.vue'
+import Catalog from '@/pages/catalog/Catalog.vue'
 import Category from '../pages/catalog/Category.vue'
 import Subcategory from '../pages/catalog/Subcategory.vue'
 import ProductCard from '../pages/catalog/ProductCard.vue'
@@ -39,7 +40,7 @@ import AdminIndex from '../pages/admin/Index.vue'
 import App from '../App.vue'
 
 const routes = [
-  { path: '/', component: App },
+  { path: '/', component: CatalogIndex },
 
   // Auth
   { path: '/login', component: Login },
@@ -53,7 +54,7 @@ const routes = [
   { path: '/forgot-password-options', component: ForgotPasswordOptions },
 
   // Catalog
-  { path: '/catalog', component: CatalogIndex },
+  { path: '/catalog', component: Catalog },
   { path: '/catalog/category', component: Category },
   { path: '/catalog/subcategory', component: Subcategory },
   { path: '/catalog/product', component: ProductCard },

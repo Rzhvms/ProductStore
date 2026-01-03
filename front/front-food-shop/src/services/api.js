@@ -1,84 +1,122 @@
-export const API_URL = "http://localhost:5282/api/";
+import api from '../api/instance';
 
-export const sendVerificationEmail = async (email) => {
-    const response = await fetch(`${API_URL}send-verification-email`, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            Email: email,
-        })
-    });
-
-    if (!response.ok) {
-        throw new Error("Не удалось получить данные пользователя");
+export const resendPinCode = async (email) => {
+    try {
+        await api.post('auth/resend-code', { email });
+    } catch (error) {
+        const data = error.response?.data;
+        if (data?.error === "User not found") {
+            throw new Error("Пользователь не найден");
+        }
+        throw new Error("Не удалось отправить код подтверждения");
     }
+};
 
-    const data = await response.json();
-    return data;
+export const sendVerificationEmail = async (email, pin) => {
+    try {
+        const response = await api.post('auth/verify-email', { email, pin });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось отправить пин-код");
+    }
+};
+
+export const verifyEmail = async (email, pin) => {
+    try {
+        const response = await api.post('auth/confirm-operation', { email, pin });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось подтвердить операцию");
+    }
+};
+
+export const changePassword = async (password, token) => {
+    try {
+        const response = await api.post('auth/change-password', { password }, { headers: { Authorization: `Bearer ${token}` } });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось изменить пароль");
+    }
 };
 
 export const createUser = async (email, password, claims) => {
-    const response = await fetch(`${API_URL}auth/register`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            "email": email,
-            "password": password,
-            "claims": claims
-        })
-    });
-
-    if (!response.ok) {
-        throw new Error("Не удалось создать пользователя");
+    try {
+        const response = await api.post('auth/register', { email, password, claims });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось создать аккаунт");
     }
-
-    const data = await response.json();
-    return data;
 };
 
-export const finishRegister = async (userId, name, lastName, phone, gender) => {
-    const response = await fetch(`${API_URL}auth/register`, {
-        method: "PATCH",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            "userId": userId,
-            "name": name,
-            "lastName": lastName,
-            "phone": phone,
-            "gender": gender
-        })
-    });
-
-    if (!response.ok) {
+export const finishRegister = async (userId, name, lastName, phone, gender, birthDate, about) => {
+    try {
+        const response = await api.patch(`auth/register`, { 
+            userId,
+            name,
+            lastName,
+            phone,
+            gender,
+            birthDate,
+            about
+        });
+        return response.data;
+    } catch (error) {
         throw new Error("Не удалось завершить регистрацию");
     }
-
-    const data = await response.json();
-    return data;
 };
 
 export const login = async (email, password) => {
-    const response = await fetch(`${API_URL}auth/login`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            "email": email,
-            "password": password
-        })
-    });
-
-    if (!response.ok) {
-        throw new Error("Не удалось войти в систему");
+    try {
+        const response = await api.post('auth/login', { email, password });
+        return response.data;
+    } catch (error) {
+        const data = error.response?.data;
+        const message = data?.message;
+        if (message === "UserDoesNotExist") {
+            throw new Error("Аккаунт не найден");
+        } else if (message === "CredentialsAreNotValid") {
+            throw new Error("Неверный логин или пароль");
+        }
+        throw new Error("Не удалось войти");
     }
+};
 
-    const data = await response.json();
-    return data;
+export const refreshToken = async () => {
+    const refreshToken = localStorage.getItem("refreshToken") || sessionStorage.getItem("refreshToken") || null;
+    return api.post('auth/refresh-token', { refreshToken });
+};
+
+export const logout = async () => {
+    return api.post('auth/sign-out');
+};
+
+export const getUser = async () => {
+    try {
+        const response = await api.get('user/profile');
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить данные пользователя");
+    }
+};
+
+export const updateUser = async (json) => {
+    try {
+        const response = await api.patch('user/profile', json);
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось обновить данные пользователя");
+    }
+};
+
+export const updatePassword = async (oldPassword, newPassword) => {
+    try {
+        const response = await api.patch('user/me/password', { oldPassword, newPassword });
+        const data = response.data;
+        if (!data.isSuccess) {
+            throw new Error(data.message);
+        }
+        return data;
+    } catch (error) {
+        throw new Error("Не удалось изменить пароль: " + error.message);
+    }
 };
