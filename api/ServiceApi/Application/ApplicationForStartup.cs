@@ -10,6 +10,7 @@ using Application.UseCases.Auth.SignOut;
 using Application.UseCases.Auth.VerifyEmail;
 using Application.UseCases.Cart;
 using Application.UseCases.Category;
+using Application.UseCases.Order;
 using Application.UseCases.Product;
 using Application.UseCases.User.ChangeUserPassword;
 using Application.UseCases.User.DeleteUser;
@@ -43,8 +44,10 @@ public static class ApplicationForStartup
         services.AddScoped<IRestoreForgotPasswordUseCase, RestoreForgotPasswordUseCase>();
         services.AddScoped<IChangePasswordUseCase, ChangePasswordUseCase>();
         services.AddScoped<IDeleteUserUseCase, DeleteUserUseCase>();
+        services.AddScoped<IOrderUseCase, OrderUseCase>();
         
         SqlMapper.AddTypeHandler(new JsonObjectTypeHandler());
+        SqlMapper.AddTypeHandler(new JsonArrayTypeHandler());
 
         return services;
     }

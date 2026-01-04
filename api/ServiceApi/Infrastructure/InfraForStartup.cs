@@ -9,6 +9,7 @@ using Infrastructure.Repositories.Product;
 using Infrastructure.Repositories.Auth;
 using Infrastructure.Repositories.Cart;
 using Infrastructure.Repositories.Category;
+using Infrastructure.Repositories.Order;
 using Infrastructure.Repositories.User;
 using Infrastructure.Services.Auth.Cryptography;
 using Infrastructure.Services.Auth.Jwt;
@@ -58,6 +59,7 @@ public static class InfraForStartup
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<ICartRepository, RedisCartRepository>();
+        services.AddScoped<IOrderRepository, OrderRepository>();
 
         // FluentMigrator
         services.AddFluentMigratorCore()
