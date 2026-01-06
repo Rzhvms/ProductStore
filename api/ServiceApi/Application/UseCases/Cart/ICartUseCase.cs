@@ -26,4 +26,9 @@ public interface ICartUseCase
     /// Очистить корзину
     /// </summary>
     Task ClearCartAsync(Guid userId);
+    
+    /// <summary>
+    /// Очистить корзину после оплаты
+    /// </summary>
+    Task ClearCartAfterPaymentAsync(Guid userId, Guid paymentId);
 }

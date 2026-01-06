@@ -9,4 +9,9 @@ public record CreateOrderResponse
     /// Идентификатор заказа
     /// </summary>
     public Guid OrderId { get; init; }
+    
+    /// <summary>
+    /// Ссылка на страницу оплаты
+    /// </summary>
+    public string PaymentUrl { get; init; }
 }

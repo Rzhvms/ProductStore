@@ -11,6 +11,7 @@ using Application.UseCases.Auth.VerifyEmail;
 using Application.UseCases.Cart;
 using Application.UseCases.Category;
 using Application.UseCases.Order;
+using Application.UseCases.Payment;
 using Application.UseCases.Product;
 using Application.UseCases.User.ChangeUserPassword;
 using Application.UseCases.User.DeleteUser;
@@ -45,6 +46,7 @@ public static class ApplicationForStartup
         services.AddScoped<IChangePasswordUseCase, ChangePasswordUseCase>();
         services.AddScoped<IDeleteUserUseCase, DeleteUserUseCase>();
         services.AddScoped<IOrderUseCase, OrderUseCase>();
+        services.AddScoped<IPaymentUseCase, PaymentUseCase>();
         
         SqlMapper.AddTypeHandler(new JsonObjectTypeHandler());
         SqlMapper.AddTypeHandler(new JsonArrayTypeHandler());

@@ -1,5 +1,6 @@
 using Application.Exceptions;
 using Application.Ports.Repositories;
+using Application.Ports.Services.Payment;
 using Application.UseCases.Order.Request;
 using Application.UseCases.Order.Response;
 using Domain.ExtensionModels;
@@ -14,13 +15,18 @@ public class OrderUseCase : IOrderUseCase
     private readonly IOrderRepository _orderRepository;
     private readonly ICartRepository _cartRepository;
     private readonly ILogger<OrderUseCase> _logger;
+    private readonly IPaymentService _paymentService;
     
     public OrderUseCase(
         IOrderRepository orderRepository, 
-        ICartRepository cartRepository)
+        ICartRepository cartRepository,
+        ILogger<OrderUseCase> logger,
+        IPaymentService paymentService)
     {
         _orderRepository = orderRepository;
         _cartRepository = cartRepository;
+        _logger = logger;
+        _paymentService = paymentService;
     }
     
     /// <inheritdoc/>
@@ -62,12 +68,14 @@ public class OrderUseCase : IOrderUseCase
                 throw new InvalidCartException("Invalid cart. You can't place an order");
             }
         
+            var totalSum = cart.Items.Sum(i => i.Price * i.Quantity);
+            
             // Создаем заказ в БД
             var orderModel = new OrderModelExtension
             {
                 CustomerId = userId,
                 State = OrderStateEnum.Created,
-                TotalSum = cart.Items.Sum(item => item.Price * item.Quantity),
+                TotalSum = totalSum,
                 ProductIdWithQuantityList = cart.Items.Select(item => new ProductWithQuantityModel
                 {
                     ProductId = item.ProductId,
@@ -81,13 +89,13 @@ public class OrderUseCase : IOrderUseCase
                 _logger.LogError("Order was created incorrectly. OrderId is invalid");
                 throw new InvalidOrderException("Invalid order.");
             }
-        
-            // Очищаем корзину после заказа
-            await _cartRepository.ClearCartAsync(userId);
+            
+            var payment = await _paymentService.CreatePaymentAsync(orderId, userId, totalSum);
 
             return new CreateOrderResponse
             {
-                OrderId = orderId
+                OrderId = orderId,
+                PaymentUrl = payment.PaymentUrl
             };
         }
         catch (Exception e)
