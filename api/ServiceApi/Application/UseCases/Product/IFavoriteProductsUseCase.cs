@@ -11,7 +11,7 @@ public interface IFavoriteProductsUseCase
     /// <summary>
     /// Получить список избранных товаров
     /// </summary>
-    Task<GetProductListResponse> GetFavoriteProductListAsync(Guid userId);
+    Task<GetProductListResponse> GetFavoriteProductListAsync(Guid userId, int pageNumber, int pageSize);
 
     /// <summary>
     /// Добавить товар в избранное

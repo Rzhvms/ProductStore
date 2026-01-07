@@ -27,10 +27,10 @@ public class FavoriteProductsController : ControllerBase
     /// </summary>
     [HttpGet("list")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<GetProductListResponse> GetFavoriteProductListAsync()
+    public async Task<GetProductListResponse> GetFavoriteProductListAsync([FromQuery] int pageNumber, [FromQuery] int pageSize)
     {
         var userId = User.GetUserId();
-        return await _favoriteProductsUseCase.GetFavoriteProductListAsync(userId);
+        return await _favoriteProductsUseCase.GetFavoriteProductListAsync(userId, pageNumber, pageSize);
     }
     
     /// <summary>

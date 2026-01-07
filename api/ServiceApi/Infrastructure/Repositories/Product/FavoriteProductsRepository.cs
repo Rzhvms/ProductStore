@@ -18,16 +18,24 @@ internal class FavoriteProductsRepository : IFavoriteProductsRepository
     }
     
     /// <inheritdoc/>
-    public async Task<IEnumerable<ResultProductModel>> GetFavoriteProductListAsync(Guid userId)
+    public async Task<IEnumerable<ResultProductModel>> GetFavoriteProductListAsync(Guid userId, int pageNumber, int pageSize)
     {
+        var offset = (pageNumber - 1) * pageSize;
         var sql = $@"SELECT * 
                     FROM ""{nameof(ProductModel)}"" p
                     JOIN ""{nameof(FavoriteProductsModel)}"" fp 
                         ON p.""{nameof(ProductModel.Id)}"" = fp.""{nameof(FavoriteProductsModel.ProductId)}""
-                    WHERE fp.""{nameof(FavoriteProductsModel.UserId)}"" = @UserId;
+                    WHERE fp.""{nameof(FavoriteProductsModel.UserId)}"" = @UserId
+                    ORDER BY p.""{nameof(ProductModel.Id)}""
+                    OFFSET @Offset LIMIT @Limit
                     ";
         
-        var result = await _dbConnection.QueryAsync<ResultProductModel>(sql, new { UserId = userId });
+        var result = await _dbConnection.QueryAsync<ResultProductModel>(sql, new
+        {
+            UserId = userId,
+            Offset = offset,
+            Limit = pageSize
+        });
         return result;
     }
 

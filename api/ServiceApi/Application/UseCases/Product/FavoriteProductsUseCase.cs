@@ -15,9 +15,9 @@ internal class FavoriteProductsUseCase : IFavoriteProductsUseCase
     }
     
     /// <inheritdoc/>
-    public async Task<GetProductListResponse> GetFavoriteProductListAsync(Guid userId)
+    public async Task<GetProductListResponse> GetFavoriteProductListAsync(Guid userId, int pageNumber, int pageSize)
     {
-        var response = await _favoriteProductsRepository.GetFavoriteProductListAsync(userId);
+        var response = await _favoriteProductsRepository.GetFavoriteProductListAsync(userId, pageNumber, pageSize);
         var productList = response.Select(p => new GetProductResponse
         {
             Id = p.Id,

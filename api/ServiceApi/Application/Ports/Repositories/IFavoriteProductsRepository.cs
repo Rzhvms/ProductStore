@@ -8,7 +8,7 @@ public interface IFavoriteProductsRepository
     /// <summary>
     /// Получить список избранных товаров
     /// </summary>
-    Task<IEnumerable<ResultProductModel>> GetFavoriteProductListAsync(Guid userId);
+    Task<IEnumerable<ResultProductModel>> GetFavoriteProductListAsync(Guid userId, int pageNumber, int pageSize);
 
     /// <summary>
     /// Добавить товар в избранное
