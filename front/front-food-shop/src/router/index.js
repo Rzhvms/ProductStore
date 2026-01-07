@@ -37,6 +37,8 @@ import AdminCategories from '../pages/admin/AdminCategories.vue'
 import AdminUsers from '../pages/admin/AdminUsers.vue'
 import AdminDashboard from '../pages/admin/AdminDashboard.vue'
 import AdminStatistic from '../pages/admin/AdminStatistic.vue'
+import AdminProduct from '../pages/admin/AdminProduct.vue'
+import AdminProductAdd from '../pages/admin/AdminProductAdd.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -71,6 +73,8 @@ const routes = [
   // Admin
   { path: '/admin', component: AdminDashboard },
   { path: '/admin/products', component: AdminProducts },
+  { path: '/admin/products/product', component: AdminProduct },
+  { path: '/admin/products/add', component: AdminProductAdd },
   { path: '/admin/categories', component: AdminCategories },
   { path: '/admin/statistics', component: AdminStatistic },
   { path: '/admin/users', component: AdminUsers },

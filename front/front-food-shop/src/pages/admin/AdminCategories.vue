@@ -119,7 +119,7 @@
           </button>
           <div class="sub-view-card header-card">
             <div class="card-left">
-              <img src="../../assets/folder-open.svg" alt="Logo" class="icon-orange" />
+              <img src="../../assets/folder.svg" alt="Logo" class="icon-orange" />
               <h1 class="card-title">{{ selectedCategory.name }}</h1>
             </div>
             <div class="header-card-actions">
@@ -259,7 +259,7 @@
                 <div class="rat-pri-del">
                   <div class="prod-col-rating">
                     <div class="stars-wrapper">
-                      <svg v-for="i in 5" :key="i" class="star-icon" width="18" height="18" viewBox="0 0 24 24">
+                      <svg v-for="i in 5" :key="i" class="star-icon" width="32" height="32" viewBox="0 0 24 24">
                         <defs>
                           <linearGradient :id="'grad-' + prod.id + '-' + i">
                             <stop offset="0%" stop-color="#FF7A00" />
@@ -289,7 +289,7 @@
                   
                   <div class="prod-col-action">
                     <button class="icon-btn danger card" @click.stop="promptDelete('product', prod.id)">
-                      <img src="../../assets/trash.svg" />
+                      <img src="../../assets/trash.svg" style="filter: invert(48%) sepia(0%) saturate(3407%) hue-rotate(30deg) brightness(100%) contrast(88%);" />
                     </button>
                   </div>
                 </div>  
@@ -769,8 +769,7 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick));
 .inline-sub-row:hover span { background-color: #FFffff; }
 .inline-empty { padding: 12px 20px 12px 54px; font-size: 13px; color: #888; background: #dddddd; }
 
-/* === Sub View Cards (View 2 & 3) === */
-.sub-view-card { background-color: #F9FAFB; border-radius: 16px; padding: 20px 24px; margin-bottom: 20px; }
+.sub-view-card { background-color: #F9F9F9; border-radius: 16px; padding: 20px 24px; margin-bottom: 20px; }
 .header-card { display: flex; justify-content: space-between; align-items: center; }
 .header-card-actions { display: flex; gap: 8px; }
 .list-card { padding-bottom: 12px; }
@@ -795,11 +794,12 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick));
 .card-sort-btn.is-active { background-color: #FF7A00; color: white; }
 .card-sort-btn.is-active svg { stroke: white; }
 
-.card-list-body { border-top: 1px solid #E5E7EB; }
 .card-list-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid #E5E7EB; cursor: pointer; transition: padding-left 0.2s; }
+.card-list-item:last-child { border-bottom: none; }
 .card-list-item:hover { padding-left: 8px; }
 .card-list-item:hover .sub-text { color: #111827; }
 .card-list-item.product-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid #E5E7EB; cursor: pointer; transition: padding-left 0.2s; }
+.card-list-item.product-item:last-child { border-bottom: none; }
 .rat-pri-del { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 50%; }
 .sub-text { font-size: 14px; color: #4B5563; }
 .delete-icon-btn { background: none; border: none; cursor: pointer; color: #9CA3AF; padding: 4px; transition: color 0.2s; }
@@ -814,7 +814,7 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick));
 .item-main-text { font-weight: 500; color: #1F2937; }
 .prod-col-rating { display: flex; align-items: center; gap: 4px; font-size: 14px; color: #4B5563; font-weight: 500; }
 .prod-col-price { text-align: right; }
-.price-val { font-weight: 600; color: #111827; font-size: 14px; }
+.price-val { font-weight: 600; color: #7a7a7a; font-size: 18px; }
 .prod-col-action { display: flex; justify-content: flex-end; }
 .active-filters { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
 .card-filters-row { margin-bottom: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
@@ -858,11 +858,11 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick));
 .custom-select-container { border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden; }
 .select-header { background-color: #F6F6F6; padding: 14px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #6B7280; }
 .select-header.is-open { background-color: #FF7A00; color: white; border-radius: 12px 12px 0 0; }
-.select-header.is-open .select-arrow { transform: rotate(180deg); color: white; }
+.select-header.is-open img { transform: rotate(180deg); filter: invert(100%) sepia(0%) saturate(7500%) hue-rotate(74deg) brightness(1210%) contrast(113%); }
 .select-body { border: 1px solid #E5E7EB; border-top: none; border-radius: 0 0 12px 12px; padding: 16px; background: #f9f9f9; }
 .select-search-wrapper { position: relative; margin-bottom: 12px; }
 .search-icon-sm { position: absolute; left: 0; top: 2px; }
-.select-search-input { background: #f9f9f9; width: 100%; border: none; border-bottom: 1px solid #E5E7EB; padding: 4px 0 8px 24px; font-size: 14px; outline: none; }
+.select-search-input { background: #f9f9f9; width: 100%; border: none; border-bottom: 1px solid #E5E7EB; padding: 6px 36px; font-size: 14px; outline: none; }
 .select-list { max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px; }
 .select-option { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; color: #4B5563; border-bottom: 1px solid #dddddd; padding: 10px;}
 .select-option input { display: none; }
