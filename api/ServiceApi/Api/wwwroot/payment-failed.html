@@ -29,15 +29,15 @@
         .header { padding:60px 32px 40px; }
 
         .cancel-icon {
-            width:80px;height:80px;border-radius:50%;
+            width:56px;height:56px;border-radius:50%;
             background:linear-gradient(135deg,#FF453A,#FF3B30);
             display:flex;align-items:center;justify-content:center;
-            margin:0 auto 28px;
-            box-shadow:0 12px 30px rgba(255,69,58,.25);
+            margin:0 auto 20px;
+            box-shadow:0 8px 24px rgba(255,69,58,.25);
             animation:pop .6s cubic-bezier(.68,-.55,.265,1.55);
         }
 
-        .cancel-icon i { color:#fff;font-size:36px;font-weight:700; }
+        .cancel-icon i { color:#fff;font-size:24px;font-weight:600; }
 
         .title {
             font-size:32px;font-weight:700;margin-bottom:12px;
@@ -194,9 +194,9 @@
         if (!data) return;
 
         document.getElementById('paymentId').textContent =
-            `#${data.id.substring(0,8).toUpperCase()}`;
+            `${data.id.substring(0,8).toUpperCase()}`;
         document.getElementById('orderId').textContent =
-            data.orderId ? `#${data.orderId.substring(0,8).toUpperCase()}` : '—';
+            data.orderId ? `${data.orderId.substring(0,8).toUpperCase()}` : '—';
 
         document.getElementById('amount').textContent =
             (data.amount ?? 0).toLocaleString('ru-RU',{minimumFractionDigits:2}) + ' ₽';

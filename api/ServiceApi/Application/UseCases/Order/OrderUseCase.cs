@@ -90,7 +90,11 @@ public class OrderUseCase : IOrderUseCase
                 throw new InvalidOrderException("Invalid order.");
             }
             
+            // Создаем платеж
             var payment = await _paymentService.CreatePaymentAsync(orderId, userId, totalSum);
+            
+            // Очищаем корзину
+            await _cartRepository.ClearCartAsync(userId);
 
             return new CreateOrderResponse
             {

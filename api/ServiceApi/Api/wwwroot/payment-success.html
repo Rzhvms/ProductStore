@@ -25,12 +25,12 @@
         }
         .header { padding:60px 32px 40px; position:relative; z-index:2; }
         .success-icon {
-            width:80px; height:80px; background:linear-gradient(135deg, #34C759 0%, #30D158 100%);
+            width:56px; height:56px; background:linear-gradient(135deg, #34C759 0%, #30D158 100%);
             border-radius:50%; display:flex; align-items:center; justify-content:center;
-            margin:0 auto 28px; box-shadow:0 12px 30px rgba(52,199,89,0.25);
+            margin:0 auto 20px; box-shadow:0 8px 24px rgba(52,199,89,0.25);
             animation: successPop 0.6s cubic-bezier(0.68,-0.55,0.265,1.55);
         }
-        .success-icon i { color:white; font-size:36px; font-weight:600; }
+        .success-icon i { color:white; font-size:24px; font-weight:600; }
         .title {
             font-size:32px; font-weight:700; letter-spacing:-0.5px; margin-bottom:12px;
             background:linear-gradient(135deg, #1d1d1f 0%, #34C759 100%);
@@ -206,8 +206,8 @@
         const data = await loadPaymentData();
         if(data){
             document.getElementById('amount').textContent = (data.amount||0).toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2});
-            if(data.orderId) document.getElementById('orderId').textContent = `#${data.orderId.substring(0,8).toUpperCase()}`;
-            if(data.id) document.getElementById('paymentId').textContent = `#${data.id.substring(0,8).toUpperCase()}`;
+            if(data.orderId) document.getElementById('orderId').textContent = `${data.orderId.substring(0,8).toUpperCase()}`;
+            if(data.id) document.getElementById('paymentId').textContent = `${data.id.substring(0,8).toUpperCase()}`;
             const paidDate = data.paidAt||data.updatedAt||new Date();
             document.getElementById('paymentDate').textContent = formatDateTime(paidDate);
         }

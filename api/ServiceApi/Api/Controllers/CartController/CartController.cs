@@ -73,6 +73,7 @@ public class CartController : ControllerBase
     /// </summary>
     [HttpPost("clear-after-payment")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [Obsolete("Решено не использовать, чистка корзины при оформлении заказа")]
     public async Task ClearCartAfterPaymentAsync(Guid userId, Guid paymentId)
     {
         await _cartUseCase.ClearCartAfterPaymentAsync(userId, paymentId);
