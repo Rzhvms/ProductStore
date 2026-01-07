@@ -1,6 +1,7 @@
 using Application.Exceptions;
 using Application.Ports.Repositories;
 using Application.UseCases.Cart.Dto.Response;
+using Domain.Payment;
 
 namespace Application.UseCases.Cart;
 
@@ -8,10 +9,12 @@ namespace Application.UseCases.Cart;
 public class CartUseCase : ICartUseCase
 {
     private readonly ICartRepository _cartRepository;
+    private readonly IPaymentRepository _paymentRepository;
 
-    public CartUseCase(ICartRepository cartRepository)
+    public CartUseCase(ICartRepository cartRepository, IPaymentRepository paymentRepository)
     {
         _cartRepository = cartRepository;
+        _paymentRepository = paymentRepository;
     }
 
     /// <inheritdoc/>
@@ -39,5 +42,18 @@ public class CartUseCase : ICartUseCase
     public async Task ClearCartAsync(Guid userId)
     {
         await _cartRepository.ClearCartAsync(userId);   
+    }
+
+    /// <inheritdoc/>
+    public async Task ClearCartAfterPaymentAsync(Guid userId, Guid paymentId)
+    {
+        var paymentModel = await _paymentRepository.GetByIdAsync(paymentId);
+        
+        // Очищаем корзину, только если заказ полностью оплачен
+        if (paymentModel?.Status != PaymentStatusEnum.Paid)
+        {
+            throw new InvalidOrderException("Payment is not paid.");
+        }
+        await _cartRepository.ClearCartAsync(userId);
     }
 }

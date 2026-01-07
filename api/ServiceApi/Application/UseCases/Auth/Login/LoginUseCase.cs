@@ -48,15 +48,15 @@ public class LoginUseCase : ILoginUseCase
         user.RefreshToken = await CreateRefreshTokenAsync();
 
         await _authRepository.UpdateUserAsync(user);
-
-        var idToken = await _authTokenService.GenerateIdToken(user);
+        
+        // var idToken = await _authTokenService.GenerateIdToken(user);
         var accessToken = await _authTokenService.GenerateAccessToken(user);
-
+        var claimList = await _authRepository.GetUserClaimsAsync(user.Id);
         return new LoginSuccessResponse
         {
-            IdToken = idToken,
             AccessToken = accessToken,
-            RefreshToken = user.RefreshToken.Value
+            RefreshToken = user.RefreshToken.Value,
+            Claims = claimList
         };
     }
 

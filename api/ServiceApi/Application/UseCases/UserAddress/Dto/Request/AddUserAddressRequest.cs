@@ -54,4 +54,16 @@ public record AddUserAddressRequest
     /// </summary>
     [JsonPropertyName("isDefault")]
     public bool? IsDefault { get; init; }
+    
+    /// <summary>
+    /// Этаж
+    /// </summary>
+    [JsonPropertyName("floor")]
+    public int? Floor { get; init; }
+    
+    /// <summary>
+    /// Подъезд
+    /// </summary>
+    [JsonPropertyName("entrance")]
+    public string? Entrance { get; init; }
 }
