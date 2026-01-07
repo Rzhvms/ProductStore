@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using Api.Middlewares;
 using Application;
+using Application.Configuration;
 using FluentMigrator.Runner;
 using Infrastructure;
 using Infrastructure.Services.Auth.Jwt;
@@ -121,6 +122,8 @@ builder.Services.AddAuthentication(options =>
         };
     });
 
+builder.Services.Configure<AppOptions>(builder.Configuration.GetSection("App"));
+
 var app = builder.Build();
 
 // Middleware
@@ -134,6 +137,7 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.UseSwagger();
 app.UseSwaggerUI();
+app.UseStaticFiles();
 
 app.UseRouting();
 

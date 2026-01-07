@@ -29,7 +29,7 @@ internal class UserAddressRepository : IUserAddressRepository
     public async Task<Guid> AddUserAddressAsync(UserAddressModel? model)
     {
         var sql = $@"INSERT INTO ""{nameof(UserAddressModel)}"" VALUES 
-                    (@Id, @UserId, @Country, @Region, @City, @Street, @House, @Apartment, @PostalCode, @IsDefault)";
+                    (@Id, @UserId, @Country, @Region, @City, @Street, @House, @Apartment, @PostalCode, @IsDefault, @Floor, @Entrance)";
 
         var addressId = Guid.NewGuid();
         await _dbConnection.ExecuteAsync(sql, new
@@ -43,7 +43,9 @@ internal class UserAddressRepository : IUserAddressRepository
             House = model.House,
             Apartment = model.Apartment,
             PostalCode = model.PostalCode,
-            IsDefault = model.IsDefault ?? false
+            IsDefault = model.IsDefault ?? false,
+            Floor = model.Floor,
+            Entrance = model.Entrance
         });
         
         return addressId;
@@ -60,7 +62,9 @@ internal class UserAddressRepository : IUserAddressRepository
                         ""{nameof(UserAddressModel.House)}"" = @House,
                         ""{nameof(UserAddressModel.Apartment)}"" = @Apartment,
                         ""{nameof(UserAddressModel.PostalCode)}"" = @PostalCode,
-                        ""{nameof(UserAddressModel.IsDefault)}"" = @IsDefault
+                        ""{nameof(UserAddressModel.IsDefault)}"" = @IsDefault,
+                        ""{nameof(UserAddressModel.Floor)}"" = @Floor,
+                        ""{nameof(UserAddressModel.Entrance)}"" = @Entrance,
                     WHERE ""{nameof(UserAddressModel.UserId)}"" = @UserId";
 
         var checkIsDefaultSql = $@"SELECT ""{nameof(UserAddressModel.IsDefault)}"" FROM ""{nameof(UserAddressModel)}"" 
@@ -77,7 +81,9 @@ internal class UserAddressRepository : IUserAddressRepository
             Apartment = model.Apartment,
             PostalCode = model.PostalCode,
             IsDefault = checkIsDefault,
-            UserId = model.UserId
+            UserId = model.UserId,
+            Floor = model.Floor,
+            Entrance = model.Entrance
         });
     }
 

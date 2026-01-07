@@ -34,7 +34,9 @@ internal class UserAddressUseCase : IUserAddressUseCase
             House = response.House,
             Apartment = response.Apartment,
             PostalCode = response.PostalCode,
-            IsDefault = response.IsDefault
+            IsDefault = response.IsDefault,
+            Floor = response.Floor,
+            Entrance = response.Entrance
         };
     }
 
@@ -51,7 +53,9 @@ internal class UserAddressUseCase : IUserAddressUseCase
             House = request.House,
             Apartment = request.Apartment,
             PostalCode = request.PostalCode,
-            IsDefault = request.IsDefault
+            IsDefault = request.IsDefault,
+            Floor = request.Floor,
+            Entrance = request.Entrance
         };
 
         var addressId = await _userAddressRepository.AddUserAddressAsync(model);
@@ -74,7 +78,9 @@ internal class UserAddressUseCase : IUserAddressUseCase
             House = request.House,
             Apartment = request.Apartment,
             PostalCode = request.PostalCode,
-            IsDefault = request.IsDefault
+            IsDefault = request.IsDefault,
+            Floor = request.Floor,
+            Entrance = request.Entrance
         };
 
         await _userAddressRepository.UpdateUserAddressAsync(model);
