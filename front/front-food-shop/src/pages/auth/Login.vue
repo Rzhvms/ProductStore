@@ -96,6 +96,7 @@ const password = ref("");
 const remember = ref(false);
 const showPassword = ref(false);
 const isLoading = ref(false);
+const regexEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 const errors = ref({ email: false, password: false });
 const errorMessage = ref("");
@@ -121,7 +122,7 @@ const handleSubmit = async () => {
   if (!email.value) {
     errors.value.email = true;
     errorMessage.value = "Почта не указана";
-  } else if (!email.value.includes("@")) {
+  } else if (!regexEmail.test(email.value)) {
     errors.value.email = true;
     errorMessage.value = "Неверный формат почты";
   }

@@ -78,13 +78,13 @@ const routes = [
   { path: '/profile/settings', component: ProfileSettings, meta: { requiresAuth: true } },
 
   // Admin
-  { path: '/admin', component: AdminDashboard },
-  { path: '/admin/products', component: AdminProducts },
+  { path: '/admin', component: AdminDashboard, meta: { requiresAuth: true } },
+  { path: '/admin/products', component: AdminProducts, meta: { requiresAuth: true } },
   { path: '/admin/products/product', component: AdminProduct },
-  { path: '/admin/products/add', component: AdminProductAdd },
-  { path: '/admin/categories', component: AdminCategories },
-  { path: '/admin/statistics', component: AdminStatistic },
-  { path: '/admin/users', component: AdminUsers },
+  { path: '/admin/products/add', component: AdminProductAdd, meta: { requiresAuth: true } },
+  { path: '/admin/categories', component: AdminCategories, meta: { requiresAuth: true } },
+  { path: '/admin/statistics', component: AdminStatistic, meta: { requiresAuth: true } },
+  { path: '/admin/users', component: AdminUsers, meta: { requiresAuth: true } },
 ]
 
 const router = createRouter({

@@ -2,8 +2,6 @@
   <AdminLayout>
     <template #default>
       <div class="admin-wrapper">
-        
-        <!-- === ХЛЕБНЫЕ КРОШКИ === -->
         <div class="breadcrumbs">
           <span 
             class="crumb-link" 
@@ -29,25 +27,18 @@
             {{ selectedSubcategory }}
           </span>
         </div>
-
-        <!-- ================================================== -->
-        <!-- VIEW 1: КАТАЛОГ (ГЛАВНАЯ) -->
-        <!-- ================================================== -->
         <div v-if="currentView === 'categories'">
-          
           <div class="view-header catalog-header">
             <div class="header-left-group">
               <img src="../../assets/folder.svg" class="folder-icon" />
               <h1 class="catalog-title">Каталог</h1>
             </div>
-
             <div class="header-right-group">
               <div class="control-box search-box-styled">
                 <img src="../../assets/search-normal.svg" />
                 <input type="text" placeholder="Поиск..." v-model="searchQuery">
                 <img src="../../assets/close-circle.svg" class="clear-circle" @click="searchQuery = ''" />
               </div>
-
               <div class="control-box dropdown-wrapper">
                 <button 
                   class="sort-btn-styled" 
@@ -58,7 +49,6 @@
                   <img v-else src="../../assets/drop down button(1).svg" />
                   <span>{{ buttonSortLabel }}</span>
                 </button>
-                
                 <div v-if="showSortDropdown" class="custom-dropdown-menu sort-menu-design">
                   <div class="sort-group-label">По алфавиту</div>
                   <div class="sort-item" @click="setSortOption('name-asc')"><div class="radio-indicator" :class="{ selected: sortOption === 'name-asc' }"></div><span class="sort-text">От А до Я</span></div>
@@ -69,7 +59,6 @@
                   <div class="sort-item" @click="setSortOption('count-asc')"><div class="radio-indicator" :class="{ selected: sortOption === 'count-asc' }"></div><span class="sort-text">Сначала меньше</span></div>
                 </div>
               </div>
-
               <div class="control-box dropdown-wrapper">
                 <button class="add-circle-btn" @click.stop="toggleAddMenu">
                   <img src="../../assets/add-circle.svg" />
@@ -82,11 +71,9 @@
               </div>
             </div>
           </div>
-
           <div v-if="sortOption" class="active-filters">
             <span class="filter-tag">{{ sortLabel }} <button class="tag-remove" @click="sortOption = ''">×</button></span>
           </div>
-
           <div class="list-container">
             <div v-for="cat in sortedCategories" :key="cat.id" class="category-item-wrapper">
               <div class="list-row" :class="{ 'row-expanded': expandedCategoryIds.has(cat.id) }">
@@ -108,10 +95,6 @@
             <div v-if="sortedCategories.length === 0" class="empty-text">Категории не найдены</div>
           </div>
         </div>
-
-        <!-- ================================================== -->
-        <!-- VIEW 2: ПОДКАТЕГОРИИ -->
-        <!-- ================================================== -->
         <div v-else-if="currentView === 'subcategories' && selectedCategory" style="display: flex; flex-direction: column;">
           <button class="icon-btn danger" title="Удалить категорию" @click="promptDelete('category', selectedCategory)">
             <span>Удалить категорию</span>
@@ -128,7 +111,6 @@
               </button>
             </div>
           </div>
-
           <div class="sub-view-card list-card">
             <div class="card-header-row">
               <div class="card-left">
@@ -141,7 +123,6 @@
                   <input type="text" placeholder="Поиск..." v-model="searchQuery">
                   <img src="../../assets/close-circle.svg" class="clear-circle" @click="searchQuery = ''" />
                 </div>
-
                 <div class="control-box dropdown-wrapper card">
                   <button class="sort-btn-styled card" :class="{ 'is-active': showSortDropdown || sortOption }" @click.stop="showSortDropdown = !showSortDropdown">
                     <img v-if="!(showSortDropdown || sortOption)" src="../../assets/drop down button.svg" />
@@ -175,20 +156,14 @@
                     <img src="../../assets/arrow-down.svg" />
                   </button>
                 </div>
-                
               </div>
               <div v-if="sortedSubcategories.length === 0" class="card-empty">Подкатегории не найдены</div>
             </div>
-
             <div class="card-footer" v-if="visibleSubCount < sortedSubcategories.length">
               <span class="show-more-text">Посмотреть ещё</span>
             </div>
           </div>
         </div>
-
-        <!-- ================================================== -->
-        <!-- VIEW 3: ТОВАРЫ -->
-        <!-- ================================================== -->
         <div v-else-if="currentView === 'products' && selectedSubcategory" style="display: flex; flex-direction: column;">
           <button class="icon-btn danger" title="Удалить подкатегорию" @click="promptDelete('subcategory-page', selectedSubcategory)">
             <span>Удалить подкатегорию</span>
@@ -205,7 +180,6 @@
               </button>
             </div>
           </div>
-
           <div class="sub-view-card list-card">
             <div class="card-header-row">
               <div class="card-left">
@@ -218,7 +192,6 @@
                   <input type="text" placeholder="Поиск товара..." v-model="searchQuery">
                   <img src="../../assets/close-circle.svg" class="clear-circle" @click="searchQuery = ''" />
                 </div>
-                
                 <div class="control-box dropdown-wrapper">
                   <button class="sort-btn-styled card" :class="{ 'is-active': showSortDropdown || sortOption }" @click.stop="showSortDropdown = !showSortDropdown">
                     <img v-if="!(showSortDropdown || sortOption)" src="../../assets/drop down button.svg" />
@@ -239,23 +212,19 @@
                     <div class="sort-item" @click="setSortOption('rating-asc')"><div class="radio-indicator" :class="{ selected: sortOption === 'rating-asc' }"></div><span class="sort-text">Низкий рейтинг</span></div>
                   </div>
                 </div>
-
                 <button class="add-circle-btn card" @click="showAddProductDialog = true">
                   <img src="../../assets/add-circle.svg" />
                 </button>
               </div>
             </div>
-            
             <div v-if="sortOption" class="card-filters-row">
                <span class="filter-tag">{{ sortLabel }} <button class="tag-remove" @click="sortOption = ''">×</button></span>
             </div>
-
             <div class="card-list-body">
               <div v-for="prod in visibleProducts" :key="prod.id" class="card-list-item product-item">
                 <div class="prod-col-name">
                   <span class="sub-text item-main-text">{{ prod.name }}</span>
                 </div>
-                
                 <div class="rat-pri-del">
                   <div class="prod-col-rating">
                     <div class="stars-wrapper">
@@ -282,11 +251,9 @@
                     </div>
                     <span class="rating-val-orange">{{ prod.rating }}</span>
                   </div>
-
                   <div class="prod-col-price">
                     <span class="price-val">{{ formatPrice(prod.price) }} ₽</span>
                   </div>
-                  
                   <div class="prod-col-action">
                     <button class="icon-btn danger card" @click.stop="promptDelete('product', prod.id)">
                       <img src="../../assets/trash.svg" style="filter: invert(48%) sepia(0%) saturate(3407%) hue-rotate(30deg) brightness(100%) contrast(88%);" />
@@ -294,21 +261,13 @@
                   </div>
                 </div>  
               </div>
-              
               <div v-if="visibleProducts.length === 0" class="card-empty">Товары не найдены</div>
             </div>
-            
             <div class="card-footer" v-if="visibleCount < sortedProducts.length">
               <span class="show-more-text" @click="showMoreProducts">Показать ещё</span>
             </div>
           </div>
         </div>
-
-        <!-- ================================================== -->
-        <!-- МОДАЛКИ -->
-        <!-- ================================================== -->
-
-        <!-- 1. Добавить категорию (Global) -->
         <div v-if="showAddCategoryDialog" class="modal-overlay blur-overlay" @click.self="showAddCategoryDialog = false">
           <div class="modal-content centered-modal">
             <h3 class="modal-title-center">Название категории</h3>
@@ -319,8 +278,6 @@
             </div>
           </div>
         </div>
-
-        <!-- 2. Добавить подкатегорию (ВНУТРИ категории, модальное окно) -->
         <div v-if="showAddSubDialog" class="modal-overlay blur-overlay" @click.self="showAddSubDialog = false">
           <div class="modal-content centered-modal">
              <h3 class="modal-title-center">Новая подкатегория</h3>
@@ -332,8 +289,6 @@
              </div>
           </div>
         </div>
-
-        <!-- 3. Переименование (Категория или Подкатегория) -->
         <div v-if="showRenameDialog" class="modal-overlay blur-overlay" @click.self="showRenameDialog = false">
           <div class="modal-content centered-modal">
             <h3 class="modal-title-center">Переименовать</h3>
@@ -344,8 +299,6 @@
             </div>
           </div>
         </div>
-
-        <!-- 4. Подтверждение удаления -->
         <div v-if="showDeleteConfirmDialog" class="modal-overlay blur-overlay" @click.self="showDeleteConfirmDialog = false">
           <div class="modal-content centered-modal">
             <h3 class="modal-title-center" v-if="currentView==='subcategories'">Удалить категорию</h3>
@@ -358,8 +311,6 @@
             </div>
           </div>
         </div>
-
-        <!-- 5. Сайдбар: Добавить подкатегорию (Global Add Menu) -->
         <div class="sidebar-overlay" :class="{ open: showAddSubSidebar }" @click.self="showAddSubSidebar = false">
           <div class="sidebar-panel">
             <h2 class="sidebar-title">Добавить подкатегорию</h2>
@@ -392,8 +343,6 @@
             </div>
           </div>
         </div>
-
-        <!-- 6. Добавить товар -->
         <div v-if="showAddProductDialog" class="modal-overlay" @click.self="showAddProductDialog = false">
           <div class="modal-content">
             <h3>Добавить товар</h3>
@@ -410,7 +359,6 @@
             </div>
           </div>
         </div>
-
       </div>
     </template>
   </AdminLayout>
@@ -420,7 +368,6 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import AdminLayout from './AdminLayout.vue';
 
-// === DATA ===
 const parentCategories = ref([
   { id: 1, name: 'Электроника', subCategories: ['Телефоны', 'Ноутбуки', 'Планшеты'] },
   { id: 2, name: 'Одежда', subCategories: ['Футболки', 'Штаны', 'Куртки'] },
@@ -441,7 +388,6 @@ const availableProducts = ref([
   { id: 202, name: 'Xiaomi Mi Band 8', price: 3990, rating: 4.6 },
 ]);
 
-// === STATE ===
 const currentView = ref('categories'); 
 const selectedCategory = ref(null);
 const selectedSubcategory = ref(null);
@@ -451,7 +397,6 @@ const itemsPerPage = 5;
 const visibleCount = ref(itemsPerPage);
 const visibleSubCount = ref(itemsPerPage);
 
-// Modals State
 const showAddMenu = ref(false);
 const showAddCategoryDialog = ref(false);
 const showAddSubDialog = ref(false); 
@@ -460,7 +405,6 @@ const showAddProductDialog = ref(false);
 const showRenameDialog = ref(false);
 const showDeleteConfirmDialog = ref(false);
 
-// Operation State
 const newCategoryName = ref('');
 const newSubName = ref('');
 const selectedProductToAdd = ref('');
@@ -468,16 +412,13 @@ const renameValue = ref('');
 const renameTarget = ref(null); 
 const deleteTarget = ref(null); 
 
-// Sidebar Selector
 const isCategorySelectorOpen = ref(false);
 const categorySearchQuery = ref('');
 const selectedParentId = ref(null);
 
-// Sorting
 const sortOption = ref('');
 const showSortDropdown = ref(false);
 
-// === COMPUTED ===
 const filteredParentCategories = computed(() => {
   if (!categorySearchQuery.value) return parentCategories.value;
   return parentCategories.value.filter(c => c.name.toLowerCase().includes(categorySearchQuery.value.toLowerCase()));
@@ -568,16 +509,12 @@ const buttonSortLabel = computed(() => {
   if (sortOption.value === 'rating-asc' || sortOption.value === 'rating-desc') return 'По рейтингу';
 });
 
-// === ACTIONS ===
-
-// --- Nav ---
 function goHome() { currentView.value = 'categories'; selectedCategory.value = null; selectedSubcategory.value = null; searchQuery.value = ''; sortOption.value = ''; }
 function goToCategory(cat) { selectedCategory.value = cat; selectedSubcategory.value = null; currentView.value = 'subcategories'; searchQuery.value = ''; sortOption.value = ''; visibleSubCount.value = itemsPerPage; }
 function goToSubcategoryFromInline(cat, subName) { selectedCategory.value = cat; selectedSubcategory.value = subName; currentView.value = 'products'; searchQuery.value = ''; sortOption.value = ''; }
 function goToSubcategory(subName) { selectedSubcategory.value = subName; currentView.value = 'products'; searchQuery.value = ''; sortOption.value = ''; visibleCount.value = itemsPerPage; }
 function toggleExpand(id) { if (expandedCategoryIds.value.has(id)) expandedCategoryIds.value.delete(id); else expandedCategoryIds.value.add(id); }
 
-// --- Add Category ---
 function toggleAddMenu() { showAddMenu.value = !showAddMenu.value; }
 function openCategoryModal() { showAddMenu.value = false; showAddCategoryDialog.value = true; newCategoryName.value = ''; }
 function addCategory() {
@@ -586,7 +523,6 @@ function addCategory() {
   newCategoryName.value = ''; showAddCategoryDialog.value = false;
 }
 
-// --- Add Subcategory (Global Sidebar) ---
 function openSubSidebar() { showAddMenu.value = false; showAddSubSidebar.value = true; newSubName.value = ''; selectedParentId.value = null; isCategorySelectorOpen.value = false; categorySearchQuery.value = ''; }
 function addSubcategory() {
   if (!newSubName.value.trim() || !selectedParentId.value) return;
@@ -595,7 +531,6 @@ function addSubcategory() {
   newSubName.value = ''; selectedParentId.value = null; showAddSubSidebar.value = false;
 }
 
-// --- Add Subcategory (Context Modal) ---
 function openAddSubDialog() {
   newSubName.value = '';
   showAddSubDialog.value = true;
@@ -607,7 +542,6 @@ function addSubcategoryFromModal() {
   showAddSubDialog.value = false;
 }
 
-// --- Add Product ---
 function addProductToSubcategory() {
   if (!selectedProductToAdd.value) return;
   const prod = availableProducts.value.find(p => p.id === Number(selectedProductToAdd.value));
@@ -618,7 +552,6 @@ function addProductToSubcategory() {
   selectedProductToAdd.value = ''; showAddProductDialog.value = false;
 }
 
-// --- Rename Operations ---
 function openRenameDialog(type, data) {
   renameTarget.value = { type, data };
   renameValue.value = type === 'category' ? data.name : data;
@@ -638,11 +571,9 @@ function confirmRename() {
     const index = subs.indexOf(data);
     if (index !== -1) {
       subs[index] = newVal;
-      // Update linked products
       dummyProducts.value.forEach(p => {
         if (p.sub === data) p.sub = newVal;
       });
-      // Update view if currently selected
       if (selectedSubcategory.value === data) {
         selectedSubcategory.value = newVal;
       }
@@ -651,7 +582,6 @@ function confirmRename() {
   showRenameDialog.value = false;
 }
 
-// --- Delete Operations ---
 function promptDelete(type, data) {
   deleteTarget.value = { type, data };
   showDeleteConfirmDialog.value = true;
@@ -683,7 +613,6 @@ function confirmDelete() {
   showDeleteConfirmDialog.value = false;
 }
 
-// --- Utils ---
 function getProductCount(subName) { return dummyProducts.value.filter(p => p.sub === subName).length; }
 function setSortOption(option) { sortOption.value = option; showSortDropdown.value = false; }
 function formatPrice(p) { return p.toLocaleString('ru-RU'); }
@@ -707,13 +636,11 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick));
 .crumb-link.active { color: #FF7A00; font-weight: 500; cursor: default; }
 .separator { margin: 0 8px; color: #CCC; }
 
-/* === Headers === */
 .catalog-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
 .header-left-group { display: flex; align-items: center; gap: 12px; }
 .catalog-title { font-size: 28px; font-weight: 700; color: #111827; margin: 0; line-height: 1.2; }
 .header-right-group { display: flex; align-items: center; gap: 12px; }
 
-/* === Controls === */
 .control-box { position: relative; }
 .search-box-styled { display: flex; align-items: center; background-color: #f9f9f9; border-radius: 16px; padding: 12px 24px; min-width: 200px; }
 .search-box-styled input { border: none; background: transparent; outline: none; font-size: 14px; color: #374151; margin-left: 8px; width: 100%; }
@@ -732,7 +659,6 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick));
 .add-circle-btn:hover { background-color: #E5E7EB; }
 .add-circle-btn.card { background-color: #ffffff; }
 .add-circle-btn.card:hover { background-color: #F3F4F6; }
-/* === Dropdown Menu === */
 .custom-dropdown-menu { min-width: 210px; position: absolute; top: calc(100% + 8px); border: 1px solid #E5E7EB; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 6px 0; z-index: 9999; background-color: #f6f6f6; }
 .custom-dropdown-menu.right-align { right: 0; left: auto; }
 .custom-dropdown-menu.sort-menu-design { padding: 16px 0; background: #FFF; top: calc(100% - 10px); }
@@ -749,7 +675,6 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick));
 .radio-indicator.selected { background-color: #FF7A00; }
 .radio-indicator.selected::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; background-color: white; border-radius: 50%; }
 
-/* === List Styles (View 1) === */
 .list-container { background: #fff; overflow: hidden; }
 .list-header { display: flex; justify-content: space-between; padding: 12px 20px; background: #F9FAFB; color: #6B7280; font-size: 12px; text-transform: uppercase; font-weight: 600; border-bottom: 1px solid #E5E7EB; }
 .list-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 8px; border-bottom: 1px solid #dddddd; background: #ffffff; transition: background-color 0.2s ease; }
@@ -809,7 +734,6 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick));
 .show-more-text { color: #FF7A00; font-size: 14px; cursor: pointer; font-weight: 500; }
 .show-more-text:hover { text-decoration: underline; }
 
-/* Product Item Grid */
 .product-item { display: grid; grid-template-columns: 1fr 80px 100px 40px; gap: 16px; align-items: center; }
 .item-main-text { font-weight: 500; color: #1F2937; }
 .prod-col-rating { display: flex; align-items: center; gap: 4px; font-size: 14px; color: #4B5563; font-weight: 500; }
@@ -821,7 +745,6 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick));
 .filter-tag { display: inline-flex; align-items: center; gap: 6px; background: #FFF7ED; color: #FF7A00; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; }
 .tag-remove { background: none; border: none; color: #FF7A00; font-size: 16px; cursor: pointer; }
 
-/* === Common & Modal === */
 .gray-input { background-color: #F9F9F9; border: none; border-radius: 16px; padding: 12px 24px; font-size: 14px; color: #333; outline: none; }
 .btn-gray { background: #F9FAFB; color: #374151; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 500; cursor: pointer; font-size: 14px; }
 .btn-gray:hover { background: #F3F4F6; }
@@ -854,7 +777,6 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick));
 .sidebar-actions { display: flex; gap: 12px; width: 100%; }
 .sidebar-actions button { width: 50%; }
 
-/* Custom Select */
 .custom-select-container { border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden; }
 .select-header { background-color: #F6F6F6; padding: 14px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #6B7280; }
 .select-header.is-open { background-color: #FF7A00; color: white; border-radius: 12px 12px 0 0; }
@@ -887,7 +809,6 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick));
 }
 
 .star-icon {
-  /* Убираем жесткий fill, так как используем градиент из шаблона */
   filter: drop-shadow(0px 1px 1px rgba(0,0,0,0.05));
 }
 
@@ -910,11 +831,9 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick));
   text-decoration: underline;
 }
 
-/* Корректировка кнопки "Показать еще" */
 .show-more-text {
   display: inline-block;
   padding: 8px 16px;
-  /* Можно добавить фон, если хочется кнопку, или оставить текстом */
   user-select: none;
 }
 

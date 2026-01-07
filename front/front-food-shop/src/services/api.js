@@ -1,4 +1,4 @@
-import api from '../api/instance';
+import api from '@/api/instance';
 
 export const resendPinCode = async (email) => {
     try {

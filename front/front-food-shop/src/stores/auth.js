@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import axios from 'axios'
 import { login as loginApi, refreshToken, logout } from '@/services/api'
 import router from '@/router';
 
@@ -45,7 +44,6 @@ export const useAuthStore = defineStore('auth', {
         setToken(accessToken) {
             this.accessToken = accessToken;
             sessionStorage.setItem('accessToken', accessToken);
-            axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
         },
         async logoutRe() {
             try {
