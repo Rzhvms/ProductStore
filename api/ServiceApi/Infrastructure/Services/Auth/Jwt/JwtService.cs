@@ -22,7 +22,7 @@ public class JwtService : IAuthTokenService
     }
 
     /// <inheritdoc />
-    public Task<string> GenerateAccessToken(UserModel userModel)
+    public Task<string> GenerateAccessToken(UserModel userModel, bool isRestoringPassword = false)
     {
         var signingCredentials = new SigningCredentials(
             key: _rsaSecurityKey,
@@ -41,16 +41,32 @@ public class JwtService : IAuthTokenService
 
         var jwtHandler = new JwtSecurityTokenHandler();
 
-        var jwt = jwtHandler.CreateJwtSecurityToken(
-            issuer: _settings.Value.AccessTokenSettings.Issuer,
-            audience: _settings.Value.AccessTokenSettings.Audience,
-            subject: claimsIdentity,
-            notBefore: DateTime.UtcNow,
-            expires: DateTime.UtcNow.AddSeconds(_settings.Value.AccessTokenSettings.LifeTimeInSeconds),
-            issuedAt: DateTime.UtcNow,
-            signingCredentials: signingCredentials);
+        JwtSecurityToken? jwtToken;
+        if (isRestoringPassword)
+        {
+            jwtToken = jwtHandler.CreateJwtSecurityToken(
+                issuer: _settings.Value.AccessTokenSettings.Issuer,
+                audience: _settings.Value.AccessTokenSettings.Audience,
+                subject: claimsIdentity,
+                notBefore: DateTime.UtcNow,
+                // Задаем 5 минут, чтобы пользователь не смог пользоваться этим токеном в авторизованной зоне
+                expires: DateTime.UtcNow.AddSeconds(300.00),
+                issuedAt: DateTime.UtcNow,
+                signingCredentials: signingCredentials);
+        }
+        else
+        {
+            jwtToken = jwtHandler.CreateJwtSecurityToken(
+                issuer: _settings.Value.AccessTokenSettings.Issuer,
+                audience: _settings.Value.AccessTokenSettings.Audience,
+                subject: claimsIdentity,
+                notBefore: DateTime.UtcNow,
+                expires: DateTime.UtcNow.AddSeconds(_settings.Value.AccessTokenSettings.LifeTimeInSeconds),
+                issuedAt: DateTime.UtcNow,
+                signingCredentials: signingCredentials);
+        }
 
-        var serializedJwt = jwtHandler.WriteToken(jwt);
+        var serializedJwt = jwtHandler.WriteToken(jwtToken);
 
         return Task.FromResult(serializedJwt);
     }

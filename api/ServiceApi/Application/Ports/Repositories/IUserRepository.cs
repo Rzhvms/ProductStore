@@ -21,4 +21,9 @@ public interface IUserRepository
     /// Изменить пароль
     /// </summary>
     Task ChangeUserPasswordAsync(Guid id, string passwordHash, string salt);
+    
+    /// <summary>
+    /// Удаление пользователя
+    /// </summary>
+    Task DeleteUserAsync(Guid id);
 }

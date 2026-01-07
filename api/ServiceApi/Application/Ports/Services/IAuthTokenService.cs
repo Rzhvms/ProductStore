@@ -15,7 +15,7 @@ public interface IAuthTokenService
     /// <summary>
     /// Генерация Access Token для пользователя
     /// </summary>
-    Task<string> GenerateAccessToken(UserModel userModel);
+    Task<string> GenerateAccessToken(UserModel userModel, bool isRestoringPassword = false);
     
     /// <summary>
     /// Генерация нового Refresh Token

@@ -1,25 +1,9 @@
-<template> 
+<template>
   <div class="page-bg">
     <div class="login-card" :style="{ height: cardHeight + 'px' }">
-      <h1 class="login-title">Регистрация</h1>
+      <h1 class="login-title">Придумайте<br> новый пароль</h1>
 
       <form @submit.prevent="handleSubmit" class="form">
-
-        <!-- Email -->
-        <div class="field-wrap">
-          <div class="field">
-            <input
-              v-model="email"
-              type="email"
-              placeholder="Введите почту"
-              class="input"
-              @input="email = sanitizeInput(email)"
-            />
-          </div>
-          <transition name="fade-slide">
-            <p v-if="errors.email" class="error-text">{{ errors.email }}</p>
-          </transition>
-        </div>
 
         <!-- Новый пароль -->
         <div class="field-wrap">
@@ -46,7 +30,7 @@
               <div class="password-strength-bg">
                 <div class="strength-bar" :style="{ width: strengthWidth.password, background: strengthColor.password }"></div>
               </div>
-              <span class="strength-label">{{ strengthLabel }}</span>
+              <span class="strength-label" style="color: #7A7A7A;">{{ strengthLabel }}</span>
             </div>
           </transition>
         </div>
@@ -67,90 +51,73 @@
             </button>
           </div>
 
-          <!-- Ошибка "Пароли не совпадают" -->
-          <transition name="fade-slide">
-            <p v-if="passwordsMismatch" class="error-text" style="margin-bottom: 0;">
-              Пароли не совпадают
-            </p>
-          </transition>
+          <!-- Ошибка совпадения -->
+          <p v-if="confirmPassword && password !== confirmPassword" class="error-text" style="margin-bottom: 0px;">
+            Пароли не совпадают
+          </p>
         </div>
+
+        <!-- Общая ошибка -->
+        <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
 
         <p class="password-rules">
           Пароль должен содержать не менее 8 символов, включая<br>
           латинские буквы (a-z, A-Z), как минимум одну заглавную<br>
           букву и одну цифру
         </p>
-
-        <!-- Общая ошибка -->
-        <transition name="fade-slide">
-          <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
-        </transition>
-
+        
         <!-- Сохранить -->
         <button
           type="submit"
           class="submit-btn"
-          :class="{
-            'inactive-btn': !isFormValid || isLoading,
-            'error-btn': !!submissionError  
-          }"
-          :disabled="!isFormValid || isLoading"
+          :class="{ 'inactive-btn': !isFormValid || isSaved }"
+          :disabled="!isFormValid || isSaved"
           style="margin-top: 12px;"
         >
-          {{ buttonText }}
+          {{ isSaved ? 'Пароль изменён!' : 'Сохранить' }}
         </button>
 
+        <!-- Контактная информация -->
+        <p class="contact-text" style="margin-top: 12px; font-size: 14px;">
+          По всем вопросам можете обращаться:<br>
+          adminexample@gmail.com
+        </p>
+
       </form>
-
-      <!-- Кнопка "У меня уже есть аккаунт" -->
-      <button class="create-btn" @click="handleLogin" style="margin-top: 12px;">
-        У меня уже есть аккаунт
-      </button>
-
-      <!-- Контактная информация -->
-      <p class="contact-text">
-        По всем вопросам можете обращаться:<br>
-        adminexample@gmail.com
-      </p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, reactive, watch } from "vue";
-import { useRouter } from "vue-router";
-import { createUser } from "@/services/api";
+import { ref, computed } from 'vue';
+import router from '@/router';
+import { changePassword } from '@/services/api';
 
-const router = useRouter();
-const email = ref("");
-const password = ref("");
-const confirmPassword = ref("");
-const showPassword = reactive({ password: false, confirm: false });
-const showPasswordStrength = reactive({ password: false });
-const errorMessage = ref("");
-const isLoading = ref(false);
-const submissionError = ref(null);
+const password = ref('');
+const confirmPassword = ref('');
+const showPassword = ref({ password: false, confirm: false });
+const errorMessage = ref('');
+const isSaved = ref(false);
+const showPasswordStrength = ref({ password: false });
 const passwordStrength = ref(0);
-const errors = ref({ email: null, password: null });
 
-// Базовая высота карты
-const baseCardHeight = 570;
+// Начальная фиксированная высота карточки
+const baseCardHeight = 524;
 const cardHeight = ref(baseCardHeight);
 
-// --- САНИТАЙЗИНГ ---
+/* --- САНИТАЙЗИНГ --- */
 const sanitizeInput = (value) => value.replace(/\s/g, '');
 
-// --- ВАЛИДАЦИЯ ---
+/* --- VALIDATION --- */
 const isFormValid = computed(() => {
   return (
-    email.value.includes("@") &&
     password.value.length >= 8 &&
     password.value === confirmPassword.value &&
-    password.value.trim().length > 0
+    !/\s/.test(password.value) // запрещаем пробелы
   );
 });
 
-// --- PASSWORD STRENGTH ---
+/* --- Password Strength --- */
 const updatePasswordStrength = (pass) => {
   let score = 1;
   if (pass.length >= 8) score++;
@@ -176,24 +143,20 @@ const updatePasswordStrength = (pass) => {
   return Math.min(score, 6);
 };
 
-const buttonText = computed(() => {
-  if (submissionError.value) return submissionError.value;
-  if (isLoading.value) return "Создание аккаунта...";
-  return "Далее";
-});
-
-watch([email, password, confirmPassword], () => {
-  if (submissionError.value) submissionError.value = null;
-});
-
 const onPasswordInput = () => {
-  password.value = sanitizeInput(password.value);
+  password.value = sanitizeInput(password.value); // удаляем пробелы
   const s = updatePasswordStrength(password.value);
   passwordStrength.value = s;
-  showPasswordStrength.password = password.value.length > 0;
+  showPasswordStrength.value.password = password.value.length > 0;
+
+  let extraHeight = 0;
+  if (showPasswordStrength.value.password) extraHeight += 40;
+  if (confirmPassword.value && password.value !== confirmPassword.value) extraHeight += 24;
+
+  cardHeight.value = baseCardHeight + extraHeight;
 };
 
-// --- COMPUTED BARS ---
+/* --- Computed bars --- */
 const strengthWidth = computed(() => ({
   password: password.value ? `${passwordStrength.value * 15 + 10}%` : '10%'
 }));
@@ -214,65 +177,27 @@ const strengthLabel = computed(() => {
   return "Сильный";
 });
 
-// --- PASSWORDS MISMATCH ---
-const passwordsMismatch = computed(() => confirmPassword.value && password.value !== confirmPassword.value);
-
-// --- Обновление высоты карты ---
-const updateCardHeight = () => {
-  let extraHeight = 0;
-  if (showPasswordStrength.password) extraHeight += 72; // высота блока сложности пароля
-  if (passwordsMismatch.value) extraHeight += 24; // высота ошибки "Пароли не совпадают"
-  cardHeight.value = baseCardHeight + extraHeight;
-};
-
-// Следим за изменениями пароля, подтверждения и блока сложности пароля
-watch(
-  [password, confirmPassword, () => showPasswordStrength.password],
-  updateCardHeight,
-  { immediate: true }
-);
-
-// --- SUBMIT ---
+/* --- Submit --- */
 const handleSubmit = async () => {
   if (!isFormValid.value) {
-    errorMessage.value = 'Пароли не совпадают, меньше 8 символов или содержат пробелы';
+    errorMessage.value = 'Пароли не совпадают';
     return;
   }
 
-  errors.value = { email: null, password: null };
-  isLoading.value = true;
-  errorMessage.value = '';
-  submissionError.value = null;
-
+  const token = sessionStorage.getItem('token');
   try {
-    const claims = [{ type: "role", value: "user" }];
-    const response = await createUser(email.value, password.value, claims);
-    if (response && response.userId) {
-      localStorage.setItem("email", email.value);
-      localStorage.setItem("userId", response.userId);
-      router.push("/confirm-email");
-    } else {
-      throw new Error(response.message);
-    }
-  } catch (err) {
-    console.log(err);
-    let msg = "Не удалось создать аккаунт";
-    if (err.response && err.response.data && err.response.data.message) {
-      msg = err.response.data.message;
-    } else if (err.message) {
-      msg = err.message;
-    }
-    submissionError.value = msg;
-  } finally {
-    isLoading.value = false;
+    const response = await changePassword(password.value, token);
+    sessionStorage.removeItem('token');
+    router.push('/login');
+  } catch (error) {
+    errorMessage.value = error.message;
   }
 };
-
-const handleLogin = () => router.push("/login");
 </script>
 
 <style scoped>
 @import './auth.css';
+
 
 .password-field {
   position: relative;
@@ -286,11 +211,6 @@ const handleLogin = () => router.push("/login");
   border: none;
   background: transparent;
   cursor: pointer;
-}
-
-.submit-btn.error-btn {
-  background-color: #E63946;
-  color: white;
 }
 
 .password-strength-wrapper {
@@ -324,12 +244,6 @@ const handleLogin = () => router.push("/login");
   color: #7A7A7A;
 }
 
-.submit-btn.inactive-btn {
-  background-color: #FFA84C;
-  color: white;
-  cursor: not-allowed;
-}
-
 .fade-slide-enter-active, .fade-slide-leave-active {
   transition: all 0.3s ease;
 }
@@ -340,5 +254,11 @@ const handleLogin = () => router.push("/login");
 .fade-slide-enter-to, .fade-slide-leave-from {
   opacity: 1;
   transform: translateY(0);
+}
+
+.submit-btn.inactive-btn {
+  background-color: #FFA84C;
+  color: white;
+  cursor: not-allowed;
 }
 </style>

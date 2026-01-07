@@ -4,7 +4,7 @@
       class="login-card"
       :class="{ 'login-card-error': codeError }"
     >
-      <h1 class="login-title">Подтвердите<br>вашу почту</h1>
+      <h1 class="login-title">Восстановление<br>пароля</h1>
       <p class="contact-text" style="margin-bottom: 16px; font-size: 16px;">
         Мы отправили код подтверждения<br>
         на вашу почту
@@ -74,7 +74,7 @@
 <script setup>
 import { ref, computed, nextTick, onMounted } from "vue";
 import router from "@/router";
-import { resendPinCode, sendVerificationEmail } from "@/services/api";
+import { verifyEmail } from "@/services/api";
 
 const code = ref(["", "", "", "", "", ""]);
 const codeError = ref(false);
@@ -94,11 +94,13 @@ const handleSubmit = async () => {
   const enteredCode = code.value.join("");
   const email = localStorage.getItem("email");
   try {
-    const response = await sendVerificationEmail(email, enteredCode);
+    const response = await verifyEmail(email, enteredCode);
+    const token = response.accessToken;
+    sessionStorage.setItem("token", token);
     codeError.value = false;
     codeSuccess.value = true;
     shakeActive.value = false;
-    router.push("/finish-registration");
+    router.push("/new-password");
   } catch (error) {
     codeError.value = true;
     codeErrorText.value = "Неверный код подтверждения\nПопробуйте еще раз или запросите код\nповторно";
@@ -124,19 +126,8 @@ const startTimer = (seconds) => {
   }, 1000);
 };
 
-const handleResend = async () => {
+const handleResend = () => {
   if (resendActive.value) return;
-  try {
-    const email = localStorage.getItem("email");
-    const response = await resendPinCode(email);
-    router.push("/finish-registration");
-  } catch (error) {
-    codeError.value = true;
-    codeErrorText.value = "Не удалось получить код подтверждения\nПопробуйте еще раз или запросите код\nповторно";
-    codeSuccess.value = false;
-    shakeActive.value = false;
-    setTimeout(() => (shakeActive.value = true), 50);
-  }
   localStorage.setItem("lastResendTime", Date.now().toString());
   startTimer(60);
 };
@@ -214,7 +205,7 @@ const onBackspace = (index, event) => {
 
 .login-card {
   width: 410px;
-  height: 540px;
+  height: 580px;
   transition: height 0.3s ease;
 }
 
