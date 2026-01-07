@@ -64,6 +64,7 @@ public static class InfraForStartup
         services.AddScoped<ICartRepository, RedisCartRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
+        services.AddScoped<IFavoriteProductsRepository, FavoriteProductsRepository>();
 
         // FluentMigrator
         services.AddFluentMigratorCore()
@@ -72,7 +73,6 @@ public static class InfraForStartup
                 .WithGlobalConnectionString(connectionString)
                 .ScanIn(typeof(Date_202511011900_AddTables_UserDal_ClaimDal_RefreshTokenDal).Assembly).For.Migrations())
             .AddLogging(lb => lb.AddFluentMigratorConsole());
-
         
         // Email
         services.AddScoped<IMailHelper, MailHelper>();

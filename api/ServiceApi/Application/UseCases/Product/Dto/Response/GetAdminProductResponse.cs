@@ -3,9 +3,9 @@ using System.Text.Json.Nodes;
 namespace Application.UseCases.Product.Dto.Response;
 
 /// <summary>
-/// Выходная модель для получения продукта на клиентской части
+/// Выходная модель для получения продукта на админ панели
 /// </summary>
-public record GetProductResponse
+public record GetAdminProductResponse
 {
     /// <summary>
     /// Идентификатор продукта
@@ -23,9 +23,19 @@ public record GetProductResponse
     public string Description { get; init; }
     
     /// <summary>
+    /// Идентификатор поставщика
+    /// </summary>
+    public Guid? ProviderId { get; init; }
+    
+    /// <summary>
     /// Цена продукта
     /// </summary>
     public decimal Price { get; init; }
+    
+    /// <summary>
+    /// Количество
+    /// </summary>
+    public int Quantity { get; init; }
     
     /// <summary>
     /// Идентификатор категории
