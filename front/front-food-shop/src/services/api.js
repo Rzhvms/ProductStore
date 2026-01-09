@@ -81,11 +81,137 @@ export const login = async (email, password) => {
     }
 };
 
-export const refreshToken = async () => {
+export const refreshToken = async (accessToken) => {
     const refreshToken = localStorage.getItem("refreshToken") || sessionStorage.getItem("refreshToken") || null;
-    return api.post('auth/refresh-token', { refreshToken });
+    return api.post('auth/refresh-token', { accessToken, refreshToken });
 };
 
 export const logout = async () => {
     return api.post('auth/sign-out');
+};
+
+export const createCategory = async (name, parentId = null) => {
+    try {
+        const response = await api.post('categories/create', { name, parentId });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось создать категорию");
+    }
+};
+
+export const getCategories = async () => {
+    try {
+        const response = await api.get('categories/list');
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить список категорий");
+    }
+};
+
+export const getCategory = async (id) => {
+    try {
+        const response = await api.get(`categories/${id}`);
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить категорию");
+    }
+};
+
+export const updateCategory = async (id, name, parentId = null) => {
+    try {
+        const response = await api.put(`categories/${id}`, { name, parentId });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось обновить категорию");
+    }
+};
+
+export const deleteCategory = async (id) => {
+    try {
+        const response = await api.delete(`categories/${id}`);
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось удалить категорию");
+    }
+};
+
+export const categoryApi = {
+    create: createCategory,
+    get: getCategories,
+    getById: getCategory,
+    update: updateCategory,
+    delete: deleteCategory
+};
+
+export const createProduct = async (name, providerId, description, price, quantity, categoryId, characteristics) => {
+    try {
+        const response = await api.post('admin-product/create', { name, providerId, description, price, quantity, categoryId, characteristics });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось создать товар");
+    }
+};
+
+export const getProducts = async (pageNumber = 1, pageSize = 10) => {
+    try {
+        const response = await api.get(`admin-product/list`, {
+            params: {
+                pageNumber,
+                pageSize,
+            },
+        });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить список товаров");
+    }
+};
+
+export const getProduct = async (id) => {
+    try {
+        const response = await api.get(`admin-product/${id}`);
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить товар");
+    }
+};
+
+export const updateProduct = async (id, name, providerId, description, price, quantity, categoryId, characteristics) => {
+    try {
+        const response = await api.put(`admin-product/${id}`, { name, providerId, description, price, quantity, categoryId, characteristics });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось обновить товар");
+    }
+};
+
+export const deleteProduct = async (id) => {
+    try {
+        const response = await api.delete(`admin-product/${id}`);
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось удалить товар");
+    }
+};
+
+export const getCategoryProducts = async (categoryId, pageNumber = 1, pageSize = 10) => {
+    try {
+        const response = await api.get(`admin-category/${categoryId}/list`, {
+            params: {
+                pageNumber,
+                pageSize,
+            },
+        });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить список товаров");
+    }
+}
+
+export const adminProductApi = {
+    create: createProduct,
+    get: getProducts,
+    getById: getProduct,
+    update: updateProduct,
+    delete: deleteProduct,
+    getCategoryProducts: getCategoryProducts
 };

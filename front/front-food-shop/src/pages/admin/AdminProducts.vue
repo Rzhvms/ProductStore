@@ -42,7 +42,7 @@
             </div>
           </div>
 
-          <button class="add-circle-btn card" @click="showAddProductDialog = true">
+          <button class="add-circle-btn card" @click="router.push('/admin/products/add')">
             <img src="../../assets/add-circle.svg" />
           </button>
         </div>
@@ -51,7 +51,7 @@
         <span class="filter-tag">{{ sortLabel }} <button class="tag-remove" @click="sortOption = ''">×</button></span>
       </div>
       <div class="products-list">
-        <div class="product-row" v-for="(p, i) in filteredProducts" :key="p.id" @click="openEditModal(i)">
+        <div class="product-row" v-for="(p, i) in filteredProducts" :key="p.id" @click="openProduct(p.id)">
   
           <div class="row-image">
             <div class="img-placeholder" :style="{ backgroundImage: p.image ? `url(${p.image})` : '' }"></div>
@@ -88,8 +88,8 @@
 
             <!-- Контейнер: категория, подкатегория -->
             <div class="row-meta">
-              <span class="p-cat">Категория: {{ p.category || 'Не указана' }}</span>
-              <span class="p-sub" v-if="p.subcategory">Подкатегория: {{ p.subcategory }}</span>
+              <span class="p-cat">Категория: {{ getCategoryName(p.categoryId) }}</span>
+              <span class="p-sub" v-if="getCategoryName(p.categoryId) !== 'Не указана'">Подкатегория: {{ getSubcategoryName(p.categoryId) }}</span>
             </div>
 
           </div>
@@ -216,10 +216,19 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, watch } from 'vue'
+import { reactive, ref, computed, watch, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import AdminLayout from './AdminLayout.vue'
+import { adminProductApi, categoryApi } from '@/services/api.js'
 
 /* --- STATE --- */
+const products = ref([])
+const categories = ref([])
+const rawCategories = ref([])
+const isLoading = ref(false)
+
+const router = useRouter()
+
 const tempFilters = reactive({ 
   priceFrom: null, 
   priceTo: null,
@@ -241,258 +250,143 @@ const categorySearch = ref('');
 const showAllCategories = ref(false);
 const visibleCategoriesCount = 3;
 const expandedCategories = ref([]);
-const showSortMenu = ref(false);
 const sortOption = ref('');
 const searchQuery = ref('');
 const showSortDropdown = ref(false);
 const showAddProductDialog = ref(false);
 const isFiltered = ref(false);
 
-/* --- DATA --- */
-const categories = reactive([
-  { name:'Фрукты', sub:['Цитрусовые','Ягоды','Тропические'] },
-  { name:'Овощи', sub:['Корнеплоды','Листовые','Бобовые'] },
-  { name:'Напитки', sub:['Соки','Чай','Кофе'] }
-])
+/* --- INITIAL DATA FETCHING --- */
+const loadData = async () => {
+  isLoading.value = true
+  try {
+    const catsResponse = await categoryApi.get()
+    rawCategories.value = catsResponse
+    categories.value = transformCategories(catsResponse)
 
-const products = ref([
-  {
-    id: 101,
-    name:'Манго сушёное',
-    price:'450',
-    image:'',
-    category:'Фрукты',
-    subcategory:'Тропические',
-    ingredients:'Манго сушёное',
-    rating: 4.8,
-    nutrition:{ calories:330, proteins:2.5, fats:0.6, carbs:83 },
-    features:['Натуральное','Без сахара']
-  },
-  {
-    id: 102,
-    name:'Морковь свежая',
-    price:'120',
-    image:'',
-    category:'Овощи',
-    subcategory:'Корнеплоды',
-    ingredients:'Морковь',
-    rating: 3.6,
-    nutrition:{ calories:41, proteins:0.9, fats:0.2, carbs:10 },
-    features:['Свежая','Без химии']
-  },
-  {
-    id: 103,
-    name:'Апельсиновый сок',
-    price:'250',
-    image:'',
-    category:'Напитки',
-    subcategory:'Соки',
-    ingredients:'Апельсин',
-    rating: 5.0,
-    nutrition:{ calories:45, proteins:0.7, fats:0.1, carbs:10 },
-    features:['100% сок','Без сахара']
+    const productsResponse = await adminProductApi.get(1, 100)
+    products.value = productsResponse.productList
+  } catch (error) {
+    console.error("Ошибка при загрузке данных:", error.message)
+    alert(error.message)
+  } finally {
+    isLoading.value = false
   }
-])
+}
+
+const transformCategories = (rawCats) => {
+  const mainCats = rawCats.filter(c => !c.parentCategoryId)
+  return mainCats.map(parent => ({
+    id: parent.categoryId,
+    name: parent.categoryName,
+    sub: rawCats.filter(c => c.parentCategoryId === parent.categoryId).map(s => ({
+      id: s.categoryId,
+      name: s.categoryName
+    }))
+  }))
+}
+
+const getCategoryName = (id) => {
+  const cat = rawCategories.value.find(c => c.categoryId === id);
+  if (!cat) return 'Не указана';
+
+  if (cat.parentCategoryId) {
+    const parent = rawCategories.value.find(c => c.categoryId === cat.parentCategoryId);
+    return parent ? parent.categoryName : cat.categoryName;
+  }
+  
+  return cat.categoryName;
+}
+
+const getSubcategoryName = (id) => {
+  const cat = rawCategories.value.find(c => c.categoryId === id);
+  return cat ? cat.categoryName : 'Не указана';
+}
+
+onMounted(() => {
+  loadData()
+})
 
 /* --- MODAL LOGIC --- */
 const showAddModal = ref(false)
 const showEditModal = ref(false)
-const editingIndex = ref(null)
-
-const modalProduct = reactive({
-  name:'', price:'', image:'', category:'', subcategory:'', ingredients:'', rating: 0,
-  nutrition:{ calories:null, proteins:null, fats:null, carbs:null },
-  features:[]
-})
+const editingId = ref(null)
 
 /* --- METHODS --- */
-const getSubcategories = (catName) => {
-  const cat = categories.find(c=>c.name===catName)
-  return cat ? cat.sub : []
-}
-
 const validateInput = (obj, key, event) => {
-  let val = event.target.value;
-  val = val.replace(/[^0-9.]/g, '');
-  if ((val.match(/\./g) || []).length > 1) {
-     val = val.slice(0, -1);
-  }
+  let val = event.target.value.replace(/[^0-9.]/g, '');
+  if ((val.match(/\./g) || []).length > 1) val = val.slice(0, -1);
   event.target.value = val;
   obj[key] = val;
 };
 
 const checkLimits = (obj, key, minLimit, maxLimit) => {
-    // Если поле пустое — ничего не делаем
     if (obj[key] === '' || obj[key] === null) return;
-
     let val = parseInt(obj[key]);
-
-    // Если введено что-то странное (NaN), сбрасываем в minLimit (или 0)
-    if (isNaN(val)) {
-        obj[key] = '';
-        return;
-    }
-
-    // Логика "Прилипания" к границам
+    if (isNaN(val)) { obj[key] = ''; return; }
     if (val < minLimit) val = minLimit;
     if (val > maxLimit) val = maxLimit;
-
-    // Записываем итоговое число обратно
     obj[key] = val;
 };
-// ===== ФИЛЬТРЫ: ОТКРЫТЬ / ЗАКРЫТЬ / ПРИМЕНИТЬ =====
 
-// Открыть панель фильтров
+// Фильтры
 const openFilters = () => {
-  // Копируем применённые фильтры во временные
-  tempFilters.priceFrom = filters.priceFrom;
-  tempFilters.priceTo = filters.priceTo;
-  tempFilters.ratingFrom = filters.ratingFrom;
-  tempFilters.ratingTo = filters.ratingTo;
+  Object.assign(tempFilters, filters);
   tempFilters.selectedSubcategories = [...filters.selectedSubcategories];
   showFilters.value = true;
 }
 
-// Закрыть без сохранения
-const closeFilters = () => {
-  showFilters.value = false;
-  categorySearch.value = '';
-}
+const closeFilters = () => { showFilters.value = false; categorySearch.value = ''; }
+const toggleFilters = () => showFilters.value ? closeFilters() : openFilters();
 
-// Переключатель (для кнопки)
-const toggleFilters = () => {
-  if (showFilters.value) {
-    closeFilters();
-  } else {
-    openFilters();
-  }
-}
-
-// Применить фильтры
 const applyFilters = () => {
-  filters.priceFrom = tempFilters.priceFrom;
-  filters.priceTo = tempFilters.priceTo;
-  filters.ratingFrom = tempFilters.ratingFrom;
-  filters.ratingTo = tempFilters.ratingTo;
+  Object.assign(filters, tempFilters);
   filters.selectedSubcategories = [...tempFilters.selectedSubcategories];
   showFilters.value = false;
   isFiltered.value = true;
-  categorySearch.value = '';
 }
 
-// Сбросить временные фильтры (в панели)
-const resetTempFilters = () => {
-  tempFilters.priceFrom = null;
-  tempFilters.priceTo = null;
-  tempFilters.ratingFrom = null;
-  tempFilters.ratingTo = null;
-  tempFilters.selectedSubcategories = [];
-}
-
-// Сбросить применённые фильтры (полный сброс)
 const resetFilters = () => {
-  resetTempFilters();
+  const empty = { priceFrom: null, priceTo: null, ratingFrom: null, ratingTo: null, selectedSubcategories: [] };
+  Object.assign(tempFilters, empty);
+  Object.assign(filters, empty);
   searchQuery.value = '';
-  filters.priceFrom = null;
-  filters.priceTo = null;
-  filters.ratingFrom = null;
-  filters.ratingTo = null;
-  filters.selectedSubcategories = [];
   isFiltered.value = false;
   showFilters.value = false;
 }
 
-// ===== КАТЕГОРИИ: ВЫБОР И РАСКРЫТИЕ =====
-
-// Проверка: все подкатегории выбраны
-const isCategoryFullySelected = (cat) => {
-  return cat.sub.length > 0 && cat.sub.every(sub => 
-    tempFilters.selectedSubcategories.includes(sub)
-  );
-}
-
-// Проверка: часть подкатегорий выбрана (для indeterminate)
+const isCategoryFullySelected = (cat) => cat.sub.length > 0 && cat.sub.every(sub => tempFilters.selectedSubcategories.includes(sub));
 const isCategoryPartiallySelected = (cat) => {
-  const selectedCount = cat.sub.filter(sub => 
-    tempFilters.selectedSubcategories.includes(sub)
-  ).length;
+  const selectedCount = cat.sub.filter(sub => tempFilters.selectedSubcategories.includes(sub)).length;
   return selectedCount > 0 && selectedCount < cat.sub.length;
 }
 
-// Переключить всю категорию (выбрать/снять все подкатегории)
 const toggleCategory = (cat) => {
   if (isCategoryFullySelected(cat)) {
-    // Убираем все подкатегории этой категории
-    tempFilters.selectedSubcategories = tempFilters.selectedSubcategories.filter(
-      sub => !cat.sub.includes(sub)
-    );
+    tempFilters.selectedSubcategories = tempFilters.selectedSubcategories.filter(sub => !cat.sub.includes(sub));
   } else {
-    // Добавляем все подкатегории этой категории
-    cat.sub.forEach(sub => {
-      if (!tempFilters.selectedSubcategories.includes(sub)) {
-        tempFilters.selectedSubcategories.push(sub);
-      }
-    });
+    cat.sub.forEach(sub => { if (!tempFilters.selectedSubcategories.includes(sub)) tempFilters.selectedSubcategories.push(sub); });
   }
 }
-
-// Развернуть/свернуть список подкатегорий
 const toggleCategoryExpand = (catName) => {
   const index = expandedCategories.value.indexOf(catName);
-  if (index > -1) {
-    expandedCategories.value.splice(index, 1);
-  } else {
-    expandedCategories.value.push(catName);
+  index > -1 ? expandedCategories.value.splice(index, 1) : expandedCategories.value.push(catName);
+}
+
+const setSortOption = (opt) => { sortOption.value = opt; showSortDropdown.value = false; }
+
+const deleteProduct = async (id) => {
+  if (!confirm('Удалить этот товар?')) return
+  try {
+    await adminProductApi.delete(id)
+    await loadData()
+  } catch (error) {
+    alert(error.message)
   }
 }
 
-// ===== СОРТИРОВКА =====
-const setSortOption = (opt) => {
-  sortOption.value = opt;
-  showSortDropdown.value = false;
-}
-
-// ===== МОДАЛКИ: ДОБАВЛЕНИЕ / РЕДАКТИРОВАНИЕ =====
-const openAddModal = () => {
-  Object.assign(modalProduct, {
-    name:'', price:'', image:'', category:'', subcategory:'', ingredients:'', rating:0,
-    nutrition:{ calories:null, proteins:null, fats:null, carbs:null },
-    features:[]
-  })
-  showAddModal.value = true
-}
-
-const openEditModal = (i) => {
-  editingIndex.value = i
-  Object.assign(modalProduct, JSON.parse(JSON.stringify(filteredProducts.value[i])))
-  showEditModal.value = true
-}
-
-const closeModals = () => {
-  showAddModal.value = false;
-  showEditModal.value = false;
-}
-
-const formatPrice = () => {
-  modalProduct.price = modalProduct.price.replace(/\D/g,'').replace(/\B(?=(\d{3})+(?!\d))/g,' ')
-}
-
-const confirmAdd = () => {
-  if(!modalProduct.name.trim()) return alert('Название обязательно')
-  const newProd = JSON.parse(JSON.stringify(modalProduct))
-  newProd.id = Date.now()
-  products.value.push(newProd)
-  closeModals()
-}
-
-const confirmEdit = () => {
-  const editedId = modalProduct.id;
-  const originalIndex = products.value.findIndex(p => p.id === editedId);
-  
-  if (originalIndex !== -1) {
-    products.value[originalIndex] = JSON.parse(JSON.stringify(modalProduct))
-  }
-  closeModals()
+const openProduct = (id) => {
+  router.push(`/admin/products/${id}`)
 }
 
 /* --- COMPUTED --- */
@@ -507,126 +401,68 @@ const buttonSortLabel = computed(() => {
 const sortLabel = computed(() => {
   const labels = {
     'name-asc': 'От А до Я', 'name-desc': 'От Я до А',
-    'count-desc': 'Сначала больше', 'count-asc': 'Сначала меньше',
     'price-asc': 'Сначала дешевле', 'price-desc': 'Сначала дороже',
     'rating-desc': 'Высокий рейтинг', 'rating-asc': 'Низкий рейтинг'
   };
   return labels[sortOption.value] || 'Сортировка';
 });
 
-
-// Фильтрация категорий по поиску
 const filteredCategories = computed(() => {
   const search = categorySearch.value.toLowerCase().trim();
-  let cats = [...categories]; // categories - reactive, не нужен .value
-  
+  let cats = [...categories.value];
   if (search) {
     cats = cats.map(c => {
       const catMatches = c.name.toLowerCase().includes(search);
       const subMatches = c.sub.filter(s => s.toLowerCase().includes(search));
-      if (catMatches || subMatches.length > 0) {
-        return { ...c, sub: catMatches ? c.sub : subMatches };
-      }
+      if (catMatches || subMatches.length > 0) return { ...c, sub: catMatches ? c.sub : subMatches };
       return null;
     }).filter(Boolean);
   } else if (!showAllCategories.value) {
     cats = cats.slice(0, visibleCategoriesCount);
   }
-
   return cats;
 });
 
-// Есть ли ещё скрытые категории
-const hasMoreCategories = computed(() => {
-  return !showAllCategories.value && 
-         !categorySearch.value && 
-         categories.length > visibleCategoriesCount;
-});
+const hasMoreCategories = computed(() => !showAllCategories.value && !categorySearch.value && categories.value.length > visibleCategoriesCount);
 
-// ФИЛЬТРАЦИЯ ПРОДУКТОВ (с рейтингом)
 const filteredProducts = computed(() => {
   let prods = [...products.value];
-
-  // 1. Поиск по названию
   if (searchQuery.value) {
-    prods = prods.filter(p => 
-      p.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-    );
+    prods = prods.filter(p => p.name.toLowerCase().includes(searchQuery.value.toLowerCase()));
   }
-
-  // 2. Фильтр цены (от)
   if (filters.priceFrom !== null && filters.priceFrom !== '') {
-    prods = prods.filter(p => 
-      Number(String(p.price).replace(/\s/g, '')) >= filters.priceFrom
-    );
+    prods = prods.filter(p => Number(String(p.price).replace(/\s/g, '')) >= filters.priceFrom);
   }
-
-  // 3. Фильтр цены (до)
   if (filters.priceTo !== null && filters.priceTo !== '') {
-    prods = prods.filter(p => 
-      Number(String(p.price).replace(/\s/g, '')) <= filters.priceTo
-    );
+    prods = prods.filter(p => Number(String(p.price).replace(/\s/g, '')) <= filters.priceTo);
   }
-
-  // 4. Фильтр рейтинга (от)
-  if (filters.ratingFrom !== null && filters.ratingFrom !== '') {
-    prods = prods.filter(p => p.rating >= filters.ratingFrom);
-  }
-
-  // 5. Фильтр рейтинга (до)
-  if (filters.ratingTo !== null && filters.ratingTo !== '') {
-    prods = prods.filter(p => p.rating <= filters.ratingTo);
-  }
-
-  // 6. Фильтр подкатегорий
   if (filters.selectedSubcategories.length > 0) {
-    prods = prods.filter(p => 
-      filters.selectedSubcategories.includes(p.subcategory)
-    );
+    prods = prods.filter(p => filters.selectedSubcategories.includes(p.subcategory));
   }
 
-  // 7. Сортировка
   if (sortOption.value) {
     const getPrice = (p) => Number(String(p.price).replace(/\s/g, ''));
-    
     switch(sortOption.value) {
-      case 'name-asc':
-        prods.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
-        break;
-      case 'name-desc':
-        prods.sort((a, b) => b.name.localeCompare(a.name, 'ru'));
-        break;
-      case 'price-asc':
-        prods.sort((a, b) => getPrice(a) - getPrice(b));
-        break;
-      case 'price-desc':
-        prods.sort((a, b) => getPrice(b) - getPrice(a));
-        break;
-      case 'rating-asc':
-        prods.sort((a, b) => a.rating - b.rating);
-        break;
-      case 'rating-desc':
-        prods.sort((a, b) => b.rating - a.rating);
-        break;
+      case 'name-asc': prods.sort((a, b) => a.name.localeCompare(b.name, 'ru')); break;
+      case 'name-desc': prods.sort((a, b) => b.name.localeCompare(a.name, 'ru')); break;
+      case 'price-asc': prods.sort((a, b) => getPrice(a) - getPrice(b)); break;
+      case 'price-desc': prods.sort((a, b) => getPrice(b) - getPrice(a)); break;
+      case 'rating-asc': prods.sort((a, b) => (a.rating || 0) - (b.rating || 0)); break;
+      case 'rating-desc': prods.sort((a, b) => (b.rating || 0) - (a.rating || 0)); break;
     }
   }
-
   return prods;
 });
 
-// Расчёт заливки звёзд
 const calculateOffset = (rating, starIndex) => {
+  if (!rating) return '0%';
   if (rating >= starIndex) return '100%';
   if (rating <= starIndex - 1) return '0%';
   return ((rating % 1) * 100) + '%';
 };
 
-// Вотчер для кнопки "Добавить" из тулбара
 watch(showAddProductDialog, (val) => {
-  if(val) {
-    openAddModal();
-    showAddProductDialog.value = false;
-  }
+  if(val) { openAddModal(); showAddProductDialog.value = false; }
 })
 </script>
 

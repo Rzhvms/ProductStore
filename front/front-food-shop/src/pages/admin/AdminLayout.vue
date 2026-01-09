@@ -154,7 +154,7 @@ html, body {
   border-radius: 10px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
   padding: 8px;
-  z-index: 10;
+  z-index: 1000000;
 }
 
 .profile-menu button {

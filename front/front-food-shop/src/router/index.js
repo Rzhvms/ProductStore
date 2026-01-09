@@ -80,7 +80,7 @@ const routes = [
   // Admin
   { path: '/admin', component: AdminDashboard, meta: { requiresAuth: true } },
   { path: '/admin/products', component: AdminProducts, meta: { requiresAuth: true } },
-  { path: '/admin/products/product', component: AdminProduct },
+  { path: '/admin/products/:id', component: AdminProduct, meta: { requiresAuth: true }, props: true },
   { path: '/admin/products/add', component: AdminProductAdd, meta: { requiresAuth: true } },
   { path: '/admin/categories', component: AdminCategories, meta: { requiresAuth: true } },
   { path: '/admin/statistics', component: AdminStatistic, meta: { requiresAuth: true } },

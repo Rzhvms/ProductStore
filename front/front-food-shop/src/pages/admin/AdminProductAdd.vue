@@ -68,6 +68,23 @@
             </div>
 
             <div class="form-group">
+              <label>Артикул и бренд:</label>
+              <div class="row-inputs">
+                <input 
+                  v-model="form.brand" 
+                  placeholder="Бренд"
+                  style="width: 50%;"
+                >
+                <input 
+                    v-model="form.article" 
+                    placeholder="Артикул"
+                    style="width: 50%;"
+                    @input="validateNumber(form, 'article', $event)"
+                >
+              </div>
+            </div>
+
+            <div class="form-group">
                 <label>Категория и подкатегория:</label>
     
     <!-- Обертка с click-outside -->
@@ -100,28 +117,28 @@
     <!-- Список категорий -->
     <div class="select-list">
       
-      <template v-for="cat in filteredCategories" :key="cat.name">
+      <template v-for="cat in filteredCategories" :key="cat.categoryName">
         
         <!-- Родительская категория (папка) -->
         <div 
           class="select-option parent-option" 
-          @click.stop="toggleCategory(cat.name)"
+          @click.stop="toggleCategory(cat.categoryName)"
         >
-          <span class="option-text font-bold">{{ cat.name }}</span>
+          <span class="option-text font-bold">{{ cat.categoryName }}</span>
           <img 
             src="../../assets/arrow-down.svg" 
             class="cat-arrow" 
-            :class="{ 'is-expanded': expandedCategory === cat.name }"
+            :class="{ 'is-expanded': expandedCategory === cat.categoryName }"
           />
         </div>
         
         <!-- Подкатегории -->
-        <template v-if="expandedCategory === cat.name">
+        <template v-if="expandedCategory === cat.categoryName">
           <label 
             v-for="sub in cat.subs" 
             :key="sub" 
             class="select-option sub-option"
-            @click.stop="selectSubcategory(cat.name, sub)"
+            @click.stop="selectSubcategory(sub)"
           >
             <input 
               type="radio" 
@@ -133,7 +150,7 @@
               class="radio-indicator" 
               :class="{ selected: form.subcategory === sub }"
             ></div>
-            <span class="option-text">{{ sub }}</span>
+            <span class="option-text">{{ sub.categoryName }}</span>
           </label>
         </template>
         
@@ -354,23 +371,32 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, reactive } from 'vue';
+import { useRouter } from 'vue-router'; // Для навигации после добавления
 import AdminLayout from './AdminLayout.vue';
+// Используем объектный экспорт из вашего api.js
+import { adminProductApi, categoryApi } from '@/services/api.js';
+
+const router = useRouter();
 
 // --- DATA ---
 
-// Логика категорий
+const isLoading = ref(false);
+const categoriesRaw = ref([]); // Сюда придут данные из API
+
+// Состояние UI
 const showCatDropdown = ref(false);
 const expandedCategory = ref(null);
-
 const isCategorySelectorOpen = ref(false);
 const categorySearchQuery = ref('');
+const showUnitMenu = ref(false);
+const showPriceUnitMenu = ref(false);
+const showStockUnitMenu = ref(false);
 
-const categoriesList = ref([
-  { name: 'Овощи', subs: ['Картофель', 'Морковь', 'Огурцы'] },
-  { name: 'Фрукты', subs: ['Цитрусовые', 'Яблоки', 'Бананы'] },
-  { name: 'Ягоды', subs: ['Клубника', 'Малина'] }
-]);
+// Словари (оставляем для UI)
+const unitDict = { 'kg': 'Килограмм', 'g': 'Грамм', 'mg': 'Миллиграмм', 'l': 'Литр', 'ml': 'Миллилитр' };
+const priceUnitsDict = { 'st': 'Шт', 'kg': 'Кг', 'g': 'Гр', 'mg': 'Мг', 'l': 'Л', 'ml': 'Мл' };
+const stockUnitsDict = { 'kg': 'Килограмм', 'st': 'Штук', 'g': 'Грамм', 'mg': 'Миллиграмм', 'l': 'Литр', 'ml': 'Миллилитр' };
 
 // Логика формы
 const form = ref({
@@ -381,7 +407,8 @@ const form = ref({
   priceUnit: 'st',
   stock: 0,
   stockUnit: 'kg',
-  subcategory: '',
+  categoryId: null,    // Добавили поле для ID категории
+  subcategoryName: '', // Только для отображения в UI
   nutrition: {
     fats: '',
     carbs: '',
@@ -389,86 +416,139 @@ const form = ref({
     energy: '',
     joules: ''
   },
+  brand: '',
+  article: '',
   description: '',
   attributes: [
     { name: '', value: '' }
   ]
 });
 
-// Словари
-const unitDict = ref({ 'kg': 'Килограмм', 'g': 'Грамм' });
-const priceUnitsDict = ref({ 'st': 'Шт.', 'kg': 'Кг' });
-const stockUnitsDict = ref({ 'kg': 'Килограмм', 'st': 'Штук' });
+// --- API FETCHING ---
 
-const showUnitMenu = ref(false);
-const showPriceUnitMenu = ref(false);
-const showStockUnitMenu = ref(false);
+const loadCategories = async () => {
+  try {
+    const data = await categoryApi.get();
+    categoriesRaw.value = data; // Сохраняем плоский список
+  } catch (error) {
+    console.error("Ошибка загрузки категорий:", error.message);
+  }
+};
+
+onMounted(() => {
+  loadCategories();
+});
 
 // --- COMPUTED ---
+
+// Преобразуем плоский список категорий в дерево для верстки
+const categoriesTree = computed(() => {
+  const mainCats = categoriesRaw.value.filter(c => !c.parentCategoryId);
+  return mainCats.map(parent => ({
+    categoryId: parent.categoryId,
+    categoryName: parent.categoryName,
+    subs: categoriesRaw.value.filter(c => c.parentCategoryId === parent.categoryId) // Теперь тут объекты {id, name...}
+  }));
+});
+
 const filteredCategories = computed(() => {
   const query = categorySearchQuery.value.toLowerCase().trim();
+  if (!query) return categoriesTree.value;
   
-  if (!query) return categoriesList.value;
-  
-  return categoriesList.value
+  return categoriesTree.value
     .map(cat => ({
-      name: cat.name,
+      ...cat,
       subs: cat.subs.filter(sub => 
-        sub.toLowerCase().includes(query) || 
-        cat.name.toLowerCase().includes(query)
+        sub.categoryName.toLowerCase().includes(query) || 
+        cat.categoryName.toLowerCase().includes(query)
       )
     }))
-    .filter(cat => 
-      cat.subs.length > 0 || 
-      cat.name.toLowerCase().includes(query)
-    );
+    .filter(cat => cat.subs.length > 0 || cat.categoryName.toLowerCase().includes(query));
 });
 
 const selectedCategoryLabel = computed(() => {
-  if (!form.value.subcategory) return 'Выбрать категорию и подкатегорию из списка';
-  const parent = categoriesList.value.find(c => c.subs.includes(form.value.subcategory));
-  return parent ? `${parent.name} - ${form.value.subcategory}` : form.value.subcategory;
+  if (!form.value.categoryId) return 'Выбрать категорию и подкатегорию из списка';
+  // Ищем категорию по ID
+  const sub = categoriesRaw.value.find(c => c.categoryId === form.value.categoryId);
+  if (!sub) return 'Выбрать категорию...';
+  const parent = categoriesRaw.value.find(c => c.categoryId === sub.parentCategoryId);
+  return parent ? `${parent.categoryName} - ${sub.categoryName}` : sub.categoryName;
 });
 
 // --- METHODS ---
+
 const toggleCategory = (catName) => {
   expandedCategory.value = expandedCategory.value === catName ? null : catName;
 };
 
 const selectSubcategory = (sub) => {
-  form.value.subcategory = sub;
-  showCatDropdown.value = false;
+  form.value.categoryId = sub.categoryId; // Сохраняем ID для сервера
+  form.value.subcategoryName = sub.categoryName; 
+  isCategorySelectorOpen.value = false; // Закрываем дропдаун
 };
 
 const validateNumber = (obj, key, event) => {
-  let val = event.target.value;
-  val = val.replace(/[^0-9.]/g, '');
-  if ((val.match(/\./g) || []).length > 1) {
-     val = val.slice(0, -1);
-  }
+  let val = event.target.value.replace(/[^0-9.]/g, '');
+  if ((val.match(/\./g) || []).length > 1) val = val.slice(0, -1);
   obj[key] = val;
 };
 
-const addAttr = () => {
-  form.value.attributes.push({ name: '', value: '' });
-};
+const addAttr = () => form.value.attributes.push({ name: '', value: '' });
+const removeAttr = (index) => form.value.attributes.splice(index, 1);
 
-const removeAttr = (index) => {
-  form.value.attributes.splice(index, 1);
-};
+const addProduct = async () => {
+  if (!form.value.title || !form.value.categoryId) {
+    return alert('Заполните название и выберите категорию');
+  }
 
-const addProduct = () => {
-  console.log('Adding product...', form.value);
-  alert('Товар добавлен!');
+  isLoading.value = true;
+  try {
+    const characteristics = {};
+
+    characteristics.grammage = {
+      weight: form.value.weight,
+      unit: form.value.unit
+    }
+
+    characteristics.priceUnit = form.value.priceUnit;
+    characteristics.stockUnit = form.value.stockUnit;
+
+    if (form.value.brand) characteristics.brand = form.value.brand;
+    if (form.value.article) characteristics.article = form.value.article;
+
+
+    if (form.value.nutrition) {
+      characteristics.nutrition = JSON.stringify(form.value.nutrition);
+    };
+
+    form.value.attributes.forEach(attr => {
+      if (attr.name && attr.value) characteristics[attr.name] = attr.value;
+    });
+
+    await adminProductApi.create(
+      form.value.title,
+      null,
+      form.value.description,
+      parseFloat(form.value.price) || 0,
+      parseInt(form.value.stock) || 0,
+      form.value.categoryId,
+      characteristics
+    );
+
+    router.push('/admin/products');
+  } catch (error) {
+    console.error(error);
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const cancel = () => {
   if(confirm('Отменить добавление?')) {
-    // логика возврата назад
+    router.back();
   }
 };
 
-// Директива v-click-outside
 const vClickOutside = {
   mounted(el, binding) {
     el.clickOutsideEvent = function(event) {
@@ -483,7 +563,6 @@ const vClickOutside = {
   }
 };
 </script>
-
 <style scoped lang="scss">
 @import './admin.css';
 

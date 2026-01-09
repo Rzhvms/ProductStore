@@ -1,4 +1,11 @@
 <template>
+  <div v-if="isLoading" class="loading-overlay">
+    <span class="loader"></span>
+  </div>
+  <div v-if="error" class="error-toast" @click="clearError">
+    {{ error }}
+    <button>Закрыть</button>
+  </div>
   <AdminLayout>
     <template #default>
       <div class="admin-wrapper">
@@ -17,14 +24,14 @@
             :class="{ active: currentView === 'subcategories' }"
             @click="goToCategory(selectedCategory)"
           >
-            {{ selectedCategory.name }}
+            {{ selectedCategory.categoryName }}
           </span>
           <span v-if="selectedSubcategory" class="separator">›</span>
           <span 
             v-if="selectedSubcategory" 
             class="crumb-link active"
           >
-            {{ selectedSubcategory }}
+            {{ selectedSubcategory.categoryName }}
           </span>
         </div>
         <div v-if="currentView === 'categories'">
@@ -75,24 +82,27 @@
             <span class="filter-tag">{{ sortLabel }} <button class="tag-remove" @click="sortOption = ''">×</button></span>
           </div>
           <div class="list-container">
-            <div v-for="cat in sortedCategories" :key="cat.id" class="category-item-wrapper">
-              <div class="list-row" :class="{ 'row-expanded': expandedCategoryIds.has(cat.id) }">
+            <div v-for="cat in visibleCategories" :key="cat.categoryId" class="category-item-wrapper">
+              <div class="list-row" :class="{ 'row-expanded': expandedCategoryIds.has(cat.categoryId) }">
                 <div class="row-main clickable-area" @click="goToCategory(cat)">
-                  <span class="item-text">{{ cat.name }}</span>
+                  <span class="item-text">{{ cat.categoryName }}</span>
                 </div>
                 <div class="row-meta">
                   <span class="meta-badge" title="Количество подкатегорий">{{ cat.subCategories.length }}</span>
-                  <button class="expand-arrow-btn" :class="{ 'is-expanded': expandedCategoryIds.has(cat.id) }" @click.stop="toggleExpand(cat.id)">
+                  <button class="expand-arrow-btn" :class="{ 'is-expanded': expandedCategoryIds.has(cat.categoryId) }" @click.stop="toggleExpand(cat.categoryId)">
                     <img src="../../assets/arrow-down.svg" />
                   </button>
                 </div>
               </div>
-              <div v-if="expandedCategoryIds.has(cat.id)" class="inline-subcategories">
-                <div v-for="(sub, idx) in cat.subCategories" :key="idx" class="inline-sub-row" @click="goToSubcategoryFromInline(cat, sub)">{{ sub }}<span class="inline-sub-count meta-badge">{{ getProductCount(sub) }}</span></div>
+              <div v-if="expandedCategoryIds.has(cat.categoryId)" class="inline-subcategories">
+                <div v-for="(sub, idx) in cat.subCategories" :key="idx" class="inline-sub-row" @click="goToSubcategoryFromInline(cat, sub)">{{ sub.categoryName }}<span class="inline-sub-count meta-badge">{{ getProductCount(sub) }}</span></div>
                 <div v-if="cat.subCategories.length === 0" class="inline-empty">Нет подкатегорий</div>
               </div>
             </div>
             <div v-if="sortedCategories.length === 0" class="empty-text">Категории не найдены</div>
+          </div>
+          <div class="card-footer" v-if="visibleCategories.length < sortedCategories.length">
+            <span class="show-more-text" @click="showMoreCategories">Показать ещё</span>
           </div>
         </div>
         <div v-else-if="currentView === 'subcategories' && selectedCategory" style="display: flex; flex-direction: column;">
@@ -103,7 +113,7 @@
           <div class="sub-view-card header-card">
             <div class="card-left">
               <img src="../../assets/folder.svg" alt="Logo" class="icon-orange" />
-              <h1 class="card-title">{{ selectedCategory.name }}</h1>
+              <h1 class="card-title">{{ selectedCategory.categoryName }}</h1>
             </div>
             <div class="header-card-actions">
               <button class="icon-btn" title="Редактировать" @click="openRenameDialog('category', selectedCategory)">
@@ -149,7 +159,7 @@
             </div>
             <div class="card-list-body">
               <div v-for="(sub, index) in visibleSubcategories" :key="index" class="card-list-item" @click="goToSubcategory(sub)">
-                <span class="sub-text">{{ sub }}</span>
+                <span class="sub-text">{{ sub.categoryName }}</span>
                 <div class="row-meta">
                   <span class="meta-badge" title="Количество товаров">{{ getProductCount(sub) }}</span>
                   <button class="expand-arrow-btn card" @click="goToSubcategory(sub)">
@@ -160,7 +170,7 @@
               <div v-if="sortedSubcategories.length === 0" class="card-empty">Подкатегории не найдены</div>
             </div>
             <div class="card-footer" v-if="visibleSubCount < sortedSubcategories.length">
-              <span class="show-more-text">Посмотреть ещё</span>
+              <span class="show-more-text" @click="showMoreSubcategories">Показать ещё</span>
             </div>
           </div>
         </div>
@@ -172,7 +182,7 @@
           <div class="sub-view-card header-card">
             <div class="card-left">
               <img src="../../assets/folder-open.svg" alt="Logo" class="icon-orange" />
-              <h1 class="card-title">{{ selectedSubcategory }}</h1>
+              <h1 class="card-title">{{ selectedSubcategory.categoryName }}</h1>
             </div>
             <div class="header-card-actions">
                <button class="icon-btn" title="Переименовать подкатегорию" @click="openRenameDialog('subcategory', selectedSubcategory)">
@@ -281,7 +291,7 @@
         <div v-if="showAddSubDialog" class="modal-overlay blur-overlay" @click.self="showAddSubDialog = false">
           <div class="modal-content centered-modal">
              <h3 class="modal-title-center">Новая подкатегория</h3>
-             <p class="modal-hint-center">В категорию: <b>{{ selectedCategory?.name }}</b></p>
+             <p class="modal-hint-center">В категорию: <b>{{ selectedCategory?.categoryName }}</b></p>
              <input v-model="newSubName" placeholder="Название подкатегории" class="gray-input" @keyup.enter="addSubcategoryFromModal"/>
              <div class="modal-actions-center">
                <button class="btn-gray" @click="showAddSubDialog = false">Отмена</button>
@@ -327,11 +337,10 @@
                     <input type="text" v-model="categorySearchQuery" placeholder="Введите название категории..." class="select-search-input"/>
                   </div>
                   <div class="select-list">
-                    <label v-for="cat in filteredParentCategories" :key="cat.id" class="select-option">
-                      <input type="radio" name="parentCategory" :value="cat.id" v-model="selectedParentId"/>
-                      <div class="radio-indicator" :class="{ selected: selectedParentId === cat.id }"></div> 
-                      <span class="option-text">{{ cat.name }}</span>
-                    </label>
+                    <div v-for="cat in filteredParentCategories" :key="cat.categoryId" class="select-option" :class="{ active: selectedParentId === cat.categoryId }" @click="selectedParentId = cat.categoryId">
+                      <div class="radio-indicator" :class="{ selected: selectedParentId === cat.categoryId }"></div> 
+                      <span class="option-text">{{ cat.categoryName }}</span>
+                    </div>
                     <div v-if="filteredParentCategories.length === 0" class="empty-select">Ничего не найдено</div>
                   </div>
                 </div>
@@ -349,7 +358,7 @@
             <p class="modal-hint">Выберите товар из каталога для добавления</p>
             <select v-model="selectedProductToAdd" class="full-input">
               <option value="">Выберите товар...</option>
-              <option v-for="prod in availableProducts" :key="prod.id" :value="prod.id">
+              <option v-for="prod in products" :key="prod.id" :value="prod.id">
                 {{ prod.name }} — {{ formatPrice(prod.price) }} ₽
               </option>
             </select>
@@ -367,35 +376,24 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import AdminLayout from './AdminLayout.vue';
+import { categoryApi, adminProductApi } from '@/services/api';
 
-const parentCategories = ref([
-  { id: 1, name: 'Электроника', subCategories: ['Телефоны', 'Ноутбуки', 'Планшеты'] },
-  { id: 2, name: 'Одежда', subCategories: ['Футболки', 'Штаны', 'Куртки'] },
-  { id: 3, name: 'Книги', subCategories: ['Фантастика', 'Наука'] },
-  { id: 4, name: 'Дом и сад', subCategories: ['Мебель', 'Декор', 'Инструменты', 'Освещение', 'Текстиль'] },
-]);
+const isLoading = ref(false);
+const isSaving = ref(false);
+const error = ref(null);
 
-const dummyProducts = ref([
-  { id: 101, sub: 'Телефоны', name: 'iPhone 14 Pro', price: 99990, rating: 4.9 },
-  { id: 102, sub: 'Телефоны', name: 'Samsung Galaxy S23', price: 79990, rating: 4.7 },
-  { id: 103, sub: 'Ноутбуки', name: 'MacBook Air M2', price: 120000, rating: 4.8 },
-  { id: 104, sub: 'Футболки', name: 'Белая футболка Basic', price: 1500, rating: 4.2 },
-  { id: 105, sub: 'Телефоны', name: 'Xiaomi 13', price: 45990, rating: 4.5 },
-]);
+const categories = ref([]);
+const products = ref([]);
 
-const availableProducts = ref([
-  { id: 201, name: 'AirPods Pro', price: 24990, rating: 4.8 },
-  { id: 202, name: 'Xiaomi Mi Band 8', price: 3990, rating: 4.6 },
-]);
-
-const currentView = ref('categories'); 
+const currentView = ref('categories');
 const selectedCategory = ref(null);
 const selectedSubcategory = ref(null);
 const searchQuery = ref('');
 const expandedCategoryIds = ref(new Set());
-const itemsPerPage = 5;
+const itemsPerPage = 10;
 const visibleCount = ref(itemsPerPage);
 const visibleSubCount = ref(itemsPerPage);
+const visibleCatCount = ref(itemsPerPage);
 
 const showAddMenu = ref(false);
 const showAddCategoryDialog = ref(false);
@@ -409,8 +407,8 @@ const newCategoryName = ref('');
 const newSubName = ref('');
 const selectedProductToAdd = ref('');
 const renameValue = ref('');
-const renameTarget = ref(null); 
-const deleteTarget = ref(null); 
+const renameTarget = ref(null);
+const deleteTarget = ref(null);
 
 const isCategorySelectorOpen = ref(false);
 const categorySearchQuery = ref('');
@@ -419,76 +417,212 @@ const selectedParentId = ref(null);
 const sortOption = ref('');
 const showSortDropdown = ref(false);
 
+async function loadCategories() {
+  isLoading.value = true;
+  error.value = null;
+  try {
+    categories.value = await categoryApi.get();
+    const prodRes = await adminProductApi.get(1, itemsPerPage);
+    products.value = prodRes.productList;
+  } catch (error) {
+    error.value = error.message;
+    console.error(error);
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+async function addCategory() {
+  if (!newCategoryName.value.trim()) return;
+  isSaving.value = true;
+  try {
+    const category = await categoryApi.create(newCategoryName.value.trim());
+    newCategoryName.value = '';
+    showAddCategoryDialog.value = false;
+    await loadCategories();
+  } catch (error) {
+    error.value = error.message;
+  } finally {
+    isSaving.value = false;
+  }
+}
+
+async function addSubcategory() {
+  if (!newSubName.value.trim() || !selectedParentId.value) return;
+  isSaving.value = true;
+  try {
+    const category = await categoryApi.create(newSubName.value.trim(), selectedParentId.value);
+    newSubName.value = '';
+    selectedParentId.value = null;
+    showAddSubSidebar.value = false;
+    await loadCategories();
+  } catch (error) {
+    error.value = error.message;
+  } finally {
+    isSaving.value = false;
+  }
+}
+
+async function addSubcategoryFromModal() {
+  if (!newSubName.value.trim() || !selectedCategory.value) return;
+  isSaving.value = true;
+  try {
+    const category = await categoryApi.create(newSubName.value.trim(), selectedCategory.value.categoryId);
+    newSubName.value = '';
+    showAddSubDialog.value = false;
+    await loadCategories();
+    selectedCategory.value = parentCategories.value.find(c => c.categoryId === selectedCategory.value.categoryId);
+  } catch (err) {
+    error.value = err.message;
+  } finally {
+    isSaving.value = false;
+  }
+}
+
+async function confirmRename() {
+  const newVal = renameValue.value.trim();
+  if (!newVal || !renameTarget.value) return;
+  const { type, data } = renameTarget.value;
+  isSaving.value = true;
+  try {
+    if (type === 'category') {
+      await categoryApi.update(data.categoryId, newVal);
+    } else if (type === 'subcategory') {
+      await categoryApi.update(data.categoryId, newVal, data.parentId);
+    }
+    await loadCategories();
+    if (selectedCategory.value) {
+      selectedCategory.value = parentCategories.value.find(c => c.categoryId === selectedCategory.value.categoryId);
+    }
+    if (selectedSubcategory.value && type === 'subcategory') {
+      selectedSubcategory.value = categories.value.find(c => c.categoryId === data.categoryId);
+    }
+    showRenameDialog.value = false;
+  } catch (err) {
+    error.value = err.message;
+  } finally {
+    isSaving.value = false;
+  }
+}
+
+async function confirmDelete() {
+  if (!deleteTarget.value) return;
+  const { type, data } = deleteTarget.value;
+  isSaving.value = true;
+  try {
+    if (type === 'category') {
+      await categoryApi.delete(data.categoryId);
+      await loadCategories();
+      if (selectedCategory.value?.categoryId === data.categoryId) {
+        goHome();
+      }
+    } else if (type === 'subcategory-page' || type === 'subcategory-item') {
+      await categoryApi.delete(data.categoryId);
+      await loadCategories();
+      if (selectedCategory.value) {
+        selectedCategory.value = parentCategories.value.find(c => c.categoryId === selectedCategory.value.categoryId);
+      }
+      if (type === 'subcategory-page') {
+        currentView.value = 'subcategories';
+        selectedSubcategory.value = null;
+      }
+    } else if (type === 'product') {
+      adminProductApi.delete(data.id);
+      await loadCategories();
+    }
+    showDeleteConfirmDialog.value = false;
+  } catch (err) {
+    error.value = err.message;
+  } finally {
+    isSaving.value = false;
+  }
+}
+
+const parentCategories = computed(() => {
+  return categories.value
+    .filter(c => c.parentCategoryId === null)
+    .map(parent => ({
+      ...parent,
+      subCategories: categories.value.filter(sub => sub.parentCategoryId === parent.categoryId)
+    }));
+});
+
 const filteredParentCategories = computed(() => {
   if (!categorySearchQuery.value) return parentCategories.value;
-  return parentCategories.value.filter(c => c.name.toLowerCase().includes(categorySearchQuery.value.toLowerCase()));
+  return parentCategories.value.filter(c => 
+    c.categoryName.toLowerCase().includes(categorySearchQuery.value.toLowerCase())
+  );
 });
 
 const selectedParentName = computed(() => {
-  const parent = parentCategories.value.find(c => c.id === selectedParentId.value);
-  return parent ? parent.name : 'Выбрать категорию из списка';
+  const parent = parentCategories.value.find(c => c.categoryId === selectedParentId.value);
+  return parent ? parent.categoryName : 'Выбрать категорию из списка';
 });
 
 const filteredCategories = computed(() => {
   if (!searchQuery.value) return parentCategories.value;
   const q = searchQuery.value.toLowerCase();
-  return parentCategories.value.filter(c => c.name.toLowerCase().includes(q));
+  return parentCategories.value.filter(c => c.categoryName.toLowerCase().includes(q));
 });
 
 const sortedCategories = computed(() => {
   let items = [...filteredCategories.value];
   switch (sortOption.value) {
-    case 'name-asc': items.sort((a, b) => a.name.localeCompare(b.name, 'ru')); break;
-    case 'name-desc': items.sort((a, b) => b.name.localeCompare(a.name, 'ru')); break;
+    case 'name-asc': items.sort((a, b) => a.categoryName.localeCompare(b.categoryName, 'ru')); break;
+    case 'name-desc': items.sort((a, b) => b.categoryName.localeCompare(a.categoryName, 'ru')); break;
     case 'count-desc': items.sort((a, b) => b.subCategories.length - a.subCategories.length); break;
     case 'count-asc': items.sort((a, b) => a.subCategories.length - b.subCategories.length); break;
   }
   return items;
 });
 
-const visibleProducts = computed(() => {
-  return sortedProducts.value.slice(0, visibleCount.value);
+const visibleCategories = computed(() => {
+  return sortedCategories.value.slice(0, visibleCatCount.value);
 });
-
-const visibleSubcategories = computed(() => {
-  return filteredSubcategories.value.slice(0, visibleSubCount.value);
-});
-
-function showMoreProducts() { visibleCount.value += itemsPerPage; }
-
-function showMoreSubcategories() { visibleSubCount.value += itemsPerPage; }
 
 const filteredSubcategories = computed(() => {
   if (!selectedCategory.value) return [];
-  const subs = selectedCategory.value.subCategories;
+  const subs = selectedCategory.value.subCategories || [];
   if (!searchQuery.value) return subs;
   const q = searchQuery.value.toLowerCase();
-  return subs.filter(s => s.toLowerCase().includes(q));
+  return subs.filter(s => s.categoryName.toLowerCase().includes(q));
 });
 
 const sortedSubcategories = computed(() => {
   let items = [...filteredSubcategories.value];
-  if (sortOption.value === 'name-asc') items.sort((a, b) => a.localeCompare(b, 'ru'));
-  if (sortOption.value === 'name-desc') items.sort((a, b) => b.localeCompare(a, 'ru'));
+  if (sortOption.value === 'name-asc') items.sort((a, b) => a.categoryName.localeCompare(b.categoryName, 'ru'));
+  if (sortOption.value === 'name-desc') items.sort((a, b) => b.categoryName.localeCompare(a.categoryName, 'ru'));
   return items;
+});
+
+const visibleSubcategories = computed(() => {
+  return sortedSubcategories.value.slice(0, visibleSubCount.value);
 });
 
 const filteredProducts = computed(() => {
   if (!selectedSubcategory.value) return [];
-  let prods = dummyProducts.value.filter(p => p.sub === selectedSubcategory.value);
-  if (searchQuery.value) prods = prods.filter(p => p.name.toLowerCase().includes(searchQuery.value.toLowerCase()));
+  let prods = products.value.filter(p => p.categoryId === selectedSubcategory.value.categoryId);
+  if (searchQuery.value) {
+    prods = prods.filter(p => p.name.toLowerCase().includes(searchQuery.value.toLowerCase()));
+  }
   return prods;
 });
 
 const sortedProducts = computed(() => {
   let items = [...filteredProducts.value];
-  if (sortOption.value === 'name-asc') items.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
-  if (sortOption.value === 'name-desc') items.sort((a, b) => b.name.localeCompare(a.name, 'ru'));
-  if (sortOption.value === 'price-asc') items.sort((a, b) => a.price - b.price);
-  if (sortOption.value === 'price-desc') items.sort((a, b) => b.price - a.price);
-  if (sortOption.value === 'rating-desc') items.sort((a, b) => b.rating - a.rating);
-  if (sortOption.value === 'rating-asc') items.sort((a, b) => a.rating - b.rating);
+  switch (sortOption.value) {
+    case 'name-asc': items.sort((a, b) => a.name.localeCompare(b.name, 'ru')); break;
+    case 'name-desc': items.sort((a, b) => b.name.localeCompare(a.name, 'ru')); break;
+    case 'price-asc': items.sort((a, b) => a.price - b.price); break;
+    case 'price-desc': items.sort((a, b) => b.price - a.price); break;
+    case 'rating-desc': items.sort((a, b) => b.rating - a.rating); break;
+    case 'rating-asc': items.sort((a, b) => a.rating - b.rating); break;
+  }
   return items;
+});
+
+const visibleProducts = computed(() => {
+  return sortedProducts.value.slice(0, visibleCount.value);
 });
 
 const sortLabel = computed(() => {
@@ -503,83 +637,84 @@ const sortLabel = computed(() => {
 
 const buttonSortLabel = computed(() => {
   if (!sortOption.value) return 'Сортировка';
-  if (sortOption.value === 'name-asc' || sortOption.value === 'name-desc') return 'По алфавиту';
-  if (sortOption.value === 'count-asc' || sortOption.value === 'count-desc') return 'По количеству';
-  if (sortOption.value === 'price-asc' || sortOption.value === 'price-desc') return 'По цене';
-  if (sortOption.value === 'rating-asc' || sortOption.value === 'rating-desc') return 'По рейтингу';
+  if (sortOption.value.startsWith('name-')) return 'По алфавиту';
+  if (sortOption.value.startsWith('count-')) return 'По количеству';
+  if (sortOption.value.startsWith('price-')) return 'По цене';
+  if (sortOption.value.startsWith('rating-')) return 'По рейтингу';
+  return 'Сортировка';
 });
 
-function goHome() { currentView.value = 'categories'; selectedCategory.value = null; selectedSubcategory.value = null; searchQuery.value = ''; sortOption.value = ''; }
-function goToCategory(cat) { selectedCategory.value = cat; selectedSubcategory.value = null; currentView.value = 'subcategories'; searchQuery.value = ''; sortOption.value = ''; visibleSubCount.value = itemsPerPage; }
-function goToSubcategoryFromInline(cat, subName) { selectedCategory.value = cat; selectedSubcategory.value = subName; currentView.value = 'products'; searchQuery.value = ''; sortOption.value = ''; }
-function goToSubcategory(subName) { selectedSubcategory.value = subName; currentView.value = 'products'; searchQuery.value = ''; sortOption.value = ''; visibleCount.value = itemsPerPage; }
-function toggleExpand(id) { if (expandedCategoryIds.value.has(id)) expandedCategoryIds.value.delete(id); else expandedCategoryIds.value.add(id); }
-
-function toggleAddMenu() { showAddMenu.value = !showAddMenu.value; }
-function openCategoryModal() { showAddMenu.value = false; showAddCategoryDialog.value = true; newCategoryName.value = ''; }
-function addCategory() {
-  if (!newCategoryName.value.trim()) return;
-  parentCategories.value.push({ id: Date.now(), name: newCategoryName.value.trim(), subCategories: [] });
-  newCategoryName.value = ''; showAddCategoryDialog.value = false;
+function goHome() {
+  currentView.value = 'categories';
+  selectedCategory.value = null;
+  selectedSubcategory.value = null;
+  searchQuery.value = '';
+  sortOption.value = '';
 }
 
-function openSubSidebar() { showAddMenu.value = false; showAddSubSidebar.value = true; newSubName.value = ''; selectedParentId.value = null; isCategorySelectorOpen.value = false; categorySearchQuery.value = ''; }
-function addSubcategory() {
-  if (!newSubName.value.trim() || !selectedParentId.value) return;
-  const parent = parentCategories.value.find(c => c.id === selectedParentId.value);
-  if (parent) parent.subCategories.push(newSubName.value.trim());
-  newSubName.value = ''; selectedParentId.value = null; showAddSubSidebar.value = false;
+function goToCategory(cat) {
+  selectedCategory.value = cat;
+  selectedSubcategory.value = null;
+  currentView.value = 'subcategories';
+  searchQuery.value = '';
+  sortOption.value = '';
+  visibleSubCount.value = itemsPerPage;
+}
+
+function goToSubcategoryFromInline(cat, sub) {
+  selectedCategory.value = cat;
+  selectedSubcategory.value = sub; // теперь это объект!
+  currentView.value = 'products';
+  searchQuery.value = '';
+  sortOption.value = '';
+}
+
+function goToSubcategory(sub) {
+  selectedSubcategory.value = sub; // теперь это объект!
+  currentView.value = 'products';
+  searchQuery.value = '';
+  sortOption.value = '';
+  visibleCount.value = itemsPerPage;
+}
+
+function toggleExpand(id) {
+  if (expandedCategoryIds.value.has(id)) {
+    expandedCategoryIds.value.delete(id);
+  } else {
+    expandedCategoryIds.value.add(id);
+  }
+}
+
+function showMoreProducts() { visibleCount.value += itemsPerPage; }
+function showMoreSubcategories() { visibleSubCount.value += itemsPerPage; }
+function showMoreCategories() { visibleCatCount.value += itemsPerPage; }
+
+function toggleAddMenu() { showAddMenu.value = !showAddMenu.value; }
+
+function openCategoryModal() {
+  showAddMenu.value = false;
+  showAddCategoryDialog.value = true;
+  newCategoryName.value = '';
+}
+
+function openSubSidebar() {
+  showAddMenu.value = false;
+  showAddSubSidebar.value = true;
+  newSubName.value = '';
+  selectedParentId.value = null;
+  isCategorySelectorOpen.value = false;
+  categorySearchQuery.value = '';
 }
 
 function openAddSubDialog() {
   newSubName.value = '';
   showAddSubDialog.value = true;
 }
-function addSubcategoryFromModal() {
-  if (!newSubName.value.trim() || !selectedCategory.value) return;
-  selectedCategory.value.subCategories.push(newSubName.value.trim());
-  newSubName.value = '';
-  showAddSubDialog.value = false;
-}
-
-function addProductToSubcategory() {
-  if (!selectedProductToAdd.value) return;
-  const prod = availableProducts.value.find(p => p.id === Number(selectedProductToAdd.value));
-  if (prod) {
-    dummyProducts.value.push({ id: prod.id, sub: selectedSubcategory.value, name: prod.name, price: prod.price, rating: prod.rating });
-    availableProducts.value = availableProducts.value.filter(p => p.id !== prod.id);
-  }
-  selectedProductToAdd.value = ''; showAddProductDialog.value = false;
-}
 
 function openRenameDialog(type, data) {
   renameTarget.value = { type, data };
-  renameValue.value = type === 'category' ? data.name : data;
+  renameValue.value = data.categoryName;
   showRenameDialog.value = true;
-}
-
-function confirmRename() {
-  const newVal = renameValue.value.trim();
-  if (!newVal || !renameTarget.value) return;
-  
-  const { type, data } = renameTarget.value;
-  
-  if (type === 'category') {
-    data.name = newVal;
-  } else if (type === 'subcategory') {
-    const subs = selectedCategory.value.subCategories;
-    const index = subs.indexOf(data);
-    if (index !== -1) {
-      subs[index] = newVal;
-      dummyProducts.value.forEach(p => {
-        if (p.sub === data) p.sub = newVal;
-      });
-      if (selectedSubcategory.value === data) {
-        selectedSubcategory.value = newVal;
-      }
-    }
-  }
-  showRenameDialog.value = false;
 }
 
 function promptDelete(type, data) {
@@ -587,36 +722,34 @@ function promptDelete(type, data) {
   showDeleteConfirmDialog.value = true;
 }
 
-function confirmDelete() {
-  if (!deleteTarget.value) return;
-  const { type, data } = deleteTarget.value;
-
-  if (type === 'category') {
-    parentCategories.value = parentCategories.value.filter(c => c.id !== data.id);
-    if (selectedCategory.value && selectedCategory.value.id === data.id) {
-      goHome();
-    }
-  } else if (type === 'subcategory-page') {
-    const subs = selectedCategory.value.subCategories;
-    const idx = subs.indexOf(data);
-    if (idx !== -1) subs.splice(idx, 1);
-    dummyProducts.value = dummyProducts.value.filter(p => p.sub !== data);
-    goToCategory(selectedCategory.value);
-  } else if (type === 'subcategory-item') {
-    const subs = selectedCategory.value.subCategories;
-    const idx = subs.indexOf(data);
-    if (idx !== -1) subs.splice(idx, 1);
-    dummyProducts.value = dummyProducts.value.filter(p => p.sub !== data);
-  } else if (type === 'product') {
-    dummyProducts.value = dummyProducts.value.filter(p => p.id !== data);
+async function addProductToSubcategory() {
+  if (!selectedProductToAdd.value) return;
+  const prod = products.value.find(p => p.id === Number(selectedProductToAdd.value));
+  if (prod && selectedSubcategory.value) {
+    await adminProductApi.update(id, prod.name, prod.providerId, prod.description, prod.price, prod.quantity, selectedSubcategory.value.categoryId, prod.characteristics);
+    await loadCategories();
   }
-  showDeleteConfirmDialog.value = false;
+  selectedProductToAdd.value = '';
+  showAddProductDialog.value = false;
 }
 
-function getProductCount(subName) { return dummyProducts.value.filter(p => p.sub === subName).length; }
-function setSortOption(option) { sortOption.value = option; showSortDropdown.value = false; }
-function formatPrice(p) { return p.toLocaleString('ru-RU'); }
-function handleGlobalClick(event) { if (!event.target.closest('.add-menu-wrapper')) showAddMenu.value = false; if (!event.target.closest('.dropdown-wrapper')) showSortDropdown.value = false; }
+function getProductCount(sub) {
+  return products.value ? products.value.filter(p => p.categoryId === sub.categoryId).length : 0;
+}
+
+function setSortOption(option) {
+  sortOption.value = option;
+  showSortDropdown.value = false;
+}
+
+function formatPrice(p) {
+  return p.toLocaleString('ru-RU');
+}
+
+function handleGlobalClick(event) {
+  if (!event.target.closest('.add-menu-wrapper')) showAddMenu.value = false;
+  if (!event.target.closest('.dropdown-wrapper')) showSortDropdown.value = false;
+}
 
 const calculateOffset = (rating, index) => {
   if (rating >= index) return '100%';
@@ -624,8 +757,18 @@ const calculateOffset = (rating, index) => {
   return ((rating % 1) * 100) + '%';
 };
 
-onMounted(() => document.addEventListener('click', handleGlobalClick));
-onUnmounted(() => document.removeEventListener('click', handleGlobalClick));
+function clearError() {
+  error.value = null;
+}
+
+onMounted(async () => {
+  document.addEventListener('click', handleGlobalClick);
+  await loadCategories();
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleGlobalClick);
+});
 </script>
 
 <style scoped>

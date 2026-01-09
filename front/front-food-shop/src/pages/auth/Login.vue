@@ -136,8 +136,12 @@ const handleSubmit = async () => {
 
   try {
     isLoading.value = true;
-    await authStore.login(email.value, password.value, remember.value);
-    router.push("/");
+    const claims = await authStore.login(email.value, password.value, remember.value);
+    if (claims.value === 'user') {
+      router.push("/");
+    } else {
+      router.push("/admin");
+    }
   } catch (error) {
     if (error.message === "Аккаунт не найден") {
       router.push("/account-not-found");
