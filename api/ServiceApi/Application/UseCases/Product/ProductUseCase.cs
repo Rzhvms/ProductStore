@@ -45,8 +45,23 @@ internal class ProductUseCase : IProductUseCase
         {
             Id = response.Id,
             Name = response.Name,
-            ProviderId = response.ProviderId,
             Description = response.Description,
+            Price = response.Price,
+            CategoryId = response.CategoryId,
+            Characteristics = response.Characteristics
+        };
+    }
+    
+    /// <inheritdoc />
+    public async Task<GetAdminProductResponse> GetAdminProductAsync(Guid id)
+    {
+        var response = await _repository.GetProductAsync(id);
+        return new GetAdminProductResponse
+        {
+            Id = response.Id,
+            Name = response.Name,
+            Description = response.Description,
+            ProviderId = response.ProviderId,
             Price = response.Price,
             Quantity = response.Quantity,
             CategoryId = response.CategoryId,
@@ -58,14 +73,12 @@ internal class ProductUseCase : IProductUseCase
     public async Task<GetProductListResponse> GetProductListAsync(int pageNumber, int pageSize)
     {
         var response = await _repository.GetProductListAsync(pageNumber, pageSize);
-        var productList = response.Select(p => new ProductModel()
+        var productList = response.Select(p => new GetProductResponse
         {
             Id = p.Id,
             Name = p.Name,
-            ProviderId = p.ProviderId,
             Description = p.Description,
             Price = p.Price,
-            Quantity = p.Quantity,
             CategoryId = p.CategoryId,
             Characteristics = p.Characteristics
         }).ToList();
@@ -77,22 +90,64 @@ internal class ProductUseCase : IProductUseCase
     }
     
     /// <inheritdoc />
-    public async Task<GetProductListResponse> GetProductListByCategoryIdAsync(Guid categoryId, int pageNumber, int pageSize)
+    public async Task<GetAdminProductListResponse> GetAdminProductListAsync(int pageNumber, int pageSize)
     {
-        var response = await _repository.GetProductListByCategoryIdAsync(categoryId, pageNumber, pageSize);
-        var productList = response.Select(p => new ProductModel()
+        var response = await _repository.GetProductListAsync(pageNumber, pageSize);
+        var productList = response.Select(p => new GetAdminProductResponse
         {
             Id = p.Id,
             Name = p.Name,
-            ProviderId = p.ProviderId,
             Description = p.Description,
+            ProviderId = p.ProviderId,
             Price = p.Price,
             Quantity = p.Quantity,
             CategoryId = p.CategoryId,
             Characteristics = p.Characteristics
         }).ToList();
         
+        return new GetAdminProductListResponse()
+        {
+            ProductList = productList
+        };
+    }
+    
+    /// <inheritdoc />
+    public async Task<GetProductListResponse> GetProductListByCategoryIdAsync(Guid categoryId, int pageNumber, int pageSize)
+    {
+        var response = await _repository.GetProductListByCategoryIdAsync(categoryId, pageNumber, pageSize);
+        var productList = response.Select(p => new GetProductResponse
+        {
+            Id = p.Id,
+            Name = p.Name,
+            Description = p.Description,
+            Price = p.Price,
+            CategoryId = p.CategoryId,
+            Characteristics = p.Characteristics
+        }).ToList();
+        
         return new GetProductListResponse()
+        {
+            ProductList = productList
+        };
+    }
+
+    public async Task<GetAdminProductListResponse> GetAdminProductListByCategoryIdAsync(Guid categoryId, int pageNumber,
+        int pageSize)
+    {
+        var response = await _repository.GetProductListByCategoryIdAsync(categoryId, pageNumber, pageSize);
+        var productList = response.Select(p => new GetAdminProductResponse
+        {
+            Id = p.Id,
+            Name = p.Name,
+            Description = p.Description,
+            ProviderId =  p.ProviderId,
+            Price = p.Price,
+            Quantity = p.Quantity,
+            CategoryId = p.CategoryId,
+            Characteristics = p.Characteristics
+        }).ToList();
+        
+        return new GetAdminProductListResponse()
         {
             ProductList = productList
         };

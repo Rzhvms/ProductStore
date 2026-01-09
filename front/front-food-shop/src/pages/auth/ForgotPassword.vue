@@ -52,6 +52,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
+import { resendPinCode } from "@/services/api";
 
 const router = useRouter();
 const email = ref("");
@@ -75,6 +76,8 @@ const handleSubmit = async () => {
   }
 
   try {
+    const response = await resendPinCode(email.value);
+    localStorage.setItem("email", email.value);
     router.push("/recovery-code");
   } catch (error) {
     errors.value.email = error.message;

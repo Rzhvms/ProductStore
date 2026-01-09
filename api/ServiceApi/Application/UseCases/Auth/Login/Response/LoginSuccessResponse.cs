@@ -1,3 +1,7 @@
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+using Application.UseCases.Auth.CreateUser.Request;
+
 namespace Application.UseCases.Auth.Login.Response;
 
 /// <summary>
@@ -6,19 +10,27 @@ namespace Application.UseCases.Auth.Login.Response;
 /// </summary>
 public record LoginSuccessResponse : LoginResponse
 {
-    /// <summary>
-    /// JWT идентификационный токен пользователя (ID token).
-    /// Используется для аутентификации и передачи информации о пользователе.
-    /// </summary>
-    public string IdToken { get; set; }
+    // /// <summary>
+    // /// JWT идентификационный токен пользователя (ID token).
+    // /// Используется для аутентификации и передачи информации о пользователе.
+    // /// </summary>
+    // public string IdToken { get; set; }
 
     /// <summary>
     /// JWT access-токен для доступа к защищенным ресурсам API.
     /// </summary>
+    [JsonPropertyName("accessToken")]
     public string AccessToken { get; set; }
 
     /// <summary>
     /// Refresh-токен, используемый для получения нового access-токена после истечения срока действия.
     /// </summary>
+    [JsonPropertyName("refreshToken")]
     public string RefreshToken { get; set; }
+    
+    /// <summary>
+    /// Права
+    /// </summary>
+    [JsonPropertyName("claims")]
+    public IEnumerable<Claim> Claims { get; set; }
 }

@@ -1,14 +1,20 @@
 using Application.TypeHandlers;
+using Application.UseCases.Auth.ChangePassword;
 using Application.UseCases.Auth.CreateUser;
 using Application.UseCases.Auth.Login;
 using Application.UseCases.Auth.RefreshToken;
 using Application.UseCases.Auth.Register;
 using Application.UseCases.Auth.ResendPinCode;
+using Application.UseCases.Auth.RestoreForgotPassword;
 using Application.UseCases.Auth.SignOut;
 using Application.UseCases.Auth.VerifyEmail;
+using Application.UseCases.Cart;
 using Application.UseCases.Category;
+using Application.UseCases.Order;
+using Application.UseCases.Payment;
 using Application.UseCases.Product;
 using Application.UseCases.User.ChangeUserPassword;
+using Application.UseCases.User.DeleteUser;
 using Application.UseCases.User.GetUserInfo;
 using Application.UseCases.User.UpdateUserInfo;
 using Application.UseCases.UserAddress;
@@ -35,8 +41,17 @@ public static class ApplicationForStartup
         services.AddScoped<IUserProfileUseCase, UserProfileUseCase>();
         services.AddScoped<ICategoryUseCase, CategoryUseCase>();
         services.AddScoped<IProductUseCase, ProductUseCase>();
+        services.AddScoped<ICartUseCase, CartUseCase>();
+        services.AddScoped<IRestoreForgotPasswordUseCase, RestoreForgotPasswordUseCase>();
+        services.AddScoped<IChangePasswordUseCase, ChangePasswordUseCase>();
+        services.AddScoped<IDeleteUserUseCase, DeleteUserUseCase>();
+        services.AddScoped<IOrderUseCase, OrderUseCase>();
+        services.AddScoped<IPaymentUseCase, PaymentUseCase>();
+        services.AddScoped<IFavoriteProductsUseCase, FavoriteProductsUseCase>();
+        services.AddScoped<IProductReviewUseCase, ProductReviewUseCase>();
         
         SqlMapper.AddTypeHandler(new JsonObjectTypeHandler());
+        SqlMapper.AddTypeHandler(new JsonArrayTypeHandler());
 
         return services;
     }

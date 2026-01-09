@@ -3,6 +3,17 @@
 </template>
 
 <script setup>
+  import { useAuthStore } from './stores/auth'
+  import { onMounted } from 'vue'
+
+  const authStore = useAuthStore();
+
+  onMounted(() => {
+    if (authStore.isAuthenticated) {
+      authStore.setToken(authStore.accessToken);
+      authStore.startRefreshTimer();
+    }
+  });
 </script>
 
 <style>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оплата отменена</title>
+
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif;
+            background:linear-gradient(135deg,#f8f9fa 0%,#e9ecef 100%);
+            display:flex; justify-content:center; align-items:center;
+            min-height:100vh; padding:20px; color:#1d1d1f;
+        }
+
+        .cancel-card {
+            width:100%; max-width:380px;
+            background:rgba(255,255,255,0.95);
+            backdrop-filter:blur(20px);
+            border-radius:24px;
+            box-shadow:0 10px 40px rgba(0,0,0,.08),0 0 0 1px rgba(255,255,255,.3) inset;
+            overflow:hidden; position:relative; text-align:center;
+            opacity:0; transform:translateY(20px);
+            transition:.5s ease;
+        }
+
+        .header { padding:60px 32px 40px; }
+
+        .cancel-icon {
+            width:56px;height:56px;border-radius:50%;
+            background:linear-gradient(135deg,#FF453A,#FF3B30);
+            display:flex;align-items:center;justify-content:center;
+            margin:0 auto 20px;
+            box-shadow:0 8px 24px rgba(255,69,58,.25);
+            animation:pop .6s cubic-bezier(.68,-.55,.265,1.55);
+        }
+
+        .cancel-icon i { color:#fff;font-size:24px;font-weight:600; }
+
+        .title {
+            font-size:32px;font-weight:700;margin-bottom:12px;
+            background:linear-gradient(135deg,#1d1d1f,#FF453A);
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
+        }
+
+        .subtitle { color:#86868b;font-size:17px; }
+
+        .reason {
+            display:inline-block;margin-top:12px;
+            background:rgba(255,69,58,.1);
+            color:#FF453A;
+            padding:8px 16px;border-radius:12px;
+            font-weight:600;font-size:14px;
+        }
+
+        .content { padding:0 32px 40px; }
+
+        .details-card {
+            background:#f8f9fa;border-radius:20px;
+            padding:24px;margin-bottom:28px;
+        }
+
+        .detail-row {
+            display:flex;justify-content:space-between;
+            padding:14px 0;border-bottom:1px solid #eee;
+        }
+        .detail-row:last-child{border:none}
+
+        .detail-label { color:#86868b;font-size:15px; }
+        .detail-value { font-size:15px;font-weight:600; }
+
+        .info-box {
+            background:linear-gradient(135deg,#FF453A10,#FF3B3008);
+            border:1px solid rgba(255,69,58,.1);
+            border-radius:18px;
+            padding:18px;text-align:left;margin-bottom:24px;
+        }
+        .info-title { color:#FF453A;font-weight:600;margin-bottom:6px; }
+
+        .actions { display:flex;flex-direction:column;gap:12px; }
+
+        .button {
+            padding:18px;border-radius:14px;
+            font-size:17px;font-weight:600;
+            cursor:pointer;border:none;
+            transition:.3s ease;
+        }
+
+        .home-button {
+            background:linear-gradient(135deg, #FF6B35 0%, #FF9F1C 100%);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.25);
+            color:#ffffff;
+        }
+        .home-button:hover { transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 107, 53, 0.35); }
+
+        .footer {
+            padding:20px;font-size:12px;color:#86868b;
+            border-top:1px solid #eee;
+            background:#f8f9fa;
+        }
+
+        @keyframes pop {
+            0%{transform:scale(0);opacity:0}
+            70%{transform:scale(1.1)}
+            100%{transform:scale(1)}
+        }
+    </style>
+</head>
+<body>
+
+<div class="cancel-card">
+    <div class="header">
+        <div class="cancel-icon"><i>􀣺</i></div>
+        <h1 class="title">Оплата отменена</h1>
+        <div class="subtitle">Платеж не был завершен</div>
+        <div class="reason" id="reasonText">—</div>
+    </div>
+
+    <div class="content">
+        <div class="details-card">
+            <div class="detail-row">
+                <div class="detail-label">Номер заказа</div>
+                <div class="detail-value" id="orderId">—</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Платеж</div>
+                <div class="detail-value" id="paymentId">—</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Сумма</div>
+                <div class="detail-value" id="amount">—</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Статус</div>
+                <div class="detail-value" style="color:#FF453A">Отменен</div>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <div class="info-title">Что делать дальше?</div>
+            <div class="info-text">
+                Вы можете повторить попытку оплаты или вернуться в корзину.
+                Заказ сохранен на 24 часа.
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="button home-button" onclick="goToCart()">Вернуться в корзину</button>
+        </div>
+    </div>
+
+    <div class="footer">Нужна помощь? Обратитесь в поддержку</div>
+</div>
+
+<script>
+    const params = new URLSearchParams(location.search);
+    const paymentId = params.get('paymentId');
+
+    const reasonMap = {
+        failed: 'Ошибка оплаты',
+        canceled: 'Отменено пользователем',
+        timeout: 'Время ожидания истекло',
+        insufficient_funds: 'Недостаточно средств',
+        card_declined: 'Карта отклонена'
+    };
+
+    async function loadPayment() {
+        if (!paymentId) return null;
+        try {
+            const r = await fetch(`/api/mock-payments/${paymentId}`);
+            if (!r.ok) throw r.status;
+            return await r.json();
+        } catch { return null; }
+    }
+    function goToCart() {
+        fadeOut('http://localhost:80/cart');
+    }
+    function fadeOut(url) {
+        const card = document.querySelector('.cancel-card');
+        card.style.opacity = 0;
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => location.href = url, 300);
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        document.querySelector('.cancel-card').style.opacity = 1;
+        document.querySelector('.cancel-card').style.transform = 'translateY(0)';
+
+        const data = await loadPayment();
+        if (!data) return;
+
+        document.getElementById('paymentId').textContent =
+            `${data.id.substring(0,8).toUpperCase()}`;
+        document.getElementById('orderId').textContent =
+            data.orderId ? `${data.orderId.substring(0,8).toUpperCase()}` : '—';
+
+        document.getElementById('amount').textContent =
+            (data.amount ?? 0).toLocaleString('ru-RU',{minimumFractionDigits:2}) + ' ₽';
+
+        document.getElementById('reasonText').textContent =
+            reasonMap[data.cancelReason] || 'Платеж отменен';
+    });
+</script>
+
+</body>
+</html>

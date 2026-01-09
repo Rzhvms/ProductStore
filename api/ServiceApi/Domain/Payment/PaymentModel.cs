@@ -10,7 +10,7 @@ public record PaymentModel
     /// <summary>
     /// Идентификатор платежа
     /// </summary>
-    public Guid Id { get; init; }
+    public Guid? Id { get; init; }
     
     /// <summary>
     /// Идентификатор заказа

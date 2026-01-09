@@ -1,8 +1,13 @@
 <template>
   <div class="page-bg">
     <div class="login-card" :style="{ height: cardHeight + 'px' }">
+    <div class="login-card" :style="{ height: cardHeight + 'px' }">
       <h1 class="login-title">Вход</h1>
 
+      <!-- Глобальная ошибка -->
+      <transition name="fade-slide">
+        <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
+      </transition>
       <!-- Глобальная ошибка -->
       <transition name="fade-slide">
         <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
@@ -87,7 +92,9 @@
 <script setup>
 import { ref, computed, watch } from "vue";
 import router from "@/router";
-import { login } from "@/services/api";
+import { useAuthStore } from "@/stores/auth";
+
+const authStore = useAuthStore();
 
 const email = ref("");
 const password = ref("");
@@ -107,36 +114,51 @@ watch(errorMessage, () => {
 }, { immediate: true });
 
 // --- Валидация формы ---
+const errorMessage = ref("");
+
+// --- Динамическая высота ---
+const baseCardHeight = 508;
+const cardHeight = ref(baseCardHeight);
+
+watch(errorMessage, () => {
+  cardHeight.value = baseCardHeight + (errorMessage.value ? 60 : 0);
+}, { immediate: true });
+
+// --- Валидация формы ---
 const isFormValid = computed(() => 
   email.value.includes("@") && password.value.length > 0
 );
 
 // --- SUBMIT ---
+// --- SUBMIT ---
 const handleSubmit = async () => {
   errors.value = { email: false, password: false };
+  errorMessage.value = "";
   errorMessage.value = "";
 
   if (!email.value) {
     errors.value.email = true;
     errorMessage.value = "Почта не указана";
+    errorMessage.value = "Почта не указана";
   } else if (!email.value.includes("@")) {
     errors.value.email = true;
+    errorMessage.value = "Неверный формат почты";
     errorMessage.value = "Неверный формат почты";
   }
 
   if (!password.value) {
     errors.value.password = true;
     errorMessage.value = "Пароль не указан";
+    errorMessage.value = "Пароль не указан";
   }
 
+  if (errorMessage.value) return;
   if (errorMessage.value) return;
 
   try {
     isLoading.value = true;
-
-    await login(email.value, password.value);
-
-    router.push("/admin");
+    await authStore.login(email.value, password.value, remember.value);
+    router.push("/");
   } catch (error) {
     const status = error.response?.status;
     const message =
@@ -160,6 +182,9 @@ const handleSubmit = async () => {
 // --- Навигация ---
 const handleRegister = () => router.push("/register");
 const handleForgot = () => router.push("/forgot-password");
+// --- Навигация ---
+const handleRegister = () => router.push("/register");
+const handleForgot = () => router.push("/forgot-password");
 </script>
 
 <style scoped>
@@ -178,9 +203,33 @@ const handleForgot = () => router.push("/forgot-password");
   margin-bottom: 12px;
 }
 
+.error-text {
+  color: #ff3333;
+  font-size: 16px;
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+
 .submit-btn:enabled:hover {
   background-color: #ff7a00;
   color: white;
+}
+
+.fade-slide-enter-active, .fade-slide-leave-active {
+  transition: all 0.3s ease;
+}
+.fade-slide-enter-from, .fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+.fade-slide-enter-to, .fade-slide-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Перекрываем фиксированную высоту для динамики */
+.login-card {
+  min-height: 508px;
 }
 
 .fade-slide-enter-active, .fade-slide-leave-active {

@@ -74,6 +74,7 @@
 <script setup>
 import { ref, computed, nextTick, onMounted } from "vue";
 import router from "@/router";
+import { resendPinCode, sendVerificationEmail } from "@/services/api";
 
 const code = ref(["", "", "", "", "", ""]);
 const codeError = ref(false);
@@ -89,18 +90,19 @@ let interval = null;
 
 const isCodeComplete = computed(() => code.value.every(d => d !== ""));
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
   const enteredCode = code.value.join("");
-  if (enteredCode === "123456") {
+  const email = localStorage.getItem("email");
+  try {
+    const response = await sendVerificationEmail(email, enteredCode);
     codeError.value = false;
     codeSuccess.value = true;
     shakeActive.value = false;
     router.push("/finish-registration");
-  } else {
+  } catch (error) {
     codeError.value = true;
     codeErrorText.value = "Неверный код подтверждения\nПопробуйте еще раз или запросите код\nповторно";
     codeSuccess.value = false;
-
     shakeActive.value = false;
     setTimeout(() => (shakeActive.value = true), 50);
   }
@@ -122,8 +124,19 @@ const startTimer = (seconds) => {
   }, 1000);
 };
 
-const handleResend = () => {
+const handleResend = async () => {
   if (resendActive.value) return;
+  try {
+    const email = localStorage.getItem("email");
+    const response = await resendPinCode(email);
+    router.push("/finish-registration");
+  } catch (error) {
+    codeError.value = true;
+    codeErrorText.value = "Не удалось получить код подтверждения\nПопробуйте еще раз или запросите код\nповторно";
+    codeSuccess.value = false;
+    shakeActive.value = false;
+    setTimeout(() => (shakeActive.value = true), 50);
+  }
   localStorage.setItem("lastResendTime", Date.now().toString());
   startTimer(60);
 };

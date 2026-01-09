@@ -1,3 +1,4 @@
+using Application.UseCases.Auth.CreateUser.Request;
 using Domain.User;
 
 namespace Application.Ports.Repositories;
@@ -31,4 +32,9 @@ public interface IAuthRepository
     /// Обновляем данный пользователя (для завершения регистрации)
     /// </summary>
     Task UpdateUserForFinalRegistrationAsync(Guid id, string name, string lastName, string gender, string phone, DateTime birthDate);
+    
+    /// <summary>
+    /// Получение прав пользователя
+    /// </summary>
+    Task<IEnumerable<Claim>> GetUserClaimsAsync(Guid userId);
 }
