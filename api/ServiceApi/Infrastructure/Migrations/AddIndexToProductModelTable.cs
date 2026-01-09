@@ -17,7 +17,7 @@ public class AddIndexToProductModelTable : Migration
     
     public override void Up()
     {
-        if (Schema.Table(_tableName).Exists())
+        if (Schema.Table(_tableName).Exists() && !Schema.Table(_tableName).Index(_indexName).Exists())
         {
             Create.Index(_indexName)
                 .OnTable(_tableName)
@@ -28,7 +28,7 @@ public class AddIndexToProductModelTable : Migration
 
     public override void Down()
     {
-        if (Schema.Table(_tableName).Exists())
+        if (Schema.Table(_tableName).Exists() && Schema.Table(_tableName).Index(_indexName).Exists())
         {
             Delete.Index(_indexName).OnTable(_tableName);
         }

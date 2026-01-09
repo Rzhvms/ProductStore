@@ -1,11 +1,9 @@
-using System.ComponentModel.DataAnnotations;
-
-namespace Domain.Product;
+namespace Application.UseCases.Product.Dto.Response;
 
 /// <summary>
-/// Модель отзыва на продукт
+/// Выходная модель получения отзыва
 /// </summary>
-public record ProductReviewModel
+public record GetProductReviewResponse
 {
     /// <summary>
     /// Идентификатор записи
@@ -25,13 +23,11 @@ public record ProductReviewModel
     /// <summary>
     /// Рейтинг
     /// </summary>
-    [Range(1, 5)]
     public int Rating { get; init; }
     
     /// <summary>
     /// Комментарий
     /// </summary>
-    [MaxLength(300)]
     public string? Message { get; init; }
     
     /// <summary>
