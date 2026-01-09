@@ -26,6 +26,7 @@ public class ProductReviewController : ControllerBase
     /// </summary>
     [HttpPost]
     [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<AddProductReviewResponse> AddProductReviewAsync(AddProductReviewRequest request)
     {
         var userId = User.GetUserId();
@@ -36,6 +37,7 @@ public class ProductReviewController : ControllerBase
     /// Получить отзыв
     /// </summary>
     [HttpGet("{reviewId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<GetProductReviewResponse> GetProductReviewAsync([FromRoute] Guid reviewId)
     {
         return await _productReviewUseCase.GetProductReviewAsync(reviewId);
@@ -44,18 +46,43 @@ public class ProductReviewController : ControllerBase
     /// <summary>
     /// Получить список отзывов
     /// </summary>
-    [HttpGet("list")]
-    public async Task GetProductReviewListAsync()
+    [HttpGet("{productId}/list")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<GetProductReviewListResponse> GetProductReviewListAsync([FromRoute] Guid productId)
     {
-        
+        return await _productReviewUseCase.GetProductReviewListAsync(productId);
     }
     
     /// <summary>
     /// Удалить отзыв
     /// </summary>
-    [HttpDelete("{id}")]
-    public async Task DeleteProductReviewAsync()
+    [HttpDelete("{reviewId}")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task DeleteProductReviewAsync([FromRoute] Guid reviewId)
     {
-        
+        await _productReviewUseCase.DeleteProductReviewAsync(reviewId);
     }
+
+    /// <summary>
+    /// Изменить видимость отзыва
+    /// </summary>
+    [Authorize]
+    [HttpPatch("admin/change-visible/{reviewId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task ChangeIsVisibleAsync([FromRoute] Guid reviewId, ChangeIsVisibleRequest request)
+    {
+        await _productReviewUseCase.ChangeIsVisibleAsync(reviewId, request);
+    }
+    
+    /// <summary>
+    /// Изменить отзыв
+    /// </summary>
+    [Authorize]
+    [HttpPatch("patch-review/{reviewId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task PatchProductReviewAsync([FromRoute] Guid reviewId, PatchProductReviewRequest request)
+    {
+        await _productReviewUseCase.PatchProductReviewAsync(reviewId, request);
+    } 
 }

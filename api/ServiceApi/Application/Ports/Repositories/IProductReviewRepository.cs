@@ -20,10 +20,20 @@ public interface IProductReviewRepository
     /// <summary>
     /// Получить список отзывов
     /// </summary>
-    Task GetProductReviewListAsync();
+    Task<List<ProductReviewModel>> GetProductReviewListAsync(Guid productId);
 
     /// <summary>
     /// Удалить отзыв
     /// </summary>
-    Task DeleteProductReviewAsync();
+    Task DeleteProductReviewAsync(Guid reviewId);
+    
+    /// <summary>
+    /// Изменить видимость отзыва
+    /// </summary>
+    Task ChangeIsVisibleAsync(Guid reviewId, bool isVisible);
+    
+    /// <summary>
+    /// Изменить отзыв
+    /// </summary>
+    Task PatchProductReviewAsync(Guid reviewId, int? rating, string? message);
 }

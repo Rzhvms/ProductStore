@@ -41,14 +41,42 @@ internal class ProductReviewUseCase : IProductReviewUseCase
     }
     
     /// <inheritdoc/>
-    public async Task GetProductReviewListAsync()
+    public async Task<GetProductReviewListResponse> GetProductReviewListAsync(Guid productId)
     {
-        
+        var reviews = await _productReviewRepository.GetProductReviewListAsync(productId);
+
+        var response = reviews.Select(x => new GetProductReviewResponse()
+        {
+            Id = x.Id,
+            UserId = x.UserId,
+            ProductId = x.ProductId,
+            Rating = x.Rating,
+            Message = x.Message,
+            CreatedAt = x.CreatedAt,
+            IsVisible = x.IsVisible
+        });
+
+        return new GetProductReviewListResponse
+        {
+            ProductReviewList = response.ToList()
+        };
     }
     
     /// <inheritdoc/>
-    public async Task DeleteProductReviewAsync()
+    public async Task DeleteProductReviewAsync(Guid reviewId)
     {
-        
+        await _productReviewRepository.DeleteProductReviewAsync(reviewId);
+    }
+
+    /// <inheritdoc/>
+    public async Task ChangeIsVisibleAsync(Guid reviewId, ChangeIsVisibleRequest request)
+    {
+        await _productReviewRepository.ChangeIsVisibleAsync(reviewId, request.IsVisible);
+    }
+
+    /// <inheritdoc/>
+    public async Task PatchProductReviewAsync(Guid reviewId, PatchProductReviewRequest request)
+    {
+        await _productReviewRepository.PatchProductReviewAsync(reviewId, request.Rating, request.Message);
     }
 }

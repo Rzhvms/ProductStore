@@ -52,14 +52,73 @@ internal class ProductReviewRepository : IProductReviewRepository
     }
     
     /// <inheritdoc/>
-    public async Task GetProductReviewListAsync()
+    public async Task<List<ProductReviewModel>> GetProductReviewListAsync(Guid productId)
     {
+        var sql = $@"SELECT * FROM ""{nameof(ProductReviewModel)}""
+                    WHERE ""{nameof(ProductReviewModel.ProductId)}"" = @ProductId";
         
+        var reviews = await _dbConnection.QueryAsync<ProductReviewModel>(sql, new
+        {
+            ProductId = productId
+        });
+        
+        return reviews.AsList();
     }
     
     /// <inheritdoc/>
-    public async Task DeleteProductReviewAsync()
+    public async Task DeleteProductReviewAsync(Guid reviewId)
     {
+        var sql = $@"DELETE FROM ""{nameof(ProductReviewModel)}""
+                    WHERE ""{nameof(ProductReviewModel.Id)}"" = @Id";
+
+        await _dbConnection.ExecuteAsync(sql, new
+        {
+            Id = reviewId
+        });
+    }
+
+    /// <inheritdoc/>
+    public async Task ChangeIsVisibleAsync(Guid reviewId, bool isVisible)
+    {
+        var sql = $@"UPDATE ""{nameof(ProductReviewModel)}""
+                    SET ""{nameof(ProductReviewModel.IsVisible)}"" = @IsVisible
+                    WHERE ""{nameof(ProductReviewModel.Id)}"" = @Id";
         
+        await _dbConnection.ExecuteAsync(sql, new
+        {
+            Id = reviewId, 
+            IsVisible = isVisible
+        });
+    }
+
+    /// <inheritdoc/>
+    public async Task PatchProductReviewAsync(Guid reviewId, int? rating, string? message)
+    {
+        var updates = new List<string>();
+        var parameters = new DynamicParameters();
+        parameters.Add(nameof(ProductReviewModel.Id), reviewId);
+
+        if (rating.HasValue)
+        {
+            updates.Add($@"""{nameof(ProductReviewModel.Rating)}"" = @Rating");
+            parameters.Add(nameof(ProductReviewModel.Rating), rating.Value);
+        }
+
+        if (message != null)
+        {
+            updates.Add($@"""{nameof(ProductReviewModel.Message)}"" = @Message");
+            parameters.Add(nameof(ProductReviewModel.Message), message);
+        }
+
+        if (updates.Count == 0)
+        {
+            return;
+        }
+
+        var sql = $@"UPDATE ""{nameof(ProductReviewModel)}""
+                SET {string.Join(", ", updates)}
+                WHERE ""{nameof(ProductReviewModel.Id)}"" = @Id";
+
+        await _dbConnection.ExecuteAsync(sql, parameters);
     }
 }
