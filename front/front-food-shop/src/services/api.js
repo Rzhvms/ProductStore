@@ -11,19 +11,6 @@ export const resendPinCode = async (email) => {
         throw new Error("Не удалось отправить код подтверждения");
     }
 };
-import api from '../api/instance';
-
-export const resendPinCode = async (email) => {
-    try {
-        await api.post('auth/resend-code', { email });
-    } catch (error) {
-        const data = error.response?.data;
-        if (data?.error === "User not found") {
-            throw new Error("Пользователь не найден");
-        }
-        throw new Error("Не удалось отправить код подтверждения");
-    }
-};
 
 export const sendVerificationEmail = async (email, pin) => {
     try {
@@ -40,30 +27,6 @@ export const verifyEmail = async (email, pin) => {
         return response.data;
     } catch (error) {
         throw new Error("Не удалось подтвердить операцию");
-export const sendVerificationEmail = async (email, pin) => {
-    try {
-        const response = await api.post('auth/verify-email', { email, pin });
-        return response.data;
-    } catch (error) {
-        throw new Error("Не удалось отправить пин-код");
-    }
-};
-
-export const verifyEmail = async (email, pin) => {
-    try {
-        const response = await api.post('auth/confirm-operation', { email, pin });
-        return response.data;
-    } catch (error) {
-        throw new Error("Не удалось подтвердить операцию");
-    }
-};
-
-export const changePassword = async (password, token) => {
-    try {
-        const response = await api.post('auth/change-password', { password }, { headers: { Authorization: `Bearer ${token}` } });
-        return response.data;
-    } catch (error) {
-        throw new Error("Не удалось изменить пароль");
     }
 };
 
@@ -82,27 +45,9 @@ export const createUser = async (email, password, claims) => {
         return response.data;
     } catch (error) {
         throw new Error("Не удалось создать аккаунт");
-    try {
-        const response = await api.post('auth/register', { email, password, claims });
-        return response.data;
-    } catch (error) {
-        throw new Error("Не удалось создать аккаунт");
     }
 };
 
-export const finishRegister = async (userId, name, lastName, phone, gender, birthDate, about) => {
-    try {
-        const response = await api.patch(`auth/register`, { 
-            userId,
-            name,
-            lastName,
-            phone,
-            gender,
-            birthDate,
-            about
-        });
-        return response.data;
-    } catch (error) {
 export const finishRegister = async (userId, name, lastName, phone, gender, birthDate, about) => {
     try {
         const response = await api.patch(`auth/register`, { 
