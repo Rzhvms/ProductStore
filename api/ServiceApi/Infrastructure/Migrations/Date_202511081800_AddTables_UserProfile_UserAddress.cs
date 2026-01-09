@@ -42,15 +42,25 @@ public class Date_202511081800_AddTables_UserProfile_UserAddress : Migration
                 .WithColumn(nameof(UserAddressModel.IsDefault)).AsBoolean().NotNullable();
         }
 
-        Create.ForeignKey("FK_UserProfile_User")
-            .FromTable(_profileTbName).ForeignColumn(nameof(UserProfileModel.UserId))
-            .ToTable(_userTbName).PrimaryColumn(nameof(UserModel.Id))
-            .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+        if (Schema.Table(_profileTbName).Exists() && Schema.Table(_userTbName).Exists()
+                                                  && !Schema.Table(_profileTbName)
+                                                      .Constraint("FK_UserProfile_User").Exists())
+        {
+            Create.ForeignKey("FK_UserProfile_User")
+                .FromTable(_profileTbName).ForeignColumn(nameof(UserProfileModel.UserId))
+                .ToTable(_userTbName).PrimaryColumn(nameof(UserModel.Id))
+                .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+        }
 
-        Create.ForeignKey("FK_UserAddress_User")
-            .FromTable(_addressTbName).ForeignColumn(nameof(UserAddressModel.UserId))
-            .ToTable(_userTbName).PrimaryColumn(nameof(UserModel.Id))
-            .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+        if (Schema.Table(_addressTbName).Exists() && Schema.Table(_userTbName).Exists()
+                                                  && !Schema.Table(_addressTbName)
+                                                      .Constraint("FK_UserAddress_User").Exists())
+        {
+            Create.ForeignKey("FK_UserAddress_User")
+                .FromTable(_addressTbName).ForeignColumn(nameof(UserAddressModel.UserId))
+                .ToTable(_userTbName).PrimaryColumn(nameof(UserModel.Id))
+                .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+        }
     }
 
     /// <inheritdoc />

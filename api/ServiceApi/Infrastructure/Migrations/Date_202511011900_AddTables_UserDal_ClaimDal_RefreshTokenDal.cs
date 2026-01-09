@@ -50,16 +50,26 @@ public class Date_202511011900_AddTables_UserDal_ClaimDal_RefreshTokenDal : Migr
                 .WithColumn(nameof(RefreshTokenModel.Active)).AsBoolean().Nullable()
                 .WithColumn(nameof(RefreshTokenModel.ExpirationDate)).AsDateTime().Nullable();
         }
-        
-        Create.ForeignKey("fk_UserDal_ClaimId_ClaimDal")
-            .FromTable(_claimTableName).ForeignColumn(nameof(ClaimModel.UserId))
-            .ToTable(_userTableName).PrimaryColumn(nameof(UserModel.Id))
-            .OnDeleteOrUpdate(System.Data.Rule.Cascade);
-        
-        Create.ForeignKey("fk_UserDal_RefreshToken_RefreshTokenDal")
-            .FromTable(_tokenTableName).ForeignColumn(nameof(RefreshTokenModel.UserId))
-            .ToTable(_userTableName).PrimaryColumn(nameof(UserModel.Id))
-            .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+
+        if (Schema.Table(_claimTableName).Exists() && Schema.Table(_userTableName).Exists() 
+                                                   && !Schema.Table(_claimTableName)
+                                                       .Constraint("fk_UserDal_ClaimId_ClaimDal").Exists())
+        {
+            Create.ForeignKey("fk_UserDal_ClaimId_ClaimDal")
+                .FromTable(_claimTableName).ForeignColumn(nameof(ClaimModel.UserId))
+                .ToTable(_userTableName).PrimaryColumn(nameof(UserModel.Id))
+                .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+        }
+
+        if (Schema.Table(_tokenTableName).Exists() && Schema.Table(_userTableName).Exists()
+                                                   && !Schema.Table(_tokenTableName)
+                                                       .Constraint("fk_UserDal_RefreshToken_RefreshTokenDal").Exists())
+        {
+            Create.ForeignKey("fk_UserDal_RefreshToken_RefreshTokenDal")
+                .FromTable(_tokenTableName).ForeignColumn(nameof(RefreshTokenModel.UserId))
+                .ToTable(_userTableName).PrimaryColumn(nameof(UserModel.Id))
+                .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+        }
     }
 
     public override void Down()

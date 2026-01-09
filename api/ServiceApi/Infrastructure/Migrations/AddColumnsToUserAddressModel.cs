@@ -13,7 +13,9 @@ public class AddColumnsToUserAddressModel : Migration
     /// <inheritdoc/>
     public override void Up()
     {
-        if (Schema.Table(_tableName).Exists())
+        if (Schema.Table(_tableName).Exists() 
+            && !Schema.Table(_tableName).Column(_floorColumnName).Exists()
+            && !Schema.Table(_tableName).Column(_entranceColumnName).Exists())
         {
             Create.Column(_floorColumnName).OnTable(_tableName).AsInt32().Nullable();
             Create.Column(_entranceColumnName).OnTable(_tableName).AsString(10).Nullable();
@@ -23,7 +25,9 @@ public class AddColumnsToUserAddressModel : Migration
     /// <inheritdoc/>
     public override void Down()
     {
-        if (Schema.Table(_tableName).Exists())
+        if (Schema.Table(_tableName).Exists()
+            && Schema.Table(_tableName).Column(_floorColumnName).Exists()
+            && Schema.Table(_tableName).Column(_entranceColumnName).Exists())
         {
             Delete.Column(_floorColumnName).FromTable(_tableName);
             Delete.Column(_entranceColumnName).FromTable(_tableName);

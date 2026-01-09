@@ -22,16 +22,26 @@ public class AddFavoritesTable : Migration
                 .WithColumn(nameof(FavoriteProductsModel.ProductId)).AsGuid().NotNullable()
                 .WithColumn(nameof(FavoriteProductsModel.UserId)).AsGuid().NotNullable();
         }
-        
-        Create.ForeignKey("FK_FavoriteProducts_Product")
-            .FromTable(_tbName).ForeignColumn(nameof(FavoriteProductsModel.ProductId))
-            .ToTable(nameof(ProductModel)).PrimaryColumn(nameof(ProductModel.Id))
-            .OnDeleteOrUpdate(System.Data.Rule.Cascade);
-            
-        Create.ForeignKey("FK_FavoriteProducts_User")
-            .FromTable(_tbName).ForeignColumn(nameof(FavoriteProductsModel.UserId))
-            .ToTable(nameof(UserModel)).PrimaryColumn(nameof(UserModel.Id))
-            .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+
+        if (Schema.Table(_tbName).Exists() && Schema.Table(nameof(ProductModel)).Exists()
+                                           && !Schema.Table(_tbName)
+                                               .Constraint("FK_FavoriteProducts_Product").Exists())
+        {
+            Create.ForeignKey("FK_FavoriteProducts_Product")
+                .FromTable(_tbName).ForeignColumn(nameof(FavoriteProductsModel.ProductId))
+                .ToTable(nameof(ProductModel)).PrimaryColumn(nameof(ProductModel.Id))
+                .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+        }
+
+        if (Schema.Table(_tbName).Exists() && Schema.Table(nameof(UserModel)).Exists()
+                                           && !Schema.Table(_tbName)
+                                               .Constraint("FK_FavoriteProducts_User").Exists())
+        {
+            Create.ForeignKey("FK_FavoriteProducts_User")
+                .FromTable(_tbName).ForeignColumn(nameof(FavoriteProductsModel.UserId))
+                .ToTable(nameof(UserModel)).PrimaryColumn(nameof(UserModel.Id))
+                .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+        }
     }
 
     /// <inheritdoc/>

@@ -62,43 +62,78 @@ public class Date_202511182200_AddTables_CategoryProductPayment : Migration
                 .WithColumn(nameof(ProductReviewModel.ProductId)).AsGuid().NotNullable()
                 .WithColumn(nameof(ProductReviewModel.Rating)).AsInt32().NotNullable()
                 .WithColumn(nameof(ProductReviewModel.Message)).AsString(300).Nullable()
-                .WithColumn(nameof(ProductReviewModel.CreatedAt)).AsDateTime().NotNullable();
+                .WithColumn(nameof(ProductReviewModel.CreatedAt)).AsDateTime().NotNullable()
+                .WithColumn(nameof(ProductReviewModel.IsVisible)).AsBoolean().WithDefaultValue(true).NotNullable();
         }
-        
-        Create.ForeignKey("FK_Payment_Order")
-            .FromTable(_paymentTb).ForeignColumn(nameof(PaymentModel.OrderId))
-            .ToTable(nameof(OrderModel)).PrimaryColumn(nameof(OrderModel.Id))
-            .OnDeleteOrUpdate(System.Data.Rule.Cascade);
-        
-        Create.ForeignKey("FK_Payment_User")
-            .FromTable(_paymentTb).ForeignColumn(nameof(PaymentModel.UserId))
-            .ToTable(nameof(UserModel)).PrimaryColumn(nameof(UserModel.Id))
-            .OnDeleteOrUpdate(System.Data.Rule.Cascade);
-        
-        Create.ForeignKey("FK_CategoryParent_CategoryId")
-            .FromTable(_categoryTb).ForeignColumn(nameof(CategoryModel.ParentId))
-            .ToTable(_categoryTb).PrimaryColumn(nameof(CategoryModel.Id))
-            .OnDeleteOrUpdate(System.Data.Rule.Cascade);
-        
-        Create.ForeignKey("FK_ProductImage_Product")
-            .FromTable(_productImageTb).ForeignColumn(nameof(ProductImageModel.ProductId))
-            .ToTable(nameof(ProductModel)).PrimaryColumn(nameof(ProductModel.Id))
-            .OnDeleteOrUpdate(System.Data.Rule.Cascade);
-        
-        Create.ForeignKey("FK_ProductReview_User")
-            .FromTable(_productReviewTb).ForeignColumn(nameof(ProductReviewModel.UserId))
-            .ToTable(nameof(UserModel)).PrimaryColumn(nameof(UserModel.Id))
-            .OnDeleteOrUpdate(System.Data.Rule.Cascade);
-        
-        Create.ForeignKey("FK_ProductReview_Product")
-            .FromTable(_productReviewTb).ForeignColumn(nameof(ProductReviewModel.ProductId))
-            .ToTable(nameof(ProductModel)).PrimaryColumn(nameof(ProductModel.Id))
-            .OnDeleteOrUpdate(System.Data.Rule.Cascade);
 
-        Create.ForeignKey("FK_Product_Category")
-            .FromTable(nameof(ProductModel)).ForeignColumn(nameof(ProductModel.CategoryId))
-            .ToTable(_categoryTb).PrimaryColumn(nameof(CategoryModel.Id))
-            .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+        if (Schema.Table(_paymentTb).Exists() && Schema.Table(nameof(OrderModel)).Exists()
+                                              && !Schema.Table(_paymentTb)
+                                                  .Constraint("FK_Payment_Order").Exists())
+        {
+            Create.ForeignKey("FK_Payment_Order")
+                .FromTable(_paymentTb).ForeignColumn(nameof(PaymentModel.OrderId))
+                .ToTable(nameof(OrderModel)).PrimaryColumn(nameof(OrderModel.Id))
+                .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+        }
+
+        if (Schema.Table(_paymentTb).Exists() && Schema.Table(nameof(UserModel)).Exists()
+                                              && !Schema.Table(_paymentTb)
+                                                  .Constraint("FK_Payment_User").Exists())
+        {
+            Create.ForeignKey("FK_Payment_User")
+                .FromTable(_paymentTb).ForeignColumn(nameof(PaymentModel.UserId))
+                .ToTable(nameof(UserModel)).PrimaryColumn(nameof(UserModel.Id))
+                .OnDeleteOrUpdate(System.Data.Rule.Cascade);   
+        }
+
+        if (Schema.Table(_categoryTb).Exists() && !Schema.Table(_categoryTb)
+                .Constraint("FK_CategoryParent_CategoryId").Exists())
+        {
+            Create.ForeignKey("FK_CategoryParent_CategoryId")
+                .FromTable(_categoryTb).ForeignColumn(nameof(CategoryModel.ParentId))
+                .ToTable(_categoryTb).PrimaryColumn(nameof(CategoryModel.Id))
+                .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+        }
+
+        if (Schema.Table(_productImageTb).Exists() && Schema.Table(nameof(ProductModel)).Exists()
+                                                   && !Schema.Table(_productImageTb)
+                                                       .Constraint("FK_ProductImage_Product").Exists())
+        {
+            Create.ForeignKey("FK_ProductImage_Product")
+                .FromTable(_productImageTb).ForeignColumn(nameof(ProductImageModel.ProductId))
+                .ToTable(nameof(ProductModel)).PrimaryColumn(nameof(ProductModel.Id))
+                .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+        }
+
+        if (Schema.Table(_productReviewTb).Exists() && Schema.Table(nameof(UserModel)).Exists()
+                                                    && !Schema.Table(_productReviewTb)
+                                                        .Constraint("FK_ProductReview_User").Exists())
+        {
+            Create.ForeignKey("FK_ProductReview_User")
+                .FromTable(_productReviewTb).ForeignColumn(nameof(ProductReviewModel.UserId))
+                .ToTable(nameof(UserModel)).PrimaryColumn(nameof(UserModel.Id))
+                .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+        }
+
+        if (Schema.Table(_productReviewTb).Exists() && Schema.Table(nameof(ProductModel)).Exists()
+                                                    && !Schema.Table(_productReviewTb)
+                                                        .Constraint("FK_ProductReview_Product").Exists())
+        {
+            Create.ForeignKey("FK_ProductReview_Product")
+                .FromTable(_productReviewTb).ForeignColumn(nameof(ProductReviewModel.ProductId))
+                .ToTable(nameof(ProductModel)).PrimaryColumn(nameof(ProductModel.Id))
+                .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+        }
+
+        if (Schema.Table(_categoryTb).Exists() && Schema.Table(nameof(ProductModel)).Exists()
+                                               && !Schema.Table(nameof(ProductModel))
+                                                   .Constraint("FK_Product_Category").Exists())
+        {
+            Create.ForeignKey("FK_Product_Category")
+                .FromTable(nameof(ProductModel)).ForeignColumn(nameof(ProductModel.CategoryId))
+                .ToTable(_categoryTb).PrimaryColumn(nameof(CategoryModel.Id))
+                .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+        }
     }
 
     /// <inheritdoc />

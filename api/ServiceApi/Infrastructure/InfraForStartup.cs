@@ -27,7 +27,8 @@ namespace Infrastructure;
 
 public static class InfraForStartup
 {
-    public static IServiceCollection AddInfrastructureModule(this IServiceCollection services, JwtSettings jwtSettings, string connectionString)
+    public static IServiceCollection AddInfrastructureModule(this IServiceCollection services, JwtSettings jwtSettings,
+        string connectionString)
     {
         // Сервисы криптографии
         services.AddSingleton<ICryptographyService, CryptographyService>();
@@ -65,6 +66,7 @@ public static class InfraForStartup
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IFavoriteProductsRepository, FavoriteProductsRepository>();
+        services.AddScoped<IProductReviewRepository, ProductReviewRepository>();
 
         // FluentMigrator
         services.AddFluentMigratorCore()
@@ -73,7 +75,7 @@ public static class InfraForStartup
                 .WithGlobalConnectionString(connectionString)
                 .ScanIn(typeof(Date_202511011900_AddTables_UserDal_ClaimDal_RefreshTokenDal).Assembly).For.Migrations())
             .AddLogging(lb => lb.AddFluentMigratorConsole());
-        
+
         // Email
         services.AddScoped<IMailHelper, MailHelper>();
         services.AddScoped<IEmailClient, EmailClient>();

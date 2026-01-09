@@ -48,6 +48,7 @@ public static class ApplicationForStartup
         services.AddScoped<IOrderUseCase, OrderUseCase>();
         services.AddScoped<IPaymentUseCase, PaymentUseCase>();
         services.AddScoped<IFavoriteProductsUseCase, FavoriteProductsUseCase>();
+        services.AddScoped<IProductReviewUseCase, ProductReviewUseCase>();
         
         SqlMapper.AddTypeHandler(new JsonObjectTypeHandler());
         SqlMapper.AddTypeHandler(new JsonArrayTypeHandler());
