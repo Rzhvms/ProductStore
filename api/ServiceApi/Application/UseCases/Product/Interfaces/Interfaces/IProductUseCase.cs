@@ -1,7 +1,7 @@
 using Application.UseCases.Product.Dto.Request;
 using Application.UseCases.Product.Dto.Response;
 
-namespace Application.UseCases.Product;
+namespace Application.UseCases.Product.Interfaces;
 
 /// <summary>
 /// UseCase по управлению продуктами на админ панели

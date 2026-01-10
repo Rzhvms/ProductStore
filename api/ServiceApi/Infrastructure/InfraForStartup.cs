@@ -10,6 +10,7 @@ using Infrastructure.Repositories.Product;
 using Infrastructure.Repositories.Auth;
 using Infrastructure.Repositories.Cart;
 using Infrastructure.Repositories.Category;
+using Infrastructure.Repositories.Images;
 using Infrastructure.Repositories.Order;
 using Infrastructure.Repositories.Payment;
 using Infrastructure.Repositories.User;
@@ -62,6 +63,7 @@ public static class InfraForStartup
         services.AddScoped<IUserProfileRepository, UserProfileRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<IImageRepository, ImageRepository>();
         services.AddScoped<ICartRepository, RedisCartRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();

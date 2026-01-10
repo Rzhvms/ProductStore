@@ -1,9 +1,11 @@
-namespace Domain.Product;
+using Domain.Product.Enum;
+
+namespace Domain.Image;
 
 /// <summary>
 /// Изображение продукта
 /// </summary>
-public record ProductImageModel
+public record ImageModel
 {
     /// <summary>
     /// Идентификатор изображения
@@ -16,12 +18,17 @@ public record ProductImageModel
     public Guid ProductId { get; init; }
     
     /// <summary>
-    /// Ссылка на изображение
+    /// Путь в MinIO
     /// </summary>
-    public string? Url { get; init; }
+    public string? ObjectPath { get; init; }
+    
+    /// <summary>
+    /// Основная картинка
+    /// </summary>
+    public bool IsMain { get; set; }
     
     /// <summary>
     /// Порядок сортировки изображений
     /// </summary>
-    public int? SortOrder { get; init; }
+    public ImageSortOrder SortOrder { get; init; }
 }

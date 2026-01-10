@@ -1,4 +1,5 @@
 using Domain.Delivery;
+using Domain.Image;
 using Domain.Order;
 using Domain.Payment;
 using Domain.Product;
@@ -13,7 +14,7 @@ public class Date_202511182200_AddTables_CategoryProductPayment : Migration
 {
     private readonly string _paymentTb = nameof(PaymentModel);
     private readonly string _categoryTb = nameof(CategoryModel);
-    private readonly string _productImageTb = nameof(ProductImageModel);
+    private readonly string _productImageTb = nameof(ImageModel);
     private readonly string _productReviewTb = nameof(ProductReviewModel);
     
     /// <inheritdoc />
@@ -48,10 +49,25 @@ public class Date_202511182200_AddTables_CategoryProductPayment : Migration
         if (!Schema.Table(_productImageTb).Exists())
         {
             Create.Table(_productImageTb)
-                .WithColumn(nameof(ProductImageModel.Id)).AsGuid().PrimaryKey()
-                .WithColumn(nameof(ProductImageModel.ProductId)).AsGuid().NotNullable()
-                .WithColumn(nameof(ProductImageModel.Url)).AsString().NotNullable()
-                .WithColumn(nameof(ProductImageModel.SortOrder)).AsInt32().Nullable();
+                .WithColumn(nameof(ImageModel.Id)).AsGuid().PrimaryKey()
+                .WithColumn(nameof(ImageModel.ProductId)).AsGuid().NotNullable()
+                .WithColumn(nameof(ImageModel.ObjectPath)).AsString().NotNullable()
+                .WithColumn(nameof(ImageModel.IsMain)).AsBoolean().NotNullable()
+                .WithColumn(nameof(ImageModel.SortOrder)).AsInt32().Nullable();
+            
+            Create.ForeignKey($"fk_{_productImageTb}_product")
+                .FromTable(_productImageTb).ForeignColumn(nameof(ImageModel.ProductId))
+                .ToTable("Products").PrimaryColumn("Id")
+                .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+
+            Create.Index($"ix_{_productImageTb}_productid")
+                .OnTable(_productImageTb)
+                .OnColumn(nameof(ImageModel.ProductId))
+                .Ascending();
+            Execute.Sql(
+                $@"CREATE UNIQUE INDEX ux_{_productImageTb}_main 
+                ON ""{_productImageTb}"" (""ProductId"") WHERE ""IsMain"" = true;");
+
         }
         
         if (!Schema.Table(_productReviewTb).Exists())
