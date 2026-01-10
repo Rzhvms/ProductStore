@@ -2,7 +2,6 @@
   <Header />
 
   <main class="home">
-    <!-- SEARCH -->
     <section class="search-section">
       <div class="search-bar">
         <span class="search-icon">🔍</span>
@@ -11,26 +10,17 @@
       </div>
     </section>
 
-    <!-- PROMO -->
     <section class="promo">
       <div class="promo-banner">
         Рекламный баннер / акции
       </div>
     </section>
 
-    <!-- POPULAR PRODUCTS -->
     <section class="popular">
       <h2>Популярные товары</h2>
 
       <div class="slider-container">
-        <!-- LEFT -->
-        <button
-          v-if="canScrollLeft"
-          class="nav-btn left"
-          @click="scrollLeft"
-        >
-          ‹
-        </button>
+        <button v-if="canScrollLeft" class="nav-btn left" @click="scrollLeft">‹</button>
 
         <div class="slider-wrapper" ref="wrapperRef">
           <div
@@ -38,27 +28,29 @@
             ref="sliderRef"
             :style="{ transform: `translateX(-${offset}px)` }"
           >
-            <div class="product-card" v-for="n in 10" :key="n">
-              <div class="product-image">🖼️</div>
+            <div 
+              class="product-card" 
+              v-for="product in products" 
+              :key="product.id"
+              @click="goToProduct(product.id)" 
+              style="cursor: pointer;"
+            >
+              <div class="product-image">
+                <img v-if="product.image" :src="product.image" :alt="product.name" class="img-fluid" />
+                <span v-else>🖼️</span>
+              </div>
               <div class="product-name">
-                Название товара заглушка {{ n }}
+                {{ product.name }}
               </div>
               <div class="product-bottom">
-                <div class="product-price">₽999</div>
-                <button class="add-cart-btn">Добавить</button>
+                <div class="product-price">₽{{ product.price }}</div>
+                <button class="add-cart-btn" @click.stop="addToCart(product)">Добавить</button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- RIGHT -->
-        <button
-          v-if="canScrollRight"
-          class="nav-btn right"
-          @click="scrollRight"
-        >
-          ›
-        </button>
+        <button v-if="canScrollRight" class="nav-btn right" @click="scrollRight">›</button>
       </div>
     </section>
   </main>
@@ -68,21 +60,45 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router' // Импортируем роутер
 import Header from './Header.vue'
 import Footer from './Footer.vue'
+import { productApi, cartApi } from '@/services/api'
+
+const router = useRouter()
+const products = ref([])
+const pageNumber = ref(1)
+const pageSize = ref(10)
 
 const wrapperRef = ref(null)
 const sliderRef = ref(null)
-
-const CARD_WIDTH = 220 // 200 + gap 20
+const CARD_WIDTH = 220 
 const offset = ref(0)
 
+// ЗАГРУЗКА ДАННЫХ
+const loadData = async () => {
+  try {
+    const data = await productApi.getList(pageNumber.value, pageSize.value)
+    // Предполагаем, что API возвращает объект с полем productList
+    products.value = data.productList || []
+  } catch (error) {
+    console.error("Ошибка при загрузке товаров:", error)
+  }
+}
+
+// НАВИГАЦИЯ
+const goToProduct = (id) => {
+  router.push(`/catalog/product/${id}`) // Путь должен соответствовать вашему router/index.js
+}
+
+const addToCart = async (product) => {
+  console.log('Добавлено в корзину:', product.name)
+  await cartApi.add(product.id, 1)
+}
+
 const maxOffset = computed(() => {
-  if (!wrapperRef.value || !sliderRef.value) return 0
-  return Math.max(
-    sliderRef.value.scrollWidth - wrapperRef.value.clientWidth,
-    0
-  )
+  if (!wrapperRef.value || !sliderRef.value || products.value.length === 0) return 0
+  return Math.max(sliderRef.value.scrollWidth - wrapperRef.value.clientWidth, 0)
 })
 
 const canScrollLeft = computed(() => offset.value > 0)
@@ -103,6 +119,7 @@ const handleResize = () => {
 }
 
 onMounted(() => {
+  loadData() // Вызываем загрузку при монтировании
   window.addEventListener('resize', handleResize)
 })
 
@@ -112,6 +129,13 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 16px;
+}
+
 .home {
   padding: 40px 48px;
   background: #fafafa;

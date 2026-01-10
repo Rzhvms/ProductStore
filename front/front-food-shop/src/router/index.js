@@ -56,7 +56,7 @@ const routes = [
   { path: '/catalog', component: Catalog },
   { path: '/catalog/category', component: Category },
   { path: '/catalog/subcategory', component: Subcategory },
-  { path: '/catalog/product', component: ProductCard },
+  { path: '/catalog/product/:id', component: ProductCard },
 
   // Cart
   { path: '/cart', component: Cart, meta: { requiresAuth: true } },
@@ -67,9 +67,9 @@ const routes = [
   { path: '/checkout/payment', component: CheckoutPayment, meta: { requiresAuth: true } },
 
   // Profile
-  { path: '/profile', component: ProfileIndex, meta: { requiresAuth: true } },
-  { path: '/profile/main', component: ProfileMain, meta: { requiresAuth: true } },
-  { path: '/profile/settings', component: ProfileSettings, meta: { requiresAuth: true } },
+  // { path: '/profile', component: ProfileIndex, meta: { requiresAuth: true } },
+  // { path: '/profile/main', component: ProfileMain, meta: { requiresAuth: true } },
+  // { path: '/profile/settings', component: ProfileSettings, meta: { requiresAuth: true } },
 
   // Admin
   { path: '/admin', component: AdminIndex, meta: { requiresAuth: true } },

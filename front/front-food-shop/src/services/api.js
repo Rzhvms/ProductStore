@@ -120,3 +120,88 @@ export const updatePassword = async (oldPassword, newPassword) => {
         throw new Error("Не удалось изменить пароль: " + error.message);
     }
 };
+
+export const getProducts = async (pageNumber, pageSize) => {
+    try {
+        const response = await api.get('product/list', { params: { pageNumber, pageSize } });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить список товаров");
+    }
+};
+
+export const getProduct = async (id) => {
+    try {
+        const response = await api.get(`product/${id}`);
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить товар");
+    }
+};
+
+export const getCategoryProducts = async (categoryId, pageNumber, pageSize) => {
+    try {
+        const response = await api.get(`product/${categoryId}/list`, { params: { pageNumber, pageSize } });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить список товаров по категории");
+    }
+};
+
+export const productApi = {
+    get: getProduct,
+    getList: getProducts,
+    getCategory: getCategoryProducts,
+}
+
+export const getCart = async () => {
+    try {
+        const response = await api.get('cart');
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить список товаров");
+    }
+};
+
+export const clearCart = async () => {
+    try {
+        const response = await api.delete('cart');
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось очистить корзину");
+    }
+};
+
+export const addToCart = async (productId, quantity) => {
+    try {
+        const response = await api.post('cart/items', { productId, quantity });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось добавить товар в корзину");
+    }
+};
+
+export const removeFromCart = async (productId) => {
+    try {
+        const response = await api.delete(`cart/items/${productId}`);
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось удалить товар из корзины");
+    }
+};
+
+export const cartApi = {
+    get: getCart,
+    clear: clearCart,
+    add: addToCart,
+    remove: removeFromCart,
+}
+
+export const getAddressSuggestions = async (query) => {
+    try {
+        const response = await api.get('address/suggest', { params: { q: query } });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить адреса");
+    }
+};

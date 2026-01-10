@@ -99,10 +99,6 @@ const isLoading = ref(false);
 
 const errors = ref({ email: false, password: false });
 
-watch(errorMessage, () => {
-  cardHeight.value = baseCardHeight + (errorMessage.value ? 60 : 0);
-}, { immediate: true });
-
 const errorMessage = ref("");
 
 // --- Динамическая высота ---
