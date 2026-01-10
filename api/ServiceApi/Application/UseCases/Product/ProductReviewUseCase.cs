@@ -79,4 +79,14 @@ internal class ProductReviewUseCase : IProductReviewUseCase
     {
         await _productReviewRepository.PatchProductReviewAsync(reviewId, request.Rating, request.Message);
     }
+
+    /// <inheritdoc/>
+    public async Task<GetAverageRatingResponse> GetAverageRatingAsync(Guid productId)
+    {
+        var rating = await _productReviewRepository.GetAverageRatingAsync(productId);
+        return new GetAverageRatingResponse
+        {
+            Rating = rating
+        };
+    }
 }

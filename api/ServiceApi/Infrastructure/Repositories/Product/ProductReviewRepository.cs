@@ -121,4 +121,18 @@ internal class ProductReviewRepository : IProductReviewRepository
 
         await _dbConnection.ExecuteAsync(sql, parameters);
     }
+
+    /// <inheritdoc/>
+    public async Task<decimal> GetAverageRatingAsync(Guid productId)
+    {
+        var sql = $@"SELECT ROUND(AVG(""{nameof(ProductReviewModel.Rating)}""), 3)
+                    FROM ""{nameof(ProductReviewModel)}""
+                    WHERE ""{nameof(ProductReviewModel.ProductId)}"" = @ProductId";
+
+        var rating = await _dbConnection.ExecuteScalarAsync<decimal>(sql, new
+        {
+            ProductId = productId
+        });
+        return rating;
+    }
 }
