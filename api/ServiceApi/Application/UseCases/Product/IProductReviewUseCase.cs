@@ -37,4 +37,9 @@ public interface IProductReviewUseCase
     /// Изменить отзыв
     /// </summary>
     Task PatchProductReviewAsync(Guid reviewId, PatchProductReviewRequest request);
+    
+    /// <summary>
+    /// Получить среднюю оценку товара
+    /// </summary>
+    Task<GetAverageRatingResponse> GetAverageRatingAsync(Guid productId);
 }

@@ -84,5 +84,15 @@ public class ProductReviewController : ControllerBase
     public async Task PatchProductReviewAsync([FromRoute] Guid reviewId, PatchProductReviewRequest request)
     {
         await _productReviewUseCase.PatchProductReviewAsync(reviewId, request);
-    } 
+    }
+
+    /// <summary>
+    /// Получить средний рейтинг товара
+    /// </summary>
+    [HttpGet("average-rating/{productId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<GetAverageRatingResponse> GetAverageRatingAsync([FromRoute] Guid productId)
+    {
+        return await _productReviewUseCase.GetAverageRatingAsync(productId);
+    }
 }
