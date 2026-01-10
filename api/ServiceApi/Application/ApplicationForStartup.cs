@@ -19,6 +19,7 @@ using Application.UseCases.User.GetUserInfo;
 using Application.UseCases.User.UpdateUserInfo;
 using Application.UseCases.UserAddress;
 using Application.UseCases.UserProfile;
+using Application.UseCases.YandexMapsAddress;
 using Dapper;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -49,6 +50,7 @@ public static class ApplicationForStartup
         services.AddScoped<IPaymentUseCase, PaymentUseCase>();
         services.AddScoped<IFavoriteProductsUseCase, FavoriteProductsUseCase>();
         services.AddScoped<IProductReviewUseCase, ProductReviewUseCase>();
+        services.AddScoped<IYandexMapsAddressUseCase, YandexMapsAddressUseCase>();
         
         SqlMapper.AddTypeHandler(new JsonObjectTypeHandler());
         SqlMapper.AddTypeHandler(new JsonArrayTypeHandler());

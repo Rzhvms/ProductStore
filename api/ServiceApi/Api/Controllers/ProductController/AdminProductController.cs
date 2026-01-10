@@ -25,7 +25,7 @@ public class AdminProductController : ControllerBase
     /// Создать продукт
     /// </summary>
     [HttpPost("create")]
-    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<CreateProductResponse>> CreateProductAsync(CreateProductRequest request)
     {
         return await _productUseCase.CreateProductAsync(request);
@@ -45,6 +45,7 @@ public class AdminProductController : ControllerBase
     /// Получить список продуктов
     /// </summary>
     [HttpGet("list")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<GetAdminProductListResponse> GetProductListAsync([FromQuery] int pageNumber, [FromQuery] int pageSize)
     {
         return await _productUseCase.GetAdminProductListAsync(pageNumber, pageSize);
@@ -54,6 +55,7 @@ public class AdminProductController : ControllerBase
     /// Получить список продуктов по айди категории
     /// </summary>
     [HttpGet("{categoryId}/list")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<GetAdminProductListResponse> GetProductListByCategoryIdAsync(
         [FromQuery] int pageNumber, 
         [FromQuery] int pageSize,

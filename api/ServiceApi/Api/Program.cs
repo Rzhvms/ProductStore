@@ -9,9 +9,6 @@ using Infrastructure.Services.Email.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
-using Application.Ports.Services;
-using Application.UseCases.AddressSuggest;
-using Infrastructure.External.Yandex.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -125,13 +122,9 @@ builder.Services.AddAuthentication(options =>
         };
     });
 
+// Конфигурация из appsettings.json
 builder.Services.Configure<AppOptions>(builder.Configuration.GetSection("App"));
-
 builder.Services.Configure<YandexAddressSuggestServiceOptions>(builder.Configuration.GetSection("Yandex"));
-
-builder.Services.AddHttpClient<IAddressSuggestService, YandexAddressSuggestService>();
-
-builder.Services.AddScoped<IAddressSuggestUseCase, AddressSuggestUseCase>();
 
 
 var app = builder.Build();
