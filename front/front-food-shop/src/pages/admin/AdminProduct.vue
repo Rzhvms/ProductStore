@@ -1,625 +1,954 @@
 <template>
   <AdminLayout>
     <div class="product-page">
-        <!-- Верхняя панель: Переключатель режимов -->
-        <div class="top-bar">
+      
+      <!-- Индикатор загрузки -->
+      <div v-if="isLoading" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Загрузка...</p>
+      </div>
+
+      <!-- Ошибка -->
+      <div v-if="error" class="error-banner">
+        <span>{{ error }}</span>
+        <button @click="error = null">×</button>
+      </div>
+
+      <!-- Верхняя панель: Переключатель режимов -->
+      <div class="top-bar">
         <div class="mode-switcher">
-            <button 
+          <button 
             :class="{ active: !isEditMode }" 
             @click="isEditMode = false"
-            >
+          >
             Режим просмотра
-            </button>
-            <button 
+          </button>
+          <button 
             :class="{ active: isEditMode }" 
             @click="isEditMode = true"
-            >
+          >
             Режим редактирования
-            </button>
+          </button>
         </div>
         
         <div class="top-actions" v-if="!isEditMode">
-            <button class="btn-outline"><img src="../../assets/percentage-circle.svg"> Добавить товар в акцию</button>
-            <button class="btn-outline"><img src="../../assets/chart.svg"> Статистика</button>
-            <button class="btn-text text-red"><img src="../../assets/trash.svg" style="filter: invert(25%) sepia(82%) saturate(1764%) hue-rotate(334deg) brightness(106%) contrast(86%)"/> Удалить товар</button>
+          <button class="btn-outline">
+            <img src="../../assets/percentage-circle.svg"> Добавить товар в акцию
+          </button>
+          <button class="btn-outline">
+            <img src="../../assets/chart.svg"> Статистика
+          </button>
+          <button class="btn-text text-red" @click="handleDelete">
+            <img src="../../assets/trash.svg" class="icon-red"/> Удалить товар
+          </button>
         </div>
         <div class="top-actions" v-else>
-            <button class="btn-text text-red"><img src="../../assets/trash.svg" style="filter: invert(25%) sepia(82%) saturate(1764%) hue-rotate(334deg) brightness(106%) contrast(86%)"/> Удалить товар</button>
+          <button class="btn-text text-red" @click="handleDelete">
+            <img src="../../assets/trash.svg" class="icon-red"/> Удалить товар
+          </button>
         </div>
-        </div>
+      </div>
 
-        <div class="main-content">
+      <div class="main-content">
         
         <!-- ЛЕВАЯ КОЛОНКА: Изображения -->
         <div class="left-col">
     
           <!-- === РЕЖИМ ПРОСМОТРА (Галерея) === -->
           <div v-if="!isEditMode" class="view-gallery">
-              <!-- Колонка миниатюр -->
-              <div class="thumbnails-col">
-                  <div 
-                      v-for="(img, index) in form.images" 
-                      :key="index"
-                      class="thumb-item"
-                      :class="{ active: activeImageIndex === index }"
-                      @click="activeImageIndex = index"
-                  >
-                      <!-- Здесь может быть <img>, пока ставим заглушку -->
-                  </div>
+            <div class="thumbnails-col">
+              <div 
+                v-for="(img, index) in form.images" 
+                :key="index"
+                class="thumb-item"
+                :class="{ active: activeImageIndex === index }"
+                @click="activeImageIndex = index"
+              >
+                <img v-if="img" :src="img" alt="thumb" />
               </div>
+            </div>
 
-              <!-- Большое изображение -->
-              <div class="main-image-display">
-                  <!-- Здесь может быть <img>, пока ставим заглушку -->
-                  <div class="main-placeholder"></div>
+            <div class="main-image-display">
+              <div class="main-placeholder">
+                <img v-if="form.images[activeImageIndex]" :src="form.images[activeImageIndex]" alt="main" />
               </div>
+            </div>
           </div>
-
 
           <!-- === РЕЖИМ РЕДАКТИРОВАНИЯ (Сетка карточек) === -->
           <div v-else class="edit-gallery-grid">
-              <div 
-                  v-for="(img, index) in form.images" 
-                  :key="index" 
-                  class="edit-card"
-              >
-                  <!-- Бейджи -->
-                  <span class="badge orange" v-if="index === 0">обложка</span>
-                  <span class="badge grey" v-else>карусель</span>
-                  
-                  <!-- Удаление -->
-                  <button class="btn-delete-card" @click="removeImage(index)">
-                      <img src="../../assets/trash.svg" style="filter: invert(25%) sepia(82%) saturate(1764%) hue-rotate(334deg) brightness(106%) contrast(86%)"/>
-                  </button>
+            <div 
+              v-for="(img, index) in form.images" 
+              :key="index" 
+              class="edit-card"
+            >
+              <span class="badge orange" v-if="index === 0">обложка</span>
+              <span class="badge grey" v-else>карусель</span>
+              
+              <button class="btn-delete-card" @click="removeImage(index)">
+                <img src="../../assets/trash.svg" class="icon-red"/>
+              </button>
 
-                  <!-- Плейсхолдер картинки -->
-                  <div class="card-placeholder"></div>
+              <div class="card-placeholder">
+                <img v-if="img" :src="img" alt="card" />
               </div>
+            </div>
 
-              <!-- Кнопка добавления -->
-              <div class="edit-card add-new" @click="addImage">
-                  <span class="plus-icon">+</span>
-              </div>
+            <div class="edit-card add-new" @click="addImage">
+              <span class="plus-icon">+</span>
+            </div>
           </div>
+        </div>
 
-      </div>
-
+        <!-- ПРАВАЯ КОЛОНКА -->
         <div class="right-col">
           
           <!-- Блок 1: Название и категория -->
           <div class="card info-card">
           
-              <!-- Заголовок / Инпут названия -->
-              <div v-if="isEditMode" class="form-group">
-                  <label>Название и граммовка:</label>
-                  <div class="row-inputs">
-                      <input v-model="form.title" type="text" placeholder="Название товара" class="input-main">
-                      
-                      <input 
-                          :value="form.weight" 
-                          @input="validateInput(form, 'weight', $event)" 
-                          placeholder="1000" 
-                          class="input-short"
+            <!-- Заголовок / Инпут названия -->
+            <div v-if="isEditMode" class="form-group">
+              <label>Название и граммовка:</label>
+              <div class="row-inputs">
+                <input 
+                  v-model="form.title" 
+                  type="text" 
+                  placeholder="Название товара" 
+                  class="input-main"
+                >
+                
+                <input 
+                  :value="form.weight" 
+                  @input="validateNumericInput('weight', $event)" 
+                  placeholder="1000" 
+                  class="input-short"
+                >
+                
+                <div class="control-box dropdown-wrapper">
+                  <button 
+                    class="sort-btn-styled" 
+                    :class="{ 'is-active': showUnitMenu }"
+                    @click.stop="toggleDropdown('unit')"
+                  >
+                    <span>{{ unitDict[form.unit] || form.unit }}</span>
+                    <img 
+                      src="../../assets/arrow-down.svg" 
+                      :class="{ 'rotated': showUnitMenu }"
+                    />
+                  </button>
+                  
+                  <div v-if="showUnitMenu" class="custom-dropdown-menu sort-menu-design">
+                    <template v-for="(val, key, index) in unitDict" :key="key">
+                      <div class="sort-item" @click="selectUnit(key)">
+                        <div class="radio-indicator" :class="{ selected: form.unit === key }"></div>
+                        <span>{{ val }}</span>
+                      </div>
+                      <div v-if="index < Object.keys(unitDict).length - 1" class="dd-divider"></div>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Режим просмотра заголовка -->
+            <div v-else>
+              <h1>{{ form.title }}, {{ form.weight }}{{ form.unit }}</h1>
+              <div class="row-rating">
+                <div class="stars-wrapper">
+                  <svg 
+                    v-for="star in 5" 
+                    :key="star" 
+                    class="star-icon" 
+                    width="32" 
+                    height="32" 
+                    viewBox="0 0 24 24"
+                  >
+                    <defs>
+                      <linearGradient :id="'grad-' + (form.id || 'new') + '-' + star">
+                        <stop offset="0%" stop-color="#FF7A00" />
+                        <stop :offset="calculateOffset(form.rating, star)" stop-color="#FF7A00" />
+                        <stop :offset="calculateOffset(form.rating, star)" stop-color="#E5E7EB" />
+                        <stop offset="100%" stop-color="#E5E7EB" />
+                      </linearGradient>
+                    </defs>
+                    <path 
+                      :fill="'url(#grad-' + (form.id || 'new') + '-' + star + ')'" 
+                      d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" 
+                    />
+                  </svg>  
+                  <span class="rating-value" style="margin-left: 20px;">{{ form.rating || 0 }}</span>
+                </div>
+                <span class="rating-value">({{ reviewsCount }} отзывов)</span>
+              </div>
+            </div>
+
+            <!-- Категория -->
+            <div v-if="isEditMode" class="form-group">
+              <label>Категория и подкатегория:</label>
+              
+              <div class="custom-select-container" v-click-outside="closeCategorySelector">
+                <div 
+                  class="select-header" 
+                  :class="{ 'is-open': isCategorySelectorOpen }" 
+                  @click="isCategorySelectorOpen = !isCategorySelectorOpen"
+                >
+                  <span>{{ selectedCategoryLabel }}</span>
+                  <img src="../../assets/arrow-down.svg" :class="{ 'rotated': isCategorySelectorOpen }" />
+                </div>
+                
+                <div v-if="isCategorySelectorOpen" class="select-body">
+                  <div class="select-search-wrapper">
+                    <img src="../../assets/search-normal.svg" alt="search" class="search-icon-sm" />
+                    <input 
+                      type="text" 
+                      v-model="categorySearchQuery" 
+                      placeholder="Введите название категории..." 
+                      class="select-search-input"
+                    />
+                  </div>
+                  
+                  <div class="select-list">
+                    <template v-for="cat in filteredCategories" :key="cat.id">
+                      <div 
+                        class="select-option parent-option" 
+                        @click.stop="toggleCategory(cat.id)"
                       >
-                  <div class="control-box dropdown-wrapper">
-                    <button 
-                      class="sort-btn-styled" 
-                      :class="{ 'is-active': showUnitMenu }"
-                      @click.stop="showUnitMenu = !showUnitMenu"
-                    >
-                      <span>{{ selectedUnitLabel }}</span>
-                      <img v-if="!showUnitMenu" src="../../assets/arrow-down.svg" />
-                      <img v-else src="../../assets/arrow-down.svg" style="transform: rotate(180deg); filter: invert(100%) sepia(0%) saturate(7500%) hue-rotate(74deg) brightness(1210%) contrast(113%);" />
-                    </button>
-                    
-                    <div v-if="showUnitMenu" class="custom-dropdown-menu sort-menu-design">
-                      <template v-for="(val, key, index) in unitDict" :key="key">
-                        <div 
-                          class="sort-item" 
-                          @click="selectUnit(key)"
+                        <span class="option-text font-bold">{{ cat.name }}</span>
+                        <img 
+                          src="../../assets/arrow-down.svg" 
+                          class="cat-arrow" 
+                          :class="{ 'is-expanded': expandedCategory === cat.id }"
+                        />
+                      </div>
+                      
+                      <template v-if="expandedCategory === cat.id">
+                        <label 
+                          v-for="sub in cat.subs" 
+                          :key="sub.id" 
+                          class="select-option sub-option"
+                          @click.stop="selectSubcategory(cat, sub)"
                         >
+                          <input 
+                            type="radio" 
+                            name="subcategory" 
+                            :value="sub.id" 
+                            v-model="form.categoryId"
+                          />
                           <div 
                             class="radio-indicator" 
-                            :class="{ selected: form.unit === key }"
+                            :class="{ selected: form.categoryId === sub.id }"
                           ></div>
-                          <span>{{ val }}</span>
-                        </div>
-                        <!-- Разделитель между элементами, кроме последнего -->
-                        <div v-if="index < Object.keys(unitDict).length - 1" class="dd-divider"></div>
+                          <span class="option-text">{{ sub.name }}</span>
+                        </label>
                       </template>
+                    </template>
+                    
+                    <div v-if="filteredCategories.length === 0" class="empty-select">
+                      Ничего не найдено
                     </div>
                   </div>
-                      
-                  </div>
+                </div>
               </div>
-              
-              <!-- Режим просмотра заголовка -->
-              <div v-else>
-                  <h1>{{ form.title }}, {{ form.weight }}{{ form.unit }}</h1>
-                  <div class="row-rating">
-                      <div class="stars-wrapper">
-                          <svg v-for="star in 5" :key="star" class="star-icon" width="32" height="32" viewBox="0 0 24 24">
-                              <defs>
-                                  <linearGradient :id="'grad-' + (form.id || 'new') + '-' + star">
-                                      <stop offset="0%" stop-color="#FF7A00" />
-                                      <stop :offset="calculateOffset(form.rating, star)" stop-color="#FF7A00" />
-                                      <stop :offset="calculateOffset(form.rating, star)" stop-color="#E5E7EB" />
-                                      <stop offset="100%" stop-color="#E5E7EB" />
-                                  </linearGradient>
-                              </defs>
-                              <path :fill="'url(#grad-' + (form.id || 'new') + '-' + star + ')'" d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-                          </svg>  
-                          <span class="rating-value" style="margin-left: 20px;">{{ form.rating || 0 }}</span>
-                      </div>
-                      <span class="rating-value">({{ form.rating || 0 }} отзывов)</span>
-                  </div>
-              </div>
+            </div>
+            
+            <div v-else class="view-row">
+              <span style="font-size: 18px; font-weight: 600;">
+                Категория: <span class="tag">{{ selectedCategoryLabel }}</span>
+              </span>
+            </div>
 
-              <!-- Категория (Сложный дропдаун в новом стиле) -->
-<div v-if="isEditMode" class="form-group">
-    <label>Категория и подкатегория:</label>
-    
-    <!-- Обертка с click-outside -->
-    <div class="custom-select-container" v-click-outside="() => isCategorySelectorOpen = false">
-  
-  <!-- Заголовок -->
-  <div 
-    class="select-header" 
-    :class="{ 'is-open': isCategorySelectorOpen }" 
-    @click="isCategorySelectorOpen = !isCategorySelectorOpen"
-  >
-    <span>{{ selectedCategoryLabel }}</span>
-    <img src="../../assets/arrow-down.svg" />
-  </div>
-  
-  <!-- Тело селектора -->
-  <div v-if="isCategorySelectorOpen" class="select-body">
-    
-    <!-- Поиск -->
-    <div class="select-search-wrapper">
-      <img src="../../assets/search-normal.svg" alt="search" class="search-icon-sm" />
-      <input 
-        type="text" 
-        v-model="categorySearchQuery" 
-        placeholder="Введите название категории..." 
-        class="select-search-input"
-      />
-    </div>
-    
-    <!-- Список категорий -->
-    <div class="select-list">
-      
-      <template v-for="cat in filteredCategories" :key="cat.name">
-        
-        <!-- Родительская категория (папка) -->
-        <div 
-          class="select-option parent-option" 
-          @click.stop="toggleCategory(cat.name)"
-        >
-          <span class="option-text font-bold">{{ cat.name }}</span>
-          <img 
-            src="../../assets/arrow-down.svg" 
-            class="cat-arrow" 
-            :class="{ 'is-expanded': expandedCategory === cat.name }"
-          />
+            <!-- Цена -->
+            <div v-if="isEditMode" class="form-group price-group">
+              <div class="row-inputs">
+                <span class="label-in">Цена:</span>
+                <input 
+                  :value="form.price" 
+                  @input="validateNumericInput('price', $event)" 
+                  class="input-price"
+                >
+                
+                <span class="label-in">За:</span>
+                
+                <div class="control-box dropdown-wrapper">
+                  <button
+                    class="sort-btn-styled"
+                    :class="{ 'is-active': showPriceUnitMenu }"
+                    @click.stop="toggleDropdown('priceUnit')"
+                  >
+                    <span>{{ priceUnitsDict[form.priceUnit] }}</span>
+                    <img 
+                      src="../../assets/arrow-down.svg" 
+                      :class="{ 'rotated': showPriceUnitMenu }"
+                    />
+                  </button>
+                  <div v-if="showPriceUnitMenu" class="custom-dropdown-menu sort-menu-design form-dd">
+                    <template v-for="(val, key, index) in priceUnitsDict" :key="key">
+                      <div
+                        class="sort-item"
+                        @click="form.priceUnit = key; showPriceUnitMenu = false"
+                      >
+                        <div class="radio-indicator" :class="{ selected: form.priceUnit === key }"></div>
+                        <span class="sort-text">{{ val }}</span>
+                      </div>
+                      <div v-if="index < Object.keys(priceUnitsDict).length - 1" class="dd-divider"></div>
+                    </template>
+                  </div>
+                </div>
+                
+                <span class="label-in ml-auto">В наличии</span>
+                
+                <div class="counter">
+                  <button @click="decrementStock">-</button>
+                  <input 
+                    :value="form.stock" 
+                    @input="validateNumericInput('stock', $event)" 
+                    class="input-short-counter"
+                  >
+                  <button @click="incrementStock">+</button>
+                </div>
+                
+                <div class="control-box dropdown-wrapper">
+                  <button
+                    class="sort-btn-styled"
+                    :class="{ 'is-active': showStockUnitMenu }"
+                    @click.stop="toggleDropdown('stockUnit')"
+                  >
+                    <span>{{ stockUnitsDict[form.stockUnit] }}</span>
+                    <img 
+                      src="../../assets/arrow-down.svg" 
+                      :class="{ 'rotated': showStockUnitMenu }"
+                    />
+                  </button>
+                  <div v-if="showStockUnitMenu" class="custom-dropdown-menu sort-menu-design form-dd right-align">
+                    <template v-for="(val, key, index) in stockUnitsDict" :key="key">
+                      <div
+                        class="sort-item"
+                        @click="form.stockUnit = key; showStockUnitMenu = false"
+                      >
+                        <div class="radio-indicator" :class="{ selected: form.stockUnit === key }"></div>
+                        <span class="sort-text">{{ val }}</span>
+                      </div>
+                      <div v-if="index < Object.keys(stockUnitsDict).length - 1" class="dd-divider"></div>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div v-else class="price-view">
+              <h2>{{ formatPrice(form.price) }} ₽ / {{ priceUnitsDict[form.priceUnit] }}</h2>
+              <span v-if="form.stock > 0">В наличии {{ form.stock }} {{ stockUnitsDict[form.stockUnit] }}</span>
+              <span v-else class="out-of-stock">Нет в наличии</span>
+            </div>
+
+          </div>
         </div>
-        
-        <!-- Подкатегории -->
-        <template v-if="expandedCategory === cat.name">
-          <label 
-            v-for="sub in cat.subs" 
-            :key="sub" 
-            class="select-option sub-option"
-            @click.stop="selectSubcategory(cat.name, sub)"
-          >
-            <input 
-              type="radio" 
-              name="subcategory" 
-              :value="sub" 
-              v-model="form.subcategory"
-            />
-            <div 
-              class="radio-indicator" 
-              :class="{ selected: form.subcategory === sub }"
-            ></div>
-            <span class="option-text">{{ sub }}</span>
-          </label>
-        </template>
-        
-      </template>
-      
-      <!-- Пусто -->
-      <div v-if="filteredCategories.length === 0" class="empty-select">
-        Ничего не найдено
       </div>
-      
-    </div>
-  </div>
-</div>
-</div>
-              <div v-else class="view-row">
-                  <span style="font-size: 18px; font-weight: 600;">Категория: <span class="tag">{{  form.category }} - {{ form.subcategory }}</span></span>
-              </div>
 
-              <!-- Цена -->
-              <div v-if="isEditMode" class="form-group price-group">
-                  <div class="row-inputs">
-                      <span class="label-in">Цена:</span>
-                      <input :value="form.price" @input="validateInput(form, 'price', $event)" class="input-price">
-                      
-                      <span class="label-in">За:</span>
-                      
-                      <!-- [2] КАСТОМНЫЙ SELECT: Цена за (Шт) -->
-                      <div class="control-box dropdown-wrapper">
-                        <button
-                          class="sort-btn-styled"
-                          :class="{ 'is-active': showPriceUnitMenu }"
-                          @click.stop="showPriceUnitMenu = !showPriceUnitMenu"
-                        >
-                          <span>{{ priceUnitsDict[form.priceUnit] }}</span>
-                          <img v-if="!showPriceUnitMenu" src="../../assets/arrow-down.svg" />
-                          <img v-else src="../../assets/arrow-down.svg" style="transform: rotate(180deg); filter: invert(100%) sepia(0%) saturate(7500%) hue-rotate(74deg) brightness(1210%) contrast(113%);" />
-                        </button>
-                        <div v-if="showPriceUnitMenu" class="custom-dropdown-menu sort-menu-design form-dd">
-                          <template v-for="(val, key, index) in priceUnitsDict " :key="key">
-                            <div
-                              class="sort-item"
-                              @click="form.priceUnit = key; showPriceUnitMenu = false"
-                            >
-                              <div class="radio-indicator" :class="{ selected: form.priceUnit === key }"></div>
-                              <span class="sort-text">{{ val }}</span>
-                            </div>
-                            <div v-if="index < Object.keys(priceUnitsDict).length - 1" class="dd-divider"></div>
-                          </template>
-                          
-                      </div>
-                    </div>
-                      
-                      <span class="label-in ml-auto">В наличии</span>
-                      
-                      <div class="counter">
-                          <button @click="form.stock--">-</button>
-                          <!-- Исправлен класс инпута внутри каунтера -->
-                          <input :value="form.stock" @input="validateInput(form, 'stock', $event)" class="input-short-counter" style="padding: 0; ">
-                          <button @click="form.stock++">+</button>
-                      </div>
-                      
-                      <!-- [3] КАСТОМНЫЙ SELECT: Единица наличия (Килограмм) -->
-                      <div class="control-box dropdown-wrapper">
-                        <button
-                          class="sort-btn-styled"
-                          :class="{ 'is-active': showStockUnitMenu }"
-                          @click.stop="showStockUnitMenu = !showStockUnitMenu"
-                        >
-                          <span>{{ stockUnitsDict[form.stockUnit] }}</span>
-                          <img v-if="!showStockUnitMenu" src="../../assets/arrow-down.svg" />
-                          <img v-else src="../../assets/arrow-down.svg" style="transform: rotate(180deg); filter: invert(100%) sepia(0%) saturate(7500%) hue-rotate(74deg) brightness(1210%) contrast(113%);" />
-                        </button>
-                        <div v-if="showStockUnitMenu" class="custom-dropdown-menu sort-menu-design form-dd right-align">
-                          <template v-for="(val, key, index) in stockUnitsDict" :key="key">
-                            <div
-                              class="sort-item"
-                              @click="form.stockUnit = key; showStockUnitMenu = false"
-                            >
-                              <div class="radio-indicator" :class="{ selected: form.stockUnit === key }"></div>
-                              <span class="sort-text">{{ val }}</span>
-                            </div>
-                            <div v-if="index < Object.keys(stockUnitsDict).length - 1" class="dd-divider"></div>
-                          </template>
-                          
-                          </div>
-                      </div>
-                      
-
-                  </div>
-              </div>
-              
-              <div v-else class="price-view">
-                  <h2>{{ form.price }} ₽ / {{ priceUnitsDict[form.priceUnit] }}</h2>
-                  <span v-if="form.stock > 0">В наличии {{ form.stock }} {{ stockUnitsDict[form.stockUnit] }}</span>
-              </div>
-
-          </div> <!-- Конец info-card -->
-
-      </div> <!-- Конец right-col -->
-        </div> <!-- Конец main-content -->
-
-
-        <!-- СЕКЦИЯ: О товаре (общая ширина) -->
-        <div class="full-width-section">
+      <!-- СЕКЦИЯ: О товаре -->
+      <div class="full-width-section">
         <h2>О товаре</h2>
         
         <div class="card content-card">
-            
-            <!-- Пищевая ценность -->
-            <div class="form-group">
-              <h3>Пищевая ценность <span>на 100г продукта</span></h3>
-              <div class="nutrition-grid">
-                <!-- Жиры -->
-                <div class="nut-item">
-                    <span class="nut-label">Жиры:</span>
-                    
-                    <input 
-                        v-if="isEditMode" 
-                        :value="form.nutrition.fats"
-                        @input="validateInput(form.nutrition, 'fats', $event)"
-                        class="nut-input"
-                    >
-                    <span v-else class="nut-value">{{ form.nutrition.fats }}<span class="nut-unit">г</span></span>
-                </div>
+          
+          <!-- Пищевая ценность -->
+          <div class="form-group">
+            <h3>Пищевая ценность <span>на 100г продукта</span></h3>
+            <div class="nutrition-grid">
+              <div class="nut-item">
+                <span class="nut-label">Жиры:</span>
+                <input 
+                  v-if="isEditMode" 
+                  :value="form.nutrition.fats"
+                  @input="validateNutritionInput('fats', $event)"
+                  class="nut-input"
+                >
+                <span v-else class="nut-value">{{ form.nutrition.fats }}<span class="nut-unit">г</span></span>
+              </div>
 
-                <!-- Углеводы -->
-                <div class="nut-item">
-                    <span class="nut-label">Углеводы:</span>
-                    
-                    <input 
-                        v-if="isEditMode" 
-                        :value="form.nutrition.carbs"
-                        @input="validateInput(form.nutrition, 'carbs', $event)"
-                        class="nut-input"
-                    >
-                    <span v-else class="nut-value">{{ form.nutrition.carbs }}<span class="nut-unit">г</span></span>
-                </div>
+              <div class="nut-item">
+                <span class="nut-label">Углеводы:</span>
+                <input 
+                  v-if="isEditMode" 
+                  :value="form.nutrition.carbs"
+                  @input="validateNutritionInput('carbs', $event)"
+                  class="nut-input"
+                >
+                <span v-else class="nut-value">{{ form.nutrition.carbs }}<span class="nut-unit">г</span></span>
+              </div>
 
-                <!-- Белки -->
-                <div class="nut-item">
-                    <span class="nut-label">Белки:</span>
-                    
-                    <input 
-                        v-if="isEditMode" 
-                        :value="form.nutrition.protein"
-                        @input="validateInput(form.nutrition, 'protein', $event)"
-                        class="nut-input"
-                    >
-                    <span v-else class="nut-value">{{ form.nutrition.protein }}<span class="nut-unit">г</span></span>
-                </div>
+              <div class="nut-item">
+                <span class="nut-label">Белки:</span>
+                <input 
+                  v-if="isEditMode" 
+                  :value="form.nutrition.protein"
+                  @input="validateNutritionInput('protein', $event)"
+                  class="nut-input"
+                >
+                <span v-else class="nut-value">{{ form.nutrition.protein }}<span class="nut-unit">г</span></span>
+              </div>
 
-                <!-- Энергетическая ценность -->
-                <div class="nut-item wide">
-                    <span class="nut-label">Энергетическая ценность:</span>
-                    
-                    <input 
-                        v-if="isEditMode" 
-                        :value="form.nutrition.energy"
-                        @input="validateInput(form.nutrition, 'energy', $event)"
-                        class="nut-input"
-                    >
-                    <span v-else class="nut-value">{{ form.nutrition.energy }}<span class="nut-unit">кКал/</span>{{ form.nutrition.joules }}<span class="nut-unit">кДж</span></span>
-                    <span v-if ="isEditMode">/</span>
-                    <input v-if ="isEditMode" :value="form.nutrition.joules" @input="validateInput(form.nutrition, 'joules', $event)" class="nut-input">
-                  </div>
+              <div class="nut-item wide">
+                <span class="nut-label">Энергетическая ценность:</span>
+                <input 
+                  v-if="isEditMode" 
+                  :value="form.nutrition.energy"
+                  @input="validateNutritionInput('energy', $event)"
+                  class="nut-input"
+                >
+                <span v-else class="nut-value">
+                  {{ form.nutrition.energy }}<span class="nut-unit">кКал/</span>{{ form.nutrition.joules }}<span class="nut-unit">кДж</span>
+                </span>
+                <span v-if="isEditMode">/</span>
+                <input 
+                  v-if="isEditMode" 
+                  :value="form.nutrition.joules" 
+                  @input="validateNutritionInput('joules', $event)" 
+                  class="nut-input"
+                >
               </div>
             </div>
+          </div>
 
-            <!-- Состав -->
-            <div class="form-group">
+          <!-- Состав -->
+          <div class="form-group">
             <h3>Состав</h3>
             <textarea 
-                v-if="isEditMode" 
-                v-model="form.description" 
-                rows="5"
+              v-if="isEditMode" 
+              v-model="form.description" 
+              rows="5"
             ></textarea>
             <p v-else class="text-content">{{ form.description }}</p>
-            </div>
+          </div>
 
-            <!-- Характеристики -->
-            <div class="form-group">
+          <!-- Характеристики -->
+          <div class="form-group">
             <div class="header-with-action">
-                <h3>Характеристики</h3>
-                <button v-if="isEditMode" class="add-circle-btn card" @click="addAttr">
-                  <img src="../../assets/add-circle.svg" />
-                </button>
+              <h3>Характеристики</h3>
+              <button v-if="isEditMode" class="add-circle-btn card" @click="addAttr">
+                <img src="../../assets/add-circle.svg" />
+              </button>
             </div>
             
             <div class="attrs-list">
-                <!-- Режим редактирования -->
-                <template v-if="isEditMode">
+              <template v-if="isEditMode">
                 <div v-for="(attr, i) in form.attributes" :key="i" class="attr-row-edit">
-                    <input v-model="attr.name" placeholder="Название">
-                    <input v-model="attr.value" placeholder="Значение">
-                    <button class="icon-btn danger" @click="removeAttr(i)">
-                      <img src="../../assets/trash.svg" style="filter: invert(25%) sepia(82%) saturate(1764%) hue-rotate(334deg) brightness(106%) contrast(86%)"/>
-                    </button>
+                  <input v-model="attr.name" placeholder="Название">
+                  <input v-model="attr.value" placeholder="Значение">
+                  <button class="icon-btn danger" @click="removeAttr(i)">
+                    <img src="../../assets/trash.svg" class="icon-red"/>
+                  </button>
                 </div>
-                </template>
+              </template>
 
-                <!-- Режим просмотра -->
-                <template v-else>
+              <template v-else>
                 <div v-for="(attr, i) in form.attributes" :key="i" class="attr-row-view">
-                    <span class="attr-name">{{ attr.name }}</span>
-                    <span class="attr-dots"></span>
-                    <span class="attr-val">{{ attr.value }}</span>
+                  <span class="attr-name">{{ attr.name }}</span>
+                  <span class="attr-dots"></span>
+                  <span class="attr-val">{{ attr.value }}</span>
                 </div>
-                </template>
+              </template>
             </div>
-            </div>
-
-        </div>
-        </div>
-
-        <div v-if="!isEditMode" class="full-width-section reviews">
-          
-          <div class="reviews-top-bar">
-              <h3>Отзывы <span class="grey-text">{{ reviews.length }}</span></h3>
-              
-              <div class="sort-controls">
-                  <span class="sort-label">Сортировка по:</span>
-                  
-                  <!-- Кнопка: Дата -->
-                  <button 
-                      class="btn-sort" 
-                      :class="{ active: currentSort.field === 'date' }" 
-                      @click="toggleSort('date')"
-                  >
-                      Дате 
-                      <span v-if="currentSort.field === 'date'">
-                          {{ currentSort.direction === 'asc' ? '↑' : '↓' }}
-                      </span>
-                  </button>
-
-                  <!-- Кнопка: Рейтинг -->
-                  <button 
-                      class="btn-sort" 
-                      :class="{ active: currentSort.field === 'rating' }" 
-                      @click="toggleSort('rating')"
-                  >
-                      Рейтингу
-                      <span v-if="currentSort.field === 'rating'">
-                          {{ currentSort.direction === 'asc' ? '↑' : '↓' }}
-                      </span>
-                  </button>
-
-                  <!-- Кнопка: Полезность -->
-                  <button 
-                      class="btn-sort" 
-                      :class="{ active: currentSort.field === 'useful' }" 
-                      @click="toggleSort('useful')"
-                  >
-                      Полезности
-                      <span v-if="currentSort.field === 'useful'">
-                          {{ currentSort.direction === 'asc' ? '↑' : '↓' }}
-                      </span>
-                  </button>
-              </div>
           </div>
 
-          <!-- Список отзывов (Заменили reviews на sortedReviews) -->
-          <div class="reviews-list">
-              <div v-for="review in sortedReviews" :key="review.id" class="review-card">
-                        
-                  <!-- === ВАРИАНТ 1: ВАШ ОТВЕТ === -->
-                  <div v-if="review.type === 'admin_reply'" class="review-content">
-                      <div class="review-header-title">
-                          <h4>{{ review.title }}</h4>
-                      </div>
-                      
-                      <p class="review-text">{{ review.text }}</p>
-                      
-                      <!-- Блок цитаты -->
-                      <div class="review-quote">
-                          <div class="quote-bar"></div>
-                          <p>{{ review.quote }}</p>
-                      </div>
-                  </div>
-
-                  <!-- === ВАРИАНТ 2: ОТЗЫВ ПОЛЬЗОВАТЕЛЯ === -->
-                  <div v-else class="review-content">
-                      <div class="review-user-header">
-                          <div class="user-info">
-                              <div class="avatar-circle">
-                                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2">
-                                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                      <circle cx="12" cy="7" r="4"></circle>
-                                  </svg>
-                              </div>
-                              <span class="user-name">{{ review.author }}</span>
-                          </div>
-
-                          <!-- Звезды -->
-                          <div class="stars-row">
-                              <svg v-for="i in 5" :key="i" width="20" height="20" viewBox="0 0 24 24" class="star-mini">
-                                  <defs>
-                                      <linearGradient :id="'r-grad-' + review.id + '-' + i">
-                                          <stop offset="0%" stop-color="#FF7A00"/>
-                                          <stop :offset="calculateOffset(review.rating, i)" stop-color="#FF7A00"/>
-                                          <stop :offset="calculateOffset(review.rating, i)" stop-color="#D1D5DB"/>
-                                          <stop offset="100%" stop-color="#D1D5DB"/>
-                                      </linearGradient>
-                                  </defs>
-                                  <path :fill="'url(#r-grad-' + review.id + '-' + i + ')'" d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
-                              </svg>
-                              <span class="rating-num">{{ review.rating.toString().replace('.', ',') }}</span>
-                          </div>
-                      </div>
-
-                      <p class="review-text">{{ review.text }}</p>
-                  </div>
-
-                  <!-- === ФУТЕР (ОБЩИЙ) === -->
-                  <div class="review-footer">
-                      <span class="pub-date">Дата публикации: {{ review.date }}</span>
-                      
-                      <div class="review-actions">
-                          <!-- Кнопка Глаз (Показать/Скрыть) -->
-                          <button class="action-btn">
-                              <!-- Иконка перечеркнутого глаза (если isHidden) -->
-                              <img v-if="review.isHidden" src="../../assets/eye-slash.svg">
-                              <!-- Иконка обычного глаза -->
-                              <img v-else src="../../assets/eye.svg">
-                              {{ review.isHidden ? 'Скрыть комментарий' : 'Показать комментарий' }}
-                          </button>
-
-                          <!-- Кнопка Ответить -->
-                          <button class="action-btn">
-                              <img src="../../assets/undo.svg">
-                              Ответить на комментарий
-                          </button>
-
-                          <!-- Кнопка Удалить -->
-                          <button class="action-btn red">
-                              <img src="../../assets/trash.svg" style="filter: invert(25%) sepia(82%) saturate(1764%) hue-rotate(334deg) brightness(106%) contrast(86%)"/>
-                              Удалить комментарий
-                          </button>
-                      </div>
-                  </div>
-
-              </div>
-          </div>
+        </div>
       </div>
 
+      <!-- СЕКЦИЯ: Отзывы (только просмотр) -->
+      <div v-if="!isEditMode" class="full-width-section reviews">
+        <div class="reviews-top-bar">
+          <h3>Отзывы <span class="grey-text">{{ reviews.length }}</span></h3>
+          
+          <div class="sort-controls">
+            <span class="sort-label">Сортировка по:</span>
+            
+            <button 
+              class="btn-sort" 
+              :class="{ active: currentSort.field === 'date' }" 
+              @click="toggleSort('date')"
+            >
+              Дате 
+              <span v-if="currentSort.field === 'date'">
+                {{ currentSort.direction === 'asc' ? '↑' : '↓' }}
+              </span>
+            </button>
 
-        <!-- STICKY FOOTER (Только Edit Mode) -->
-        <div v-if="isEditMode" class="sticky-footer">
+            <button 
+              class="btn-sort" 
+              :class="{ active: currentSort.field === 'rating' }" 
+              @click="toggleSort('rating')"
+            >
+              Рейтингу
+              <span v-if="currentSort.field === 'rating'">
+                {{ currentSort.direction === 'asc' ? '↑' : '↓' }}
+              </span>
+            </button>
+
+            <button 
+              class="btn-sort" 
+              :class="{ active: currentSort.field === 'useful' }" 
+              @click="toggleSort('useful')"
+            >
+              Полезности
+              <span v-if="currentSort.field === 'useful'">
+                {{ currentSort.direction === 'asc' ? '↑' : '↓' }}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div class="reviews-list">
+          <div v-for="review in sortedReviews" :key="review.id" class="review-card">
+            
+            <!-- Ваш ответ -->
+            <div v-if="review.type === 'admin_reply'" class="review-content">
+              <div class="review-header-title">
+                <h4>{{ review.title }}</h4>
+              </div>
+              <p class="review-text">{{ review.text }}</p>
+              <div class="review-quote">
+                <div class="quote-bar"></div>
+                <p>{{ review.quote }}</p>
+              </div>
+            </div>
+
+            <!-- Отзыв пользователя -->
+            <div v-else class="review-content">
+              <div class="review-user-header">
+                <div class="user-info">
+                  <div class="avatar-circle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                  </div>
+                  <span class="user-name">{{ review.author }}</span>
+                </div>
+
+                <div class="stars-row">
+                  <svg v-for="i in 5" :key="i" width="20" height="20" viewBox="0 0 24 24" class="star-mini">
+                    <defs>
+                      <linearGradient :id="'r-grad-' + review.id + '-' + i">
+                        <stop offset="0%" stop-color="#FF7A00"/>
+                        <stop :offset="calculateOffset(review.rating, i)" stop-color="#FF7A00"/>
+                        <stop :offset="calculateOffset(review.rating, i)" stop-color="#D1D5DB"/>
+                        <stop offset="100%" stop-color="#D1D5DB"/>
+                      </linearGradient>
+                    </defs>
+                    <path 
+                      :fill="'url(#r-grad-' + review.id + '-' + i + ')'" 
+                      d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+                    />
+                  </svg>
+                  <span class="rating-num">{{ review.rating.toString().replace('.', ',') }}</span>
+                </div>
+              </div>
+
+              <p class="review-text">{{ review.text }}</p>
+            </div>
+
+            <!-- Футер -->
+            <div class="review-footer">
+              <span class="pub-date">Дата публикации: {{ review.date }}</span>
+              
+              <div class="review-actions">
+                <button class="action-btn" @click="toggleReviewVisibility(review)">
+                  <img v-if="review.isHidden" src="../../assets/eye-slash.svg">
+                  <img v-else src="../../assets/eye.svg">
+                  {{ review.isHidden ? 'Показать комментарий' : 'Скрыть комментарий' }}
+                </button>
+
+                <button class="action-btn">
+                  <img src="../../assets/undo.svg">
+                  Ответить на комментарий
+                </button>
+
+                <button class="action-btn red" @click="deleteReview(review.id)">
+                  <img src="../../assets/trash.svg" class="icon-red"/>
+                  Удалить комментарий
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- STICKY FOOTER (Только Edit Mode) -->
+      <div v-if="isEditMode" class="sticky-footer">
         <div class="footer-content">
-            <button class="btn-cancel" @click="cancelChanges">Отменить</button>
-            <button class="btn-save" @click="saveChanges">Сохранить</button>
+          <button class="btn-cancel" @click="handleCancel" :disabled="isSaving">
+            Отменить
+          </button>
+          <button class="btn-save" @click="handleSave" :disabled="isSaving">
+            <span v-if="isSaving">Сохранение...</span>
+            <span v-else>Сохранить</span>
+          </button>
         </div>
-        </div>
+      </div>
 
     </div>
   </AdminLayout>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import AdminLayout from './AdminLayout.vue';
-import Category from '../catalog/Category.vue';
+import { adminProductApi, categoryApi } from '@/services/api';
 
+// ==================== ROUTER ====================
+const route = useRoute();
+const router = useRouter();
 
-// --- STATE ---
-const isEditMode = ref(false); // Главный переключатель// === Логика категорий ===
-const showCatDropdown = ref(false);
+// ==================== СОСТОЯНИЕ ====================
+const isLoading = ref(false);
+const isSaving = ref(false);
+const error = ref(null);
+const isEditMode = ref(false);
+
+// ID товара из роута
+const productId = computed(() => route.params.id);
+const isNewProduct = computed(() => !productId.value || productId.value === 'new');
+
+// ==================== ФОРМА ====================
+const getEmptyForm = () => ({
+  id: null,
+  title: '',
+  description: '',
+  price: 0,
+  stock: 0,
+  categoryId: '',
+  weight: 0,
+  unit: 'г',
+  priceUnit: 'st',
+  stockUnit: 'kg',
+  brand: '',
+  article: '',
+  nutrition: {
+    fats: 0,
+    carbs: 0,
+    protein: 0,
+    energy: 0,
+    joules: 0,
+  },
+  attributes: [],
+  images: [],
+  rating: 0,
+});
+
+const form = ref(getEmptyForm());
+const originalForm = ref(null);
+
+// ==================== КАТЕГОРИИ ====================
+const categoriesRaw = ref([]);
+const categoriesTree = ref([]);
 const isCategorySelectorOpen = ref(false);
 const categorySearchQuery = ref('');
 const expandedCategory = ref(null);
-// Мок данных категорий
-const categoriesList = ref([
-  { 
-    name: 'Овощи', 
-    subs: ['Картофель', 'Морковь', 'Огурцы'] 
-  },
-  { 
-    name: 'Фрукты', 
-    subs: ['Цитрусовые', 'Яблоки', 'Бананы'] 
-  },
-  { 
-    name: 'Ягоды', 
-    subs: ['Клубника', 'Малина'] 
+
+// ==================== DROPDOWNS ====================
+const showUnitMenu = ref(false);
+const showPriceUnitMenu = ref(false);
+const showStockUnitMenu = ref(false);
+
+// ==================== ГАЛЕРЕЯ ====================
+const activeImageIndex = ref(0);
+
+// ==================== ОТЗЫВЫ ====================
+const reviews = ref([]);
+const reviewsCount = computed(() => reviews.value.length);
+
+const currentSort = ref({
+  field: null,
+  direction: null
+});
+
+// ==================== СЛОВАРИ ====================
+const unitDict = {
+  'кг': 'Килограмм',
+  'г': 'Грамм',
+  'л': 'Литр',
+  'мл': 'Миллилитр'
+};
+
+const priceUnitsDict = {
+  'st': 'Шт.',
+  'kg': 'Кг',
+  'l': 'Л'
+};
+
+const stockUnitsDict = {
+  'kg': 'Килограмм',
+  'st': 'Штук',
+  'l': 'Литров'
+};
+
+// Зарезервированные ключи характеристик (не показывать в атрибутах)
+const RESERVED_CHARACTERISTICS = [
+  'grammage', 'priceUnit', 'stockUnit', 'brand', 'article', 'nutrition', 'images', 'rating'
+];
+
+// ==================== МАППИНГ API → ФОРМА ====================
+function mapApiToForm(apiData) {
+  const characteristics = apiData.characteristics || {};
+  const grammage = characteristics.grammage || {};
+  
+  // Парсим nutrition (может быть строкой JSON)
+  let nutrition = { fats: 0, carbs: 0, protein: 0, energy: 0, joules: 0 };
+  if (characteristics.nutrition) {
+    try {
+      nutrition = typeof characteristics.nutrition === 'string' 
+        ? JSON.parse(characteristics.nutrition) 
+        : characteristics.nutrition;
+    } catch (e) {
+      console.warn('Failed to parse nutrition:', e);
+    }
   }
-]);
+
+  // Извлекаем кастомные атрибуты
+  const attributes = [];
+  Object.entries(characteristics).forEach(([key, value]) => {
+    if (!RESERVED_CHARACTERISTICS.includes(key) && typeof value === 'string') {
+      attributes.push({ name: key, value });
+    }
+  });
+
+  return {
+    id: apiData.id,
+    title: apiData.name || '',
+    description: apiData.description || '',
+    price: apiData.price || 0,
+    stock: apiData.quantity || 0,
+    categoryId: apiData.categoryId || '',
+    weight: grammage.weight || 0,
+    unit: grammage.unit || 'г',
+    priceUnit: characteristics.priceUnit || 'st',
+    stockUnit: characteristics.stockUnit || 'kg',
+    brand: characteristics.brand || '',
+    article: characteristics.article || '',
+    nutrition,
+    attributes,
+    images: characteristics.images || [],
+    rating: characteristics.rating || 0,
+  };
+}
+
+// ==================== МАППИНГ ФОРМА → API ====================
+function mapFormToApi(formData) {
+  const characteristics = {};
+
+  // Граммовка
+  characteristics.grammage = {
+    weight: Number(formData.weight) || 0,
+    unit: formData.unit
+  };
+
+  // Единицы измерения
+  characteristics.priceUnit = formData.priceUnit;
+  characteristics.stockUnit = formData.stockUnit;
+
+  // Бренд и артикул
+  if (formData.brand) characteristics.brand = formData.brand;
+  if (formData.article) characteristics.article = formData.article;
+
+  // Пищевая ценность
+  if (formData.nutrition) {
+    characteristics.nutrition = JSON.stringify(formData.nutrition);
+  }
+
+  // Изображения
+  if (formData.images && formData.images.length > 0) {
+    characteristics.images = formData.images;
+  }
+
+  // Кастомные атрибуты
+  formData.attributes.forEach(attr => {
+    if (attr.name && attr.value) {
+      characteristics[attr.name] = attr.value;
+    }
+  });
+
+  return {
+    name: formData.title,
+    providerId: null,
+    description: formData.description,
+    price: parseFloat(formData.price) || 0,
+    quantity: parseInt(formData.stock) || 0,
+    categoryId: formData.categoryId,
+    characteristics
+  };
+}
+
+// ==================== ПОСТРОЕНИЕ ДЕРЕВА КАТЕГОРИЙ ====================
+function buildCategoryTree(flatCategories) {
+  const parentCategories = flatCategories.filter(c => !c.parentCategoryId);
+  
+  return parentCategories.map(parent => ({
+    id: parent.categoryId,
+    name: parent.categoryName,
+    subs: flatCategories
+      .filter(c => c.parentCategoryId === parent.categoryId)
+      .map(sub => ({
+        id: sub.categoryId,
+        name: sub.categoryName,
+      })),
+  }));
+}
+
+// ==================== ЗАГРУЗКА ДАННЫХ ====================
+async function loadData() {
+  isLoading.value = true;
+  error.value = null;
+
+  try {
+    // Загружаем категории
+    const categoriesData = await categoryApi.get();
+    categoriesRaw.value = categoriesData;
+    categoriesTree.value = buildCategoryTree(categoriesData);
+
+    // Загружаем товар (если не новый)
+    if (!isNewProduct.value) {
+      const productData = await adminProductApi.getById(productId.value);
+      form.value = mapApiToForm(productData);
+      originalForm.value = JSON.parse(JSON.stringify(form.value));
+    } else {
+      form.value = getEmptyForm();
+      originalForm.value = JSON.parse(JSON.stringify(form.value));
+      isEditMode.value = true; // Сразу в режим редактирования для нового товара
+    }
+
+    // TODO: Загрузить отзывы когда появится API
+    // reviews.value = await reviewsApi.getByProductId(productId.value);
+
+  } catch (e) {
+    console.error('Load data error:', e);
+    error.value = e.message || 'Ошибка загрузки данных';
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+// ==================== СОХРАНЕНИЕ ====================
+async function handleSave() {
+  // Валидация
+  if (!form.value.title) {
+    error.value = 'Заполните название товара';
+    return;
+  }
+  if (!form.value.categoryId) {
+    error.value = 'Выберите категорию';
+    return;
+  }
+
+  isSaving.value = true;
+  error.value = null;
+
+  try {
+    const apiData = mapFormToApi(form.value);
+
+    if (isNewProduct.value) {
+      // Создание
+      const result = await adminProductApi.create(
+        apiData.name,
+        apiData.providerId,
+        apiData.description,
+        apiData.price,
+        apiData.quantity,
+        apiData.categoryId,
+        apiData.characteristics
+      );
+      
+      // Переходим на страницу созданного товара
+      router.push(`/admin/products/${result.productId}`);
+    } else {
+      // Обновление
+      await adminProductApi.update(
+        form.value.id,
+        apiData.name,
+        apiData.providerId,
+        apiData.description,
+        apiData.price,
+        apiData.quantity,
+        apiData.categoryId,
+        apiData.characteristics
+      );
+      
+      originalForm.value = JSON.parse(JSON.stringify(form.value));
+      isEditMode.value = false;
+    }
+
+  } catch (e) {
+    console.error('Save error:', e);
+    error.value = e.message || 'Ошибка сохранения';
+  } finally {
+    isSaving.value = false;
+  }
+}
+
+// ==================== ОТМЕНА ====================
+function handleCancel() {
+  if (hasChanges.value) {
+    if (!confirm('Сбросить изменения?')) return;
+  }
+  
+  if (isNewProduct.value) {
+    router.push('/admin/products');
+  } else {
+    form.value = JSON.parse(JSON.stringify(originalForm.value));
+    isEditMode.value = false;
+  }
+}
+
+// ==================== УДАЛЕНИЕ ====================
+async function handleDelete() {
+  if (!form.value.id) return;
+  
+  if (!confirm('Удалить товар? Это действие необратимо.')) return;
+
+  try {
+    await adminProductApi.delete(form.value.id);
+    router.push('/admin/products');
+  } catch (e) {
+    error.value = e.message || 'Ошибка удаления';
+  }
+}
+
+// ==================== COMPUTED ====================
+const hasChanges = computed(() => {
+  return JSON.stringify(form.value) !== JSON.stringify(originalForm.value);
+});
+
+const selectedCategoryLabel = computed(() => {
+  if (!form.value.categoryId) return 'Выберите категорию';
+  
+  // Ищем категорию в дереве
+  for (const cat of categoriesTree.value) {
+    if (cat.id === form.value.categoryId) {
+      return cat.name;
+    }
+    const sub = cat.subs.find(s => s.id === form.value.categoryId);
+    if (sub) {
+      return `${cat.name} - ${sub.name}`;
+    }
+  }
+  
+  // Фоллбэк - ищем в плоском списке
+  const category = categoriesRaw.value.find(c => c.categoryId === form.value.categoryId);
+  return category?.categoryName || 'Категория не найдена';
+});
 
 const filteredCategories = computed(() => {
   const query = categorySearchQuery.value.toLowerCase().trim();
+  if (!query) return categoriesTree.value;
   
-  if (!query) return categoriesList.value;
-  
-  return categoriesList.value
+  return categoriesTree.value
     .map(cat => ({
-      name: cat.name,
-      subs: cat.subs.filter(sub => 
-        sub.toLowerCase().includes(query) || 
+      ...cat,
+      subs: cat.subs.filter(sub =>
+        sub.name.toLowerCase().includes(query) ||
         cat.name.toLowerCase().includes(query)
-      )
+      ),
     }))
     .filter(cat => 
       cat.subs.length > 0 || 
@@ -627,261 +956,206 @@ const filteredCategories = computed(() => {
     );
 });
 
-const selectedCategoryLabel = computed(() => {
-  const cat = form.value.category;
-  const sub = form.value.subcategory;
-
-  // Если есть и то, и другое
-  if (cat && sub) {
-    return `${cat} - ${sub}`;
-  }
-  
-  // Если по какой-то причине есть только подкатегория
-  if (sub) {
-    return sub;
-  }
-
-  return 'Выберите категорию';
-});
-
-// Раскрыть/закрыть папку
-const toggleCategory = (catName) => {
-  expandedCategory.value = expandedCategory.value === catName ? null : catName;
-};
-
-// Выбрать подкатегорию
-const selectSubcategory = (catName, sub) => {
-  form.value.category = catName;
-  form.value.subcategory = sub;
-  isCategorySelectorOpen.value = false;
-  expandedCategory.value = null;
-};
-const unitDict = ref({ 'кг': 'Килограмм', 'г': 'Грамм', 'л': 'Литр', 'мл': 'Миллилитр' });
-// Индекс активного изображения для режима просмотра
-const activeImageIndex = ref(0);
-// Данные формы
-
-// === Состояние сортировки ===
-// direction: 'asc' (↑), 'desc' (↓), null (выкл)
-const currentSort = ref({
-  field: null, 
-  direction: null
-});
-
-// === Мок данных (добавил поле useful) ===
-const reviews = ref([
-  {
-    id: 1,
-    type: 'admin_reply',
-    title: 'Ваш ответ',
-    text: 'Lorem Ipsum - это текст-"рыба"...',
-    quote: 'Цитата...',
-    date: '10.05.25', // Сделал дату старше для проверки
-    rating: 0,      // У админа нет рейтинга
-    useful: 0,
-    isHidden: true
-  },
-  {
-    id: 2,
-    type: 'user_review',
-    author: 'Аноним',
-    rating: 3.6,
-    useful: 15,     // Полезность
-    text: 'Текст отзыва...',
-    date: '13.05.25',
-    isHidden: false
-  },
-  {
-    id: 3,
-    type: 'user_review',
-    author: 'Иван Иванов',
-    rating: 5.0,
-    useful: 5,
-    text: 'Отличный товар!',
-    date: '12.05.25',
-    isHidden: false
-  }
-]);
-
-// === Логика переключения (3 шага) ===
-const toggleSort = (field) => {
-  // Если нажали на другую кнопку - сбрасываем на "asc" для новой кнопки
-  if (currentSort.value.field !== field) {
-    currentSort.value = { field, direction: 'asc' };
-    return;
-  }
-
-  // Если нажали на ту же кнопку - перебираем состояния
-  if (currentSort.value.direction === 'asc') {
-    currentSort.value.direction = 'desc'; // 2-е нажатие
-  } else if (currentSort.value.direction === 'desc') {
-    currentSort.value = { field: null, direction: null }; // 3-е нажатие (выкл)
-  }
-};
-
-// === Вычисляемое свойство для отображения ===
 const sortedReviews = computed(() => {
-  // Если сортировка выключена
-  if (!currentSort.value.field) {
-    return reviews.value;
-  }
+  if (!currentSort.value.field) return reviews.value;
 
   return [...reviews.value].sort((a, b) => {
-    let modifier = currentSort.value.direction === 'asc' ? 1 : -1;
+    const modifier = currentSort.value.direction === 'asc' ? 1 : -1;
     
-    // === ИСПРАВЛЕННАЯ СОРТИРОВКА ПО ДАТЕ ===
     if (currentSort.value.field === 'date') {
-      // Функция для превращения '13.05.25' в Timestamp
       const getTimestamp = (dateStr) => {
         const [day, month, year] = dateStr.split('.');
-        // new Date(год, месяц(0-11), день)
-        // Добавляем 2000 к году (25 -> 2025)
-        // Вычитаем 1 из месяца, т.к. в JS месяцы с 0
         return new Date(2000 + Number(year), Number(month) - 1, Number(day)).getTime();
       };
-
       return (getTimestamp(a.date) - getTimestamp(b.date)) * modifier;
     }
 
-    // Сортировка по рейтингу
     if (currentSort.value.field === 'rating') {
       return (a.rating - b.rating) * modifier;
     }
 
-    // Сортировка по полезности
     if (currentSort.value.field === 'useful') {
-      return (a.useful - b.useful) * modifier;
+      return ((a.useful || 0) - (b.useful || 0)) * modifier;
     }
 
     return 0;
   });
 });
 
-const form = ref({
-  title: 'Какое-то название очень крутого вкусного и замечательного товара',
-  weight: 1000,
-  unit: 'г',
-  price: 30000,
-  stock: 200,
-  rating: 3.7,
-  category: '',
-  subcategory: '',
-  images: [1, 2, 3], // Мок изображений
-  nutrition: {
-    fats: 4,
-    carbs: 4,
-    protein: 4,
-    energy: 400,
-    joules: 44
-  },
-  description: 'Lorem Ipsum - это текст-"рыба", часто используемый в печати и вэб-дизайне...',
-  attributes: [
-    { name: 'Полное название', value: 'Печенье LOTTE Choco Pie...' },
-    { name: 'Тип продукта', value: 'Пирожное' },
-    { name: 'Вид продукта', value: 'Бисквитный' }
-  ]
-});
-
-// --- LOGIC ---
-
-// === Состояния выпадающих списков ===
-const showUnitMenu = ref(false);
-const showPriceUnitMenu = ref(false);
-const showStockUnitMenu = ref(false);
-
-// === Словари (Данные для списков) ===
-// unitDict у тебя уже есть: { 'кг': 'Килограмм', ... }
-
-// Опции для "Цена за..."
-const priceUnitsDict = ref({ 'st': 'Шт.', 'kg': 'Кг', 'l': 'Л' });
-// Опции для "В наличии..."
-const stockUnitsDict = ref({ 'kg': 'Килограмм', 'st': 'Штук', 'l': 'Литров' });
-
-// Если в form еще нет этих полей, зададим дефолтные (или добавь их в свой объект form)
-if (!form.value.priceUnit) form.value.priceUnit = 'st';
-if (!form.value.stockUnit) form.value.stockUnit = 'kg';
-
-
-// === Директива v-click-outside (Чтобы закрывать меню при клике в пустоту) ===
-const vClickOutside = {
-  mounted(el, binding) {
-    el.clickOutsideEvent = function(event) {
-      if (!(el === event.target || el.contains(event.target))) {
-        binding.value(event, el);
-      }
-    };
-    document.body.addEventListener('click', el.clickOutsideEvent);
-  },
-  unmounted(el) {
-    document.body.removeEventListener('click', el.clickOutsideEvent);
-  }
-};
-
-
-const addImage = () => {
-  form.value.images.push(Date.now());
-};
-
-const removeImage = (index) => {
-  form.value.images.splice(index, 1);
-};
-
-const addAttr = () => {
-  form.value.attributes.push({ name: '', value: '' });
-};
-
-const removeAttr = (index) => {
-  form.value.attributes.splice(index, 1);
-};
-
-const saveChanges = () => {
-  console.log('Saving...', form.value);
-  isEditMode.value = false;
-};
-
-const cancelChanges = () => {
-  if(confirm('Сбросить изменения?')) {
-    isEditMode.value = false;
-  }
-};
-
-const calculateOffset = (rating, starIndex) => {
-  if (!rating) return '0%';
+// ==================== МЕТОДЫ: DROPDOWN ====================
+function toggleDropdown(type) {
+  // Закрываем все
+  showUnitMenu.value = false;
+  showPriceUnitMenu.value = false;
+  showStockUnitMenu.value = false;
   
-  const val = rating - (starIndex - 1);
-  
-  if (val >= 1) return '100%';
-  if (val <= 0) return '0%';
-  
-  return `${val * 100}%`;
-};
+  // Открываем нужный
+  if (type === 'unit') showUnitMenu.value = true;
+  else if (type === 'priceUnit') showPriceUnitMenu.value = true;
+  else if (type === 'stockUnit') showStockUnitMenu.value = true;
+}
 
-const validateInput = (obj, key, event) => {
-  let val = event.target.value;
-  val = val.replace(/[^0-9.]/g, '');
-  if ((val.match(/\./g) || []).length > 1) {
-     val = val.slice(0, -1);
+function closeAllDropdowns(e) {
+  if (!e.target.closest('.dropdown-wrapper')) {
+    showUnitMenu.value = false;
+    showPriceUnitMenu.value = false;
+    showStockUnitMenu.value = false;
   }
-  event.target.value = val;
-  obj[key] = val;
-};
+}
 
-const selectedUnitLabel = computed(() => {
-  return unitDict.value[form.value.unit] || form.value.unit;
-});
-
-const selectUnit = (unit) => {
+function selectUnit(unit) {
   form.value.unit = unit;
   showUnitMenu.value = false;
+}
+
+// ==================== МЕТОДЫ: КАТЕГОРИИ ====================
+function closeCategorySelector() {
+  isCategorySelectorOpen.value = false;
+}
+
+function toggleCategory(catId) {
+  expandedCategory.value = expandedCategory.value === catId ? null : catId;
+}
+
+function selectSubcategory(cat, sub) {
+  form.value.categoryId = sub.id;
+  isCategorySelectorOpen.value = false;
+  expandedCategory.value = null;
+}
+
+// ==================== МЕТОДЫ: ИЗОБРАЖЕНИЯ ====================
+function addImage() {
+  // TODO: Интегрировать с загрузкой файлов
+  form.value.images.push(`placeholder-${Date.now()}`);
+}
+
+function removeImage(index) {
+  form.value.images.splice(index, 1);
+  if (activeImageIndex.value >= form.value.images.length) {
+    activeImageIndex.value = Math.max(0, form.value.images.length - 1);
+  }
+}
+
+// ==================== МЕТОДЫ: АТРИБУТЫ ====================
+function addAttr() {
+  form.value.attributes.push({ name: '', value: '' });
+}
+
+function removeAttr(index) {
+  form.value.attributes.splice(index, 1);
+}
+
+// ==================== МЕТОДЫ: STOCK ====================
+function incrementStock() {
+  form.value.stock = (parseInt(form.value.stock) || 0) + 1;
+}
+
+function decrementStock() {
+  const current = parseInt(form.value.stock) || 0;
+  form.value.stock = Math.max(0, current - 1);
+}
+
+// ==================== МЕТОДЫ: ОТЗЫВЫ ====================
+function toggleSort(field) {
+  if (currentSort.value.field !== field) {
+    currentSort.value = { field, direction: 'asc' };
+    return;
+  }
+
+  if (currentSort.value.direction === 'asc') {
+    currentSort.value.direction = 'desc';
+  } else {
+    currentSort.value = { field: null, direction: null };
+  }
+}
+
+function toggleReviewVisibility(review) {
+  review.isHidden = !review.isHidden;
+  // TODO: API call
+}
+
+function deleteReview(reviewId) {
+  if (!confirm('Удалить комментарий?')) return;
+  reviews.value = reviews.value.filter(r => r.id !== reviewId);
+  // TODO: API call
+}
+
+// ==================== МЕТОДЫ: ВАЛИДАЦИЯ ====================
+function validateNumericInput(field, event) {
+  let val = event.target.value.replace(/[^0-9.]/g, '');
+  if ((val.match(/\./g) || []).length > 1) {
+    val = val.slice(0, -1);
+  }
+  event.target.value = val;
+  form.value[field] = val;
+}
+
+function validateNutritionInput(field, event) {
+  let val = event.target.value.replace(/[^0-9.]/g, '');
+  if ((val.match(/\./g) || []).length > 1) {
+    val = val.slice(0, -1);
+  }
+  event.target.value = val;
+  form.value.nutrition[field] = parseFloat(val) || 0;
+}
+
+// ==================== УТИЛИТЫ ====================
+function calculateOffset(rating, starIndex) {
+  if (!rating) return '0%';
+  const val = rating - (starIndex - 1);
+  if (val >= 1) return '100%';
+  if (val <= 0) return '0%';
+  return `${val * 100}%`;
+}
+
+function formatPrice(price) {
+  return new Intl.NumberFormat('ru-RU').format(price);
+}
+
+// ==================== ДИРЕКТИВА v-click-outside ====================
+const vClickOutside = {
+  mounted(el, binding) {
+    el._clickOutside = (event) => {
+      if (!(el === event.target || el.contains(event.target))) {
+        binding.value(event);
+      }
+    };
+    document.addEventListener('click', el._clickOutside);
+  },
+  unmounted(el) {
+    document.removeEventListener('click', el._clickOutside);
+  },
 };
 
-const closeUnitMenu = (e) => {
-  if (e.target.closest('.custom-dropdown-menu')) showUnitMenu.value = false;
-};
+// ==================== ПРЕДУПРЕЖДЕНИЕ ПРИ УХОДЕ ====================
+function beforeUnloadHandler(e) {
+  if (hasChanges.value && isEditMode.value) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+}
 
-onMounted(() => document.addEventListener('click', closeUnitMenu));
-onUnmounted(() => document.removeEventListener('click', closeUnitMenu));
+// ==================== LIFECYCLE ====================
+onMounted(async () => {
+  await loadData();
+  document.addEventListener('click', closeAllDropdowns);
+  window.addEventListener('beforeunload', beforeUnloadHandler);
+});
 
+onUnmounted(() => {
+  document.removeEventListener('click', closeAllDropdowns);
+  window.removeEventListener('beforeunload', beforeUnloadHandler);
+});
+
+// Следим за изменением ID в роуте
+watch(
+  () => route.params.id,
+  async (newId) => {
+    if (newId) {
+      await loadData();
+    }
+  }
+);
 </script>
 
 <style scoped lang="scss">
@@ -891,6 +1165,67 @@ $primary-orange: #FF7F00;
 $bg-grey: #F5F7FA;
 $text-dark: #333;
 $border-color: #E0E0E0;
+
+/* Добавьте стили для loading и error */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-banner {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.error-banner button {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #dc2626;
+}
+
+.icon-red {
+  filter: invert(25%) sepia(82%) saturate(1764%) hue-rotate(334deg) brightness(106%) contrast(86%);
+}
+
+.rotated {
+  transform: rotate(180deg);
+}
+
+.out-of-stock {
+  color: #dc2626;
+  font-weight: 500;
+}
 
 span { font-weight: 600; font-size: 18px; }
 

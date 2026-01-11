@@ -898,7 +898,7 @@ onUnmounted(() => {
 .mb-4 { margin-bottom: 16px; width: -webkit-fill-available; }
 
 .blur-overlay { background: rgba(0, 0, 0, 0.2); backdrop-filter: blur(2px); z-index: 1000; position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;}
-.centered-modal { display: flex; flex-direction: column; gap: 32px; width: 400px; padding: 40px; text-align: center; border-radius: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); background: white;}
+.centered-modal { display: flex; flex-direction: column; gap: 32px; width: 400px; padding: 40px; text-align: center; border-radius: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); background: white;}
 .modal-title-center { font-size: 24px; margin-bottom: 10px; font-weight: 600; }
 .modal-hint-center { font-size: 14px; color: #6B7280; margin-bottom: 24px; }
 .modal-text { font-size: 16px; color: #6B7280; margin-bottom: 20px; line-height: 1.5; }

@@ -2,9 +2,6 @@
   <AdminLayout>
     <template #default>
       
-      <!-- ============================================= -->
-      <!-- VIEW 1: СПИСОК ТОВАРОВ (ГЛАВНАЯ) -->
-      <!-- ============================================= -->
       <div v-if="!selectedProduct" class="stats-page">
         
         <div class="header-row">
@@ -12,44 +9,42 @@
           <div class="total-badge">Всего товаров: {{ products.length }}</div>
         </div>
 
-        <!-- ПАНЕЛЬ УПРАВЛЕНИЯ (Поиск, Фильтр, Сортировка) -->
         <div class="controls-panel">
-          
-          <!-- Левая часть: Поиск + Кнопка Фильтров -->
           <div class="left-controls">
-            <div class="search-input-wrapper">
-              <span class="search-icon">🔍</span>
-              <input 
-                type="text" 
-                placeholder="Поиск товара..." 
-                v-model="searchQuery" 
-              />
+            <div class="search-box-styled card">
+              <img src="../../assets/search-normal.svg" alt="search" class="search-icon" />
+              <input type="text" placeholder="Поиск товара..." v-model="searchQuery">
+              <img src="../../assets/close-circle.svg" class="clear-circle" @click="searchQuery = ''" />
             </div>
-            
-            <button 
-              class="control-btn" 
-              :class="{ active: showFilters }" 
-              @click="showFilters = !showFilters"
-            >
-              <span class="filter-icon">⚙</span> Фильтры
-            </button>
           </div>
-
-          <!-- Правая часть: Сортировка (Выпадающий список) -->
           <div class="right-controls">
-            <span class="sort-label">Сортировка:</span>
-            <select v-model="currentSort" class="sort-select">
-              <option value="name_asc">По названию (А → Я)</option>
-              <option value="name_desc">По названию (Я → А)</option>
-              <option value="sales_desc">По продажам (Много → Мало)</option>
-              <option value="sales_asc">По продажам (Мало → Много)</option>
-              <option value="reviews_desc">По отзывам (Много → Мало)</option>
-              <option value="reviews_asc">По отзывам (Мало → Много)</option>
-            </select>
+            <button class="tool-btn" @click="toggleFilters" :class="{ 'active': isFiltered }">
+              <img src="../../assets/filter.svg" alt="filter" />
+              <span>Фильтры</span>
+            </button>
+            <div class="control-box dropdown-wrapper">
+              <button class="sort-btn-styled card" :class="{ 'is-active': showSortDropdown || sortOption }" @click.stop="showSortDropdown = !showSortDropdown">
+                <img v-if="!(showSortDropdown || sortOption)" src="../../assets/drop down button.svg" />
+                <img v-else src="../../assets/drop down button(1).svg" />
+                <span class="sort-btn-text">{{ buttonSortLabel }}</span>
+              </button>
+              <div v-if="showSortDropdown" class="custom-dropdown-menu sort-menu-design right-align">
+                <div class="sort-group-label">По алфавиту</div>
+                <div class="sort-item" @click="setSortOption('name-asc')"><div class="radio-indicator" :class="{ selected: sortOption === 'name-asc' }"></div><span class="sort-text">От А до Я</span></div>
+                <div class="sort-item" @click="setSortOption('name-desc')"><div class="radio-indicator" :class="{ selected: sortOption === 'name-desc' }"></div><span class="sort-text">От Я до А</span></div>
+                <div class="dd-divider"></div>
+                <div class="sort-group-label">Цена</div>
+                <div class="sort-item" @click="setSortOption('price-asc')"><div class="radio-indicator" :class="{ selected: sortOption === 'price-asc' }"></div><span class="sort-text">Сначала дешевле</span></div>
+                <div class="sort-item" @click="setSortOption('price-desc')"><div class="radio-indicator" :class="{ selected: sortOption === 'price-desc' }"></div><span class="sort-text">Сначала дороже</span></div>
+                <div class="dd-divider"></div>
+                <div class="sort-group-label">Рейтинг</div>
+                <div class="sort-item" @click="setSortOption('rating-desc')"><div class="radio-indicator" :class="{ selected: sortOption === 'rating-desc' }"></div><span class="sort-text">Высокий рейтинг</span></div>
+                <div class="sort-item" @click="setSortOption('rating-asc')"><div class="radio-indicator" :class="{ selected: sortOption === 'rating-asc' }"></div><span class="sort-text">Низкий рейтинг</span></div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Выпадающая панель фильтров -->
         <transition name="slide-fade">
           <div v-if="showFilters" class="filters-drawer">
             <div class="filter-group">
@@ -68,161 +63,193 @@
             <button class="clear-filters" @click="resetFilters">Сбросить всё</button>
           </div>
         </transition>
-
-        <!-- СПИСОК КАРТОЧЕК -->
+        <div v-if="sortOption" class="active-filters">
+            <span class="filter-tag">{{ sortLabel }} <button class="tag-remove" @click="sortOption = ''">×</button></span>
+          </div>
         <div class="products-list">
-          <div 
-            class="product-stat-card" 
-            v-for="product in sortedAndFilteredProducts" 
-            :key="product.id"
-            @click="openProductStats(product)"
-          >
-            <!-- Иконка и Название -->
-            <div class="card-left">
-              <div class="card-icon">📦</div>
-              <div class="card-info">
-                <h3 class="p-name">{{ product.name }}</h3>
-                <div class="p-module">
-                  Категория: <span class="highlight">{{ product.category }}</span> • {{ product.subcategory }}
-                </div>
-              </div>
+          <div class="product-row" v-for="(p, i) in filteredProducts" :key="p.id" @click="openProductStats(p)">
+            <div class="row-image">
+              <div class="img-placeholder" :style="{ backgroundImage: p.image ? `url(${p.image})` : '' }"></div>
             </div>
-
-            <!-- Статистика справа -->
-            <div class="card-stats">
-              <div class="stat-group">
-                <div class="stars-row">
-                  <span v-for="n in 5" :key="n" class="star" :class="{ filled: n <= Math.round(product.rating) }">★</span>
-                </div>
-                <div class="score-val">{{ product.rating }}</div>
+            <div class="row-content">
+              <div class="row-main">
+                <h2 class="p-name">{{ p.name }}</h2>
+                <div class="rat-pri">
+                  <div class="row-rating">
+                    <div class="stars-wrapper">
+                      <svg v-for="star in 5" :key="star" class="star-icon" width="24" height="24" viewBox="0 0 24 24">
+                        <defs>
+                          <linearGradient :id="'grad-' + p.id + '-' + star">
+                            <stop offset="0%" stop-color="#FF7A00" />
+                            <stop :offset="calculateOffset(p.rating, star)" stop-color="#FF7A00" />
+                            <stop :offset="calculateOffset(p.rating, star)" stop-color="#E5E7EB" />
+                            <stop offset="100%" stop-color="#E5E7EB" />
+                          </linearGradient>
+                        </defs>
+                        <path :fill="'url(#grad-' + p.id + '-' + star + ')'" d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                      </svg>
+                    </div>
+                    <span class="rating-value">{{ p.rating }}</span>
+                  </div>
+                  <div class="row-replies">
+                    <img src="../../assets/messages-3.svg"/>
+                    <span class="replies-count">{{ p.reviewsCount }}</span>
+                  </div>
+                  <div class="row-price">{{ p.price }} ₽</div>
+                </div>      
               </div>
-              
-              <div class="stat-group reviews">
-                <span class="icon">💬</span> {{ product.reviewsCount.toLocaleString() }} отзывов
-              </div>
-
-              <div class="sales-badge">
-                Продаж: {{ product.sales.toLocaleString() }}
+              <div class="row-meta">
+                <span class="p-cat">Категория: {{ getCategoryName(p.categoryId) || p.category }}</span>
               </div>
             </div>
           </div>
-          
-          <!-- Если ничего не найдено -->
-          <div v-if="sortedAndFilteredProducts.length === 0" class="empty-state">
-            По вашему запросу товары не найдены.
+          <div v-if="filteredProducts.length === 0" style="text-align:center; padding: 20px; color: #999;">
+              Товары не найдены
           </div>
         </div>
-
       </div>
 
-      <!-- ============================================= -->
-      <!-- VIEW 2: ДЕТАЛЬНАЯ СТАТИСТИКА (Ваш старый код) -->
-      <!-- ============================================= -->
       <div v-else class="detail-view">
         
-        <!-- Хлебные крошки / Назад -->
-        <div class="back-nav" @click="closeProductStats">
-          <span class="back-arrow">←</span> Назад к списку
+        <div class="breadcrumbs">
+          <span class="crumb-link" @click="closeProductStats">Статистика</span> 
+          <span class="crumb-arrow"> > </span>
+          <span class="crumb-current">{{ selectedProduct.name }}</span>
         </div>
 
-        <div class="detail-header">
-          <h2>{{ selectedProduct.name }}</h2>
-          <div class="total-score">
-            Общая оценка: <strong>{{ selectedProduct.rating }}</strong>
+        <h1 class="detail-title">{{ selectedProduct.name }}</h1>
+
+        <div class="date-controls-row">
+          <div class="period-text">Статистика за период с <span class="d-val">05.12.2025</span> по <span class="d-val">05.01.2026</span></div>
+          <div class="date-dropdown-btn">За последний месяц ⌄</div>
+        </div>
+
+        <div class="metrics-tabs">
+          <div class="metric-tab active">
+            <div class="m-label">Заказы</div>
+            <div class="m-value-row">
+              <span class="m-val">586</span>
+              <span class="m-arrow up">↑</span>
+            </div>
+            <div class="m-sub">Больше на 26%</div>
+          </div>
+
+          <div class="metric-tab">
+            <div class="m-label">Добавление в избранное</div>
+            <div class="m-value-row">
+              <span class="m-val">286</span>
+              <span class="m-arrow down">↓</span>
+            </div>
+            <div class="m-sub">Меньше на 26%</div>
+          </div>
+
+          <div class="metric-tab">
+            <div class="m-label">Просмотры</div>
+            <div class="m-value-row">
+              <span class="m-val">1,3 тыс.</span>
+              <span class="m-arrow up">↑</span>
+            </div>
+            <div class="m-sub">Больше на 26%</div>
           </div>
         </div>
 
-        <!-- 1. БЛОК ГРАФИКА -->
-        <div class="chart-card">
-          <div class="chart-header">
-            <h3>За последние 28 дней ваши товары набрали <strong>1254 просмотра</strong></h3>
-            <div class="date-select">Последние 28 дней ⌄</div>
+        <div class="big-chart-area">
           </div>
 
-          <div class="chart-tabs">
-            <div class="chart-tab active">
-              <div class="tab-label">Просмотры</div>
-              <div class="tab-val">1,3 тыс. ⌄</div>
-              <div class="tab-sub">Ниже обычного (на 293)</div>
-            </div>
-            <div class="chart-tab">
-              <div class="tab-label">Посетители</div>
-              <div class="tab-val">593 чел. ^</div>
-              <div class="tab-sub">Выше обычного</div>
-            </div>
-            <div class="chart-tab">
-              <div class="tab-label">Заказы</div>
-              <div class="tab-val">146 заказ</div>
-              <div class="tab-sub">В среднем диапазоне</div>
+        <div class="rating-section card-box">
+          <div class="rating-header">
+            <h3>Общая оценка</h3>
+            <div class="rating-total-stars">
+              <div class="stars-fixed">
+                <span class="star-f filled">★</span>
+                <span class="star-f filled">★</span>
+                <span class="star-f filled">★</span>
+                <span class="star-f filled">★</span>
+                <span class="star-f half">★</span>
+              </div>
+              <span class="big-rating-num">{{ selectedProduct.rating }}</span>
             </div>
           </div>
+          <div class="rating-sub">Количество оценок <span class="count-gray">{{ selectedProduct.reviewsCount }}</span></div>
 
-          <div class="chart-area">
-            <div class="grid-line" style="top: 0%"><span>75</span></div>
-            <div class="grid-line" style="top: 33%"><span>50</span></div>
-            <div class="grid-line" style="top: 66%"><span>25</span></div>
-            <div class="grid-line" style="top: 100%"><span>0</span></div>
-            <svg class="chart-svg" viewBox="0 0 1000 200" preserveAspectRatio="none">
-              <path d="M0,150 L100,120 L200,160 L300,100 L400,110 L500,80 L600,140 L700,50 L800,100 L900,110 L1000,80" 
-                    fill="none" stroke="#589BF2" stroke-width="3" vector-effect="non-scaling-stroke"/>
-              <path d="M0,150 L100,120 L200,160 L300,100 L400,110 L500,80 L600,140 L700,50 L800,100 L900,110 L1000,80 V200 H0 Z" 
-                    fill="rgba(88, 155, 242, 0.1)" stroke="none"/>
-            </svg>
+          <div class="rating-bars">
+            <div class="bar-row" v-for="n in 5" :key="n">
+              <div class="stars-label">
+                 <span v-for="s in (6-n)" :key="s" class="star-mini filled">★</span>
+                 <span v-for="e in (n-1)" :key="e" class="star-mini">★</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" :style="{ width: getStarPercent(6-n) + '%' }"></div>
+              </div>
+              <div class="bar-count">{{ getStarCount(6-n) }}</div>
+            </div>
           </div>
-
-          <div class="chart-dates">
-            <span>15 окт.</span><span>20 окт.</span><span>25 окт.</span><span>30 окт.</span><span>5 нояб.</span><span>10 нояб.</span>
-          </div>
-
-          <button class="details-btn">Подробнее</button>
         </div>
 
-        <!-- 2. БЛОК ОТЗЫВОВ -->
-        <div class="reviews-section">
-          <div class="reviews-header-row">
-            <h3>💬 Отзывы <span class="count">11 111</span></h3>
-            <button class="orange-btn">Написать отзыв (Admin)</button>
+        <div class="reviews-wrapper">
+          <div class="reviews-title-row">
+            <h2>Отзывы <span class="reviews-total">11 111</span></h2>
           </div>
 
-          <div class="sort-row small">
-            <span class="sort-link active">Дате ↑</span>
-            <span class="sort-link">Рейтингу</span>
-            <span class="sort-link">Полезности</span>
+          <div class="reviews-sort-row">
+            <span class="rs-label">Сортировка по:</span>
+            <span class="rs-link active">Дате ↑</span>
+            <span class="rs-link">Рейтингу</span>
+            <span class="rs-link">Полезности</span>
           </div>
 
-          <div class="review-card" v-for="review in mockReviews" :key="review.id">
-            <div class="review-top">
-              <div class="user-info">
-                <div class="avatar-circle">👤</div>
-                <span class="user-name">{{ review.author }}</span>
-              </div>
-              <div class="review-score">
-                Общая оценка: <strong>{{ review.score }}</strong>
+          <div class="review-item card-box">
+            <div class="review-header">
+              <div class="review-title">Ваш ответ</div>
+            </div>
+            
+            <div class="review-body">
+              <p class="review-text-content">
+                Lorem Ipsum - это текст-"рыба", часто используемый в печати и веб-дизайне. Lorem Ipsum является стандартной "рыбой" для текстов на латинице с начала XVI века.
+              </p>
+              
+              <div class="admin-reply-block">
+                 <div class="reply-line"></div>
+                 <div class="reply-content">
+                   <p>Lorem Ipsum - это текст-"рыба", часто используемый в печати и веб-дизайне. Lorem Ipsum является стандартной "рыбой" для текстов на латинице с начала XVI века.</p>
+                 </div>
               </div>
             </div>
-
-            <div class="review-criteria">
-              <div class="criteria-item">
-                <span>❓ Качество товара</span>
-                <div class="stars-mini">
-                  <span v-for="n in 5" :key="n" class="star" :class="{ filled: n <= review.quality }">★</span>
-                </div>
-              </div>
-              <div class="criteria-item">
-                <span>🚚 Скорость доставки</span>
-                <div class="stars-mini">
-                  <span v-for="n in 5" :key="n" class="star" :class="{ filled: n <= review.delivery }">★</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="review-text">{{ review.text }}</div>
 
             <div class="review-footer">
-              <span class="date">Дата публикации: {{ review.date }}</span>
-              <div class="likes">Был ли отзыв полезен? 👍 👎</div>
+              <span class="pub-date">Дата публикации: 13.05.25</span>
+              <div class="review-actions">
+                <button class="act-btn"><span class="icon-eye-off">ø</span> Скрыть комментарий</button>
+                <button class="act-btn"><span class="icon-reply">↩</span> Ответить на комментарий</button>
+                <button class="act-btn delete"><span class="icon-trash">🗑</span> Удалить комментарий</button>
+              </div>
             </div>
           </div>
+
+          <div class="review-item card-box">
+            <div class="user-header">
+              <div class="u-avatar-placeholder">👤</div>
+              <span class="u-name">Аноним</span>
+              <div class="u-stars">
+                 <span class="star-f filled">★</span><span class="star-f filled">★</span><span class="star-f filled">★</span><span class="star-f half">★</span><span class="star-f">★</span>
+                 <span class="u-score">3,6</span>
+              </div>
+            </div>
+             <div class="review-body">
+              <p class="review-text-content">
+                Lorem Ipsum - это текст-"рыба", часто используемый в печати и веб-дизайне. Lorem Ipsum является стандартной "рыбой" для текстов на латинице с начала XVI века.
+              </p>
+            </div>
+            <div class="review-footer">
+              <span class="pub-date">Дата публикации: 13.05.25</span>
+              <div class="review-actions">
+                <button class="act-btn"><span class="icon-eye">👁</span> Показать комментарий</button>
+                <button class="act-btn"><span class="icon-reply">↩</span> Ответить на комментарий</button>
+                <button class="act-btn delete"><span class="icon-trash">🗑</span> Удалить комментарий</button>
+              </div>
+            </div>
+          </div>
+
         </div>
 
       </div>
@@ -239,74 +266,48 @@ import './admin.css';
 const searchQuery = ref('');
 const selectedProduct = ref(null);
 const showFilters = ref(false);
-
-// Фильтры
+const showSortDropdown = ref(false);
+const sortOption = ref(''); 
 const filterCategory = ref('');
 const filterRatingMin = ref(0);
 
-// Сортировка (по умолчанию "По продажам - много")
-const currentSort = ref('sales_desc');
-
 // === ДАННЫЕ (MOCK DATA) ===
+// Добавил 'starCounts' для отрисовки полосок рейтинга
 const products = ref([
-  { id: 1, name: 'iPhone 14 Pro Max 256GB', category: 'Электроника', subcategory: 'Телефоны', rating: 4.8, reviewsCount: 1250, sales: 5400 },
-  { id: 2, name: 'Футболка Cotton Basic White', category: 'Одежда', subcategory: 'Футболки', rating: 3.6, reviewsCount: 11263, sales: 8900 },
-  { id: 3, name: 'Наушники Sony WH-1000XM5', category: 'Электроника', subcategory: 'Аудио', rating: 4.9, reviewsCount: 850, sales: 1200 },
-  { id: 4, name: 'Роман "Мастер и Маргарита"', category: 'Книги', subcategory: 'Классика', rating: 5.0, reviewsCount: 300, sales: 450 },
-  { id: 5, name: 'Кроссовки Nike Air Force 1', category: 'Одежда', subcategory: 'Обувь', rating: 4.2, reviewsCount: 2100, sales: 3200 },
-  { id: 6, name: 'Акула Блохэй', category: 'Игрушки', subcategory: 'Мягкие', rating: 4.9, reviewsCount: 15000, sales: 25000 },
-  { id: 7, name: 'Зубная щетка', category: 'Красота', subcategory: 'Уход', rating: 4.1, reviewsCount: 50, sales: 120 },
+  { id: 1, name: 'iPhone 14 Pro Max 256GB', category: 'Электроника', rating: 4.8, reviewsCount: 1250, sales: 5400, price: 120000, starCounts: {5: 900, 4: 200, 3: 100, 2: 30, 1: 20} },
+  { id: 2, name: 'Футболка Cotton Basic White', category: 'Одежда', rating: 3.6, reviewsCount: 125, sales: 8900, price: 1500, starCounts: {5: 36, 4: 36, 3: 36, 2: 36, 1: 0} }, // Данные как на макете
+  { id: 3, name: 'Наушники Sony WH-1000XM5', category: 'Электроника', rating: 4.9, reviewsCount: 850, sales: 1200, price: 35000, starCounts: {5: 800, 4: 40, 3: 10, 2: 0, 1: 0} },
+  { id: 4, name: 'Кроссовки Nike Air Force 1', category: 'Одежда', rating: 4.2, reviewsCount: 2100, sales: 3200, price: 12000, starCounts: {5: 1000, 4: 800, 3: 200, 2: 50, 1: 50} },
 ]);
 
-const mockReviews = ref([
-  { id: 101, author: 'Алексей Смирнов', score: 4.0, quality: 4, delivery: 5, date: '13.05.2025', text: 'Товар пришел быстро, качество соответствует описанию.' },
-  { id: 102, author: 'Аноним', score: 3.0, quality: 3, delivery: 2, date: '10.05.2025', text: 'Ожидал большего. Материал кажется дешевым.' },
-  { id: 103, author: 'Мария Иванова', score: 5.0, quality: 5, delivery: 5, date: '01.05.2025', text: 'Все супер! Очень довольна покупкой.' },
-]);
+const rawCategories = ref([]);
 
-// === ЛОГИКА ФИЛЬТРАЦИИ И СОРТИРОВКИ ===
+// === МЕТОДЫ ===
+
+// Расчет % заполнения полоски рейтинга
+const getStarPercent = (star) => {
+  if (!selectedProduct.value || !selectedProduct.value.starCounts) return 0;
+  const count = selectedProduct.value.starCounts[star] || 0;
+  const total = selectedProduct.value.reviewsCount || 1; 
+  // Для демо: если reviewsCount на макете 125, а сумма counts другая, берем макс значение как 100% для красоты или честный процент
+  // Здесь сделаем упрощенно: count / reviewsCount * 100
+  // Но на макете визуально полоски одинаковой длины (36), поэтому просто вернем процент от некоего максимума
+  return (count / 100) * 100; // Условная логика для демо
+};
+
+const getStarCount = (star) => {
+   if (!selectedProduct.value || !selectedProduct.value.starCounts) return 0;
+   return selectedProduct.value.starCounts[star] || 0;
+}
+
+// ... Остальная логика без изменений ...
 const resetFilters = () => {
   filterCategory.value = '';
   filterRatingMin.value = 0;
   searchQuery.value = '';
+  sortOption.value = '';
 };
 
-const sortedAndFilteredProducts = computed(() => {
-  let result = [...products.value];
-
-  // 1. Поиск
-  if (searchQuery.value) {
-    const q = searchQuery.value.toLowerCase();
-    result = result.filter(p => p.name.toLowerCase().includes(q));
-  }
-
-  // 2. Фильтр по категории
-  if (filterCategory.value) {
-    result = result.filter(p => p.category === filterCategory.value);
-  }
-
-  // 3. Фильтр по рейтингу
-  if (filterRatingMin.value > 0) {
-    result = result.filter(p => p.rating >= filterRatingMin.value);
-  }
-
-  // 4. Сортировка
-  result.sort((a, b) => {
-    switch (currentSort.value) {
-      case 'name_asc': return a.name.localeCompare(b.name);
-      case 'name_desc': return b.name.localeCompare(a.name);
-      case 'sales_desc': return b.sales - a.sales; // Больше -> Меньше
-      case 'sales_asc': return a.sales - b.sales;  // Меньше -> Больше
-      case 'reviews_desc': return b.reviewsCount - a.reviewsCount;
-      case 'reviews_asc': return a.reviewsCount - b.reviewsCount;
-      default: return 0;
-    }
-  });
-
-  return result;
-});
-
-// Навигация
 function openProductStats(prod) {
   selectedProduct.value = prod;
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -314,225 +315,267 @@ function openProductStats(prod) {
 function closeProductStats() {
   selectedProduct.value = null;
 }
+
+function toggleFilters() {
+  showFilters.value = !showFilters.value;
+}
+
+function setSortOption(opt) {
+  sortOption.value = opt;
+  showSortDropdown.value = false;
+}
+
+const buttonSortLabel = computed(() => {
+  if (!sortOption.value) return 'Сортировка';
+  if (sortOption.value.includes('name')) return 'По названию';
+  if (sortOption.value.includes('price')) return 'По цене';
+  if (sortOption.value.includes('rating')) return 'По рейтингу';
+  return 'Сортировка';
+});
+
+const sortLabel = computed(() => {
+  const labels = {
+    'name-asc': 'От А до Я', 'name-desc': 'От Я до А',
+    'price-asc': 'Сначала дешевле', 'price-desc': 'Сначала дороже',
+    'rating-desc': 'Высокий рейтинг', 'rating-asc': 'Низкий рейтинг'
+  };
+  return labels[sortOption.value] || 'Сортировка';
+});
+
+const filteredProducts = computed(() => {
+  let result = [...products.value];
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase();
+    result = result.filter(p => p.name.toLowerCase().includes(q));
+  }
+  if (filterCategory.value) {
+    result = result.filter(p => p.category === filterCategory.value);
+  }
+  if (filterRatingMin.value > 0) {
+    result = result.filter(p => p.rating >= filterRatingMin.value);
+  }
+  if (sortOption.value) {
+    result.sort((a, b) => {
+      switch (sortOption.value) {
+        case 'name-asc': return a.name.localeCompare(b.name);
+        case 'name-desc': return b.name.localeCompare(a.name);
+        case 'price-asc': return a.price - b.price;
+        case 'price-desc': return b.price - a.price;
+        case 'rating-asc': return (a.rating || 0) - (b.rating || 0);
+        case 'rating-desc': return (b.rating || 0) - (a.rating || 0);
+        default: return 0;
+      }
+    });
+  }
+  return result;
+});
+
+const calculateOffset = (rating, starIndex) => {
+  if (!rating) return '0%';
+  if (rating >= starIndex) return '100%';
+  if (rating <= starIndex - 1) return '0%';
+  return ((rating % 1) * 100) + '%';
+};
+
+const getCategoryName = (id) => { return 'Категория'; } // Заглушка
 </script>
 
 <style scoped>
-/* Основной контейнер без лишних отступов */
-.stats-page {
-  width: 100%;
-  box-sizing: border-box;
-}
+/* Глобальный сброс для этого компонента */
+* { box-sizing: border-box; }
 
-.header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25px;
-}
+/* === LIST VIEW STYLES (Existing) === */
+.stats-page { width: 100%; }
+.header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
 .page-title { margin: 0; font-size: 26px; font-weight: 700; color: #333; }
-.total-badge { background: #EAF4FF; color: #589BF2; padding: 5px 12px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+.total-badge { background: #ffaa; color: #ff7a00; padding: 5px 12px; border-radius: 20px; font-weight: 600; font-size: 14px; }
 
-/* === ПАНЕЛЬ УПРАВЛЕНИЯ === */
-.controls-panel {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-.left-controls {
-  display: flex;
-  gap: 15px;
-  flex: 1;
-  min-width: 300px;
-}
-.right-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+.controls-panel { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 20px; flex-wrap: wrap; }
+.left-controls { display: flex; gap: 15px; flex: 1; min-width: 300px; }
+.right-controls { display: flex; align-items: center; gap: 10px; }
 
-/* Поиск */
-.search-input-wrapper {
-  flex-grow: 1;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  padding: 0 15px;
-  height: 42px;
-  transition: border-color 0.2s;
-}
-.search-input-wrapper:focus-within { border-color: #589BF2; }
-.search-input-wrapper input { border: none; background: transparent; width: 100%; outline: none; font-size: 14px; }
-.search-icon { opacity: 0.5; margin-right: 10px; }
+.search-box-styled { display: flex; align-items: center; background-color: #f9f9f9; border-radius: 16px; padding: 12px 24px; width: 100%; }
+.search-box-styled input { border: none; background: transparent; outline: none; font-size: 14px; color: #374151; margin-left: 8px; width: 100%; }
+.tool-btn { padding: 12px 24px; border-radius: 8px; border: none; background: #F9F9F9; color: #555; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; transition: 0.2s; }
+.tool-btn.active { background: #FF7A00; color: #fff; }
+.tool-btn.active img { filter: brightness(0) invert(1); }
 
-/* Кнопка Фильтров */
-.control-btn {
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 0 20px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 44px;
-  transition: all 0.2s;
-}
-.control-btn:hover { background: #f9f9f9; }
-.control-btn.active { background: #FF7A00; border-color: #FF7A00; color: white; } /* Оранжевый активный */
-
-/* Сортировка */
-.sort-label { font-size: 14px; color: #666; font-weight: 500; }
-.sort-select {
-  padding: 10px 30px 10px 15px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  background: #fff;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  outline: none;
-  /* Кастомная стрелочка */
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px top 50%;
-  background-size: 10px;
-}
-
-/* Выпадающая панель фильтров */
-.filters-drawer {
-  background: #f8f9fa;
-  border: 1px solid #eee;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  display: flex;
-  gap: 20px;
-  align-items: flex-end;
-}
+/* Sort & Filter Styles */
+.filters-drawer { background: #f8f9fa; border: 1px solid #eee; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 20px; align-items: flex-end; }
 .filter-group { display: flex; flex-direction: column; gap: 5px; }
-.filter-group label { font-size: 12px; font-weight: 700; color: #777; }
-.filter-group select, .filter-group input { padding: 8px; border: 1px solid #ddd; border-radius: 6px; min-width: 150px; }
 .clear-filters { background: none; border: none; color: #FF5252; cursor: pointer; text-decoration: underline; padding-bottom: 10px; }
+.active-filters { display: flex; gap: 8px; margin-bottom: 15px; }
+.filter-tag { display: inline-flex; align-items: center; gap: 6px; background: #FFF7ED; color: #FF7A00; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; }
+.tag-remove { background: none; border: none; color: #FF7A00; font-size: 16px; cursor: pointer; }
 
-/* Анимация фильтров */
-.slide-fade-enter-active, .slide-fade-leave-active { transition: all 0.3s ease; }
-.slide-fade-enter-from, .slide-fade-leave-to { transform: translateY(-10px); opacity: 0; }
+/* Product Row Styles */
+.products-list { display: flex; flex-direction: column; gap: 16px; }
+.product-row { display: flex; align-items: center; background: #F9F9F9; padding: 16px 24px; border-radius: 20px; gap: 20px; cursor: pointer; transition: background 0.2s; }
+.product-row:hover { background: #F2F2F2; }
+.img-placeholder { width: 80px; height: 80px; background-size: cover; background-position: center; background-color: #fff; border-radius: 12px; }
+.row-content { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.row-main { display: flex; align-items: center; gap: 20px; justify-content: space-between; }
+.p-name { margin: 0; font-size: 24px; font-weight: 600; color: #333; }
+.rat-pri { display: flex; align-items: center; justify-content: space-between; gap: 100px; }
+.row-rating { display: flex; align-items: center; gap: 8px; }
+.stars-wrapper { display: flex; }
+.rating-value { color: #FF7A00; font-weight: 600; font-size: 24px; }
+.row-replies { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 600; color: #7a7a7a; }
+.row-price { font-size: 18px; font-weight: 700; color: #333; }
+.row-meta { display: flex; gap: 4px; font-size: 18px; color: #7a7a7a; flex-direction: column; }
 
 
-/* === СПИСОК КАРТОЧЕК === */
-.product-stat-card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
+/* ========================================================= */
+/* === DETAIL VIEW STYLES (NEW - КАК НА СКРИНШОТЕ) === */
+/* ========================================================= */
+
+.detail-view {
+  font-family: 'Inter', sans-serif; /* Подставьте свой шрифт */
+  color: #333;
+}
+
+/* 1. Навигация и Шапка */
+.breadcrumbs {
+  font-size: 14px;
+  color: #FF7A00;
   margin-bottom: 12px;
+  cursor: pointer;
+}
+.crumb-arrow { color: #aaa; margin: 0 5px; }
+.crumb-current { color: #ffb160; cursor: default; }
+
+.detail-title {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 20px 0;
+}
+
+.date-controls-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  cursor: pointer;
-  border: 1px solid transparent;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
-  transition: all 0.2s;
+  margin-bottom: 24px;
 }
-.product-stat-card:hover {
-  border-color: #589BF2;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(88, 155, 242, 0.1);
+.period-text {
+  font-size: 14px;
+  color: #666;
 }
-
-.card-left { display: flex; align-items: center; gap: 15px; }
-.card-icon {
-  width: 48px; height: 48px;
-  background: #EAF4FF;
-  border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 24px; color: #589BF2;
-}
-.card-info { flex-grow: 1; }
-.p-name { margin: 0 0 5px 0; font-size: 17px; font-weight: 600; color: #333; }
-.p-module { font-size: 13px; color: #888; }
-.highlight { color: #333; font-weight: 500; }
-
-.card-stats { display: flex; align-items: center; gap: 30px; }
-.stat-group { display: flex; flex-direction: column; align-items: flex-end; }
-.reviews { flex-direction: row; gap: 5px; color: #777; font-size: 14px; }
-.stars-row { display: flex; gap: 2px; }
-.star { color: #ddd; font-size: 16px; }
-.star.filled { color: #589BF2; }
-.score-val { font-size: 18px; font-weight: 700; color: #333; margin-top: 2px; }
-
-.sales-badge {
-  background: #f5f5f5;
+.d-val { color: #333; font-weight: 500; }
+.date-dropdown-btn {
+  background: #F3F4F6;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
   color: #555;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
+  cursor: pointer;
 }
 
-.empty-state { text-align: center; padding: 40px; color: #999; font-style: italic; }
+/* 2. Табы метрик */
+.metrics-tabs {
+  display: flex;
+  border-bottom: 2px solid #FF7A00;
+  margin-bottom: 20px;
+}
+.metric-tab {
+  flex: 1;
+  padding: 16px;
+  border-top: 2px solid transparent;
+  cursor: pointer;
+}
+/* Активный таб имитируем верхнюю оранжевую линию, если нужно, но на макете подчеркивание общее */
+/* На макете заголовки просто текстом. Сделаем структуру: */
+.metric-tab {
+  border-bottom: none; 
+  position: relative;
+}
+.metric-tab::after {
+  /* Разделители вертикальные, если нужны, но на макете их нет явно */
+}
+
+.m-label { font-size: 14px; color: #666; margin-bottom: 8px; }
+.m-value-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.m-val { font-size: 32px; font-weight: 700; color: #FF7A00; }
+.m-arrow { font-size: 20px; }
+.m-arrow.up { color: #FF7A00; }
+.m-arrow.down { color: #dcbfa6; transform: rotate(180deg); display: inline-block; } /* Примерный цвет */
+
+.m-sub { font-size: 14px; color: #999; }
+
+/* 3. График */
+.big-chart-area {
+  background: #FAFAFA; /* Серый фон как на макете */
+  border-radius: 12px;
+  height: 300px;
+  margin-bottom: 30px;
+}
+
+/* 4. Рейтинг */
+.card-box {
+  background: #FAFAFA;
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.rating-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.rating-header h3 { margin: 0; font-size: 18px; font-weight: 600; }
+.rating-total-stars { display: flex; align-items: center; gap: 10px; }
+.stars-fixed { color: #E5E7EB; font-size: 20px; }
+.stars-fixed .filled { color: #FF7A00; }
+.big-rating-num { font-size: 20px; font-weight: 700; color: #FF7A00; }
+
+.rating-sub { font-size: 14px; color: #999; margin-bottom: 15px; }
+.count-gray { float: right; }
+
+.rating-bars { display: flex; flex-direction: column; gap: 8px; }
+.bar-row { display: flex; align-items: center; gap: 15px; }
+.stars-label { width: 100px; display: flex; justify-content: flex-end; gap: 2px; }
+.star-mini { color: #E5E7EB; font-size: 14px; }
+.star-mini.filled { color: #FF7A00; }
+
+.progress-track { flex: 1; height: 6px; background: #E5E7EB; border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; background: #FF7A00; border-radius: 3px; }
+.bar-count { width: 30px; text-align: right; color: #999; font-size: 14px; }
 
 
-/* === ДЕТАЛЬНАЯ СТРАНИЦА (VIEW 2) === */
-.detail-view { animation: fadeIn 0.3s ease; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+/* 5. Отзывы */
+.reviews-wrapper { margin-top: 40px; }
+.reviews-title-row { margin-bottom: 20px; }
+.reviews-title-row h2 { font-size: 20px; font-weight: 700; display: flex; gap: 15px; }
+.reviews-total { color: #555; font-weight: 400; }
 
-.back-nav { color: #589BF2; cursor: pointer; font-size: 15px; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 5px; }
-.back-nav:hover { text-decoration: underline; }
+.reviews-sort-row { display: flex; gap: 20px; margin-bottom: 20px; font-size: 14px; color: #FF7A00; }
+.rs-label { color: #333; font-weight: 600; }
+.rs-link { cursor: pointer; }
+.rs-link.active { text-decoration: none; } /* Можно добавить стрелку */
 
-.detail-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.detail-header h2 { margin: 0; font-size: 24px; }
-.total-score { font-size: 18px; color: #589BF2; }
+.review-item { margin-bottom: 20px; }
+.review-header { margin-bottom: 10px; }
+.review-title { font-weight: 700; font-size: 16px; margin-bottom: 5px; }
 
-/* Блок Графика */
-.chart-card { background: #fff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid #eee; }
-.chart-header { display: flex; justify-content: space-between; margin-bottom: 25px; }
-.chart-header h3 { margin: 0; font-size: 18px; font-weight: 500; }
-.date-select { font-weight: 600; cursor: pointer; color: #333; }
+/* Стили для ответа админа (цитата) */
+.admin-reply-block { display: flex; margin-top: 15px; gap: 12px; }
+.reply-line { width: 4px; background: #FF7A00; border-radius: 2px; flex-shrink: 0; }
+.reply-content { font-size: 14px; color: #888; line-height: 1.5; }
 
-.chart-tabs { display: flex; border-bottom: 1px solid #eee; }
-.chart-tab { flex: 1; padding: 15px; border-right: 1px solid #eee; cursor: pointer; }
-.chart-tab:last-child { border-right: none; }
-.chart-tab.active { border-top: 3px solid #589BF2; background: #fafcff; }
-.tab-label { font-size: 14px; color: #888; margin-bottom: 5px; }
-.tab-val { font-size: 20px; font-weight: 700; color: #333; }
-.tab-sub { font-size: 12px; color: #aaa; margin-top: 5px; }
+.review-text-content { font-size: 14px; color: #555; line-height: 1.6; }
 
-.chart-area { position: relative; height: 250px; margin: 20px 0; background: #F8FBFF; border-left: 1px solid #eee; border-bottom: 1px solid #eee; }
-.grid-line { position: absolute; width: 100%; border-top: 1px dashed #e0e0e0; left: 0; }
-.grid-line span { position: absolute; right: -30px; top: -8px; font-size: 11px; color: #999; }
-.chart-svg { width: 100%; height: 100%; }
-.chart-dates { display: flex; justify-content: space-between; padding: 0 20px; color: #999; font-size: 12px; }
-.details-btn { margin-top: 20px; background: #fff; border: 1px solid #ddd; padding: 8px 16px; border-radius: 20px; font-weight: 700; cursor: pointer; }
+/* Футер отзыва */
+.review-footer { margin-top: 15px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 15px; }
+.pub-date { font-size: 13px; color: #aaa; }
+.review-actions { display: flex; gap: 20px; }
+.act-btn { background: none; border: none; font-size: 13px; color: #777; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.act-btn:hover { color: #FF7A00; }
+.act-btn.delete { color: #FF5252; }
 
-/* Блок Отзывов */
-.reviews-section { background: #fff; border-radius: 12px; }
-.reviews-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-.count { color: #999; font-weight: 400; font-size: 16px; }
-.orange-btn { background: #FF7A00; color: white; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+/* Пользовательский хедер */
+.user-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+.u-avatar-placeholder { width: 32px; height: 32px; background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #999; }
+.u-name { font-weight: 700; font-size: 15px; }
+.u-stars { display: flex; align-items: center; gap: 5px; margin-left: auto; }
+.u-score { font-weight: 700; color: #FF7A00; margin-left: 5px; }
 
-.sort-row.small { display: flex; gap: 15px; margin-bottom: 15px; font-size: 14px; }
-.sort-link { color: #589BF2; cursor: pointer; border-bottom: 1px dashed transparent; }
-.sort-link.active { color: #333; cursor: default; font-weight: 700; }
-
-.review-card { background: #FAFAFA; padding: 20px; border-radius: 8px; margin-bottom: 15px; }
-.review-top { display: flex; justify-content: space-between; margin-bottom: 15px; }
-.user-info { display: flex; align-items: center; gap: 10px; }
-.avatar-circle { width: 36px; height: 36px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid #eee; }
-.user-name { font-weight: 600; font-size: 15px; }
-.review-score { color: #589BF2; font-size: 14px; }
-
-.review-criteria { margin-bottom: 15px; }
-.criteria-item { display: flex; align-items: center; gap: 15px; font-size: 13px; margin-bottom: 5px; }
-.stars-mini .star { font-size: 14px; }
-
-.review-text { font-size: 14px; line-height: 1.5; color: #444; margin-bottom: 15px; }
-.review-footer { display: flex; justify-content: space-between; font-size: 12px; color: #999; }
-.likes { cursor: pointer; }
+/* Dropdown styles reused */
+.sort-btn-styled { /* ... */ }
+.custom-dropdown-menu { /* ... */ }
 </style>
