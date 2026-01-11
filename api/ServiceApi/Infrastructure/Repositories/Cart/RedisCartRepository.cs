@@ -1,5 +1,6 @@
 using System.Text.Json;
-using Application.Exceptions;
+using Application.Exceptions.Cart;
+using Application.Exceptions.Product;
 using Application.Ports.Repositories;
 using Application.UseCases.Cart.Dto.Response;
 using StackExchange.Redis;

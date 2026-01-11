@@ -1,6 +1,6 @@
 using Application.Exceptions.Base;
 
-namespace Application.Exceptions;
+namespace Application.Exceptions.Token;
 
 /// <summary>
 /// Кастомные ошибки при невалидном Refresh токене

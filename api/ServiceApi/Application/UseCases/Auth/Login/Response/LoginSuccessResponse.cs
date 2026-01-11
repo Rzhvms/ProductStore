@@ -1,6 +1,5 @@
-using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using Application.UseCases.Auth.CreateUser.Request;
+using Application.UseCases.Auth.Register.Request;
 
 namespace Application.UseCases.Auth.Login.Response;
 

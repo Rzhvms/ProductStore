@@ -1,6 +1,6 @@
 using Application.Exceptions.Base;
 
-namespace Application.Exceptions;
+namespace Application.Exceptions.Email;
 
 /// <summary>
 /// Ошибка верификации пользователя

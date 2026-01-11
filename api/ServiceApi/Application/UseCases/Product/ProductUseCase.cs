@@ -3,7 +3,6 @@ using Application.UseCases.Product.Dto.Response;
 using Application.UseCases.Product.Dto.Request;
 using Application.UseCases.Product.Interfaces;
 using Domain.ExtensionModels;
-using Domain.Product;
 
 namespace Application.UseCases.Product;
 

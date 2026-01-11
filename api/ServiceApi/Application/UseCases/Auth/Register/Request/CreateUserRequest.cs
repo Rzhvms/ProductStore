@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using Claim = Application.UseCases.Auth.CreateUser.Request.Claim;
+using Claim = Application.UseCases.Auth.Register.Request.Claim;
 
 namespace Application.UseCases.Auth.Register.Request;
 

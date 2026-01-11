@@ -1,4 +1,6 @@
-namespace Application.UseCases.Auth.CreateUser.Response;
+using Application.UseCases.Auth.CreateUser.Response;
+
+namespace Application.UseCases.Auth.Register.Response;
 
 /// <summary>
 /// Выходная модель с успешным созданием пользователя
