@@ -6,12 +6,10 @@
         <div class="chart-card">
           <div class="chart-header">
             <div>
-              <!-- Теперь заголовок корректно отображает выбранный период -->
               <h3>Сводка: {{ periodLabels[selectedPeriod] }}</h3>
               <p class="chart-subtitle">Статистика по: {{ currentMetricTitle }}</p>
             </div>
             <div class="date-select-wrapper">
-              <!-- Диапазон дат теперь динамический -->
               <span class="period-range-label">{{ currentPeriodDatesRange }}</span>
               <select v-model="selectedPeriod" class="custom-select">
                 <option v-for="(label, key) in periodLabels" :key="key" :value="key">{{ label }}</option>
@@ -95,15 +93,25 @@
         <div class="promotions-section">
           <div class="section-header">
             <h2>Акции и баннеры</h2>
-            <button class="add-btn" @click="openModal('create')">+ Добавить акцию</button>
+            <div classs="header-actions">
+              <button class="secondary-btn small" @click="handleExportData" title="Экспорт">Экспорт</button>
+              <button class="secondary-btn small" @click="handleResetData" title="Сброс">Сброс</button>
+              <button class="add-btn small" @click="openModal('create')">+ Добавить акцию</button>
+            </div>
           </div>
 
-          <div class="promo-grid">
+          <div v-if="isLoading" style="text-align: center; padding: 20px; color: #666;">Загрузка данных...</div>
+          <div v-else-if="promotions.length === 0" class="empty-state">
+            <h3>Акций пока нет.</h3>
+            <p>Добавьте первую акцию</p>
+            <button class="primary-btn" @click="openModal('create')">Добавить акцию</button>
+          </div>
+          <div v-else class="promo-grid">
             <div class="promo-card" v-for="promo in promotions" :key="promo.id">
               <div class="promo-image" :style="{ backgroundColor: promo.color }">
                 <span class="promo-img-text">{{ promo.valueType === 'percent' ? '%' : '₽' }}</span>
                 
-                <div class="status-dropdown-wrapper">
+                <div class="status-dropdown-wrapper" ref="statusDropdownRefs">
                    <div class="promo-status" :class="promo.status" @click.stop="toggleStatusMenu(promo.id)">
                     {{ getStatusLabel(promo.status) }} ▾
                    </div>
@@ -206,7 +214,7 @@
             </div>
 
             <div class="form-group" v-if="form.targetType !== 'all'">
-              <label>Поиск и выбор {{ getTargetLabel(form.targetType).toLowerCase() }}</label>
+              <label>Поиск и выбор {{ getTargetLabelGenitive(form.targetType) }}</label>
               
               <div class="search-select-wrapper">
                 <input 
@@ -249,7 +257,7 @@
               </div>
               <div class="form-group half">
                 <label>Дата окончания</label>
-                <input type="date" v-model="form.dateEnd" />
+                <input type="date" v-model="form.dateEnd" :min="form.dateStart" :class=" {'input-error': errors.dateEnd} "/>
               </div>
             </div>
 
@@ -285,16 +293,34 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive, watch } from 'vue';
+import { ref, computed, reactive, watch, onMounted, onUnmounted } from 'vue';
 import AdminLayout from './AdminLayout.vue';
+import { usePromotions } from '@/services/usePromotions';
+import { resetToDefaults, exportPromotions } from '@/services/promotionsService';
 import './admin.css';
+
+const { promotions, 
+        isLoading,
+        createPromotion: createPromo,
+        updatePromotion: updatePromo,
+        deletePromotion: deletePromo,
+        changeStatus: changePromoStatus } = usePromotions();
 
 const errors = reactive({
   title: '',
   description: '',
   value: '',
-  dateStart: ''
+  dateStart: '',
+  dateEnd: ''
 });
+
+function clearErrors() {
+  errors.title = '';
+  errors.description = '';
+  errors.value = '';
+  errors.dateStart = '';
+  errors.dateEnd = '';
+}
 
 const periodLabels = { 
   day: 'День', 
@@ -310,12 +336,10 @@ const selectedPeriod = ref('month');
 const activeTab = ref('views');
 const currentMetricTitle = computed(() => ({ views: 'Просмотрам', visitors: 'Посетителям', orders: 'Заказам', revenue: 'Выручке' }[activeTab.value]));
 
-// Цвета графика
 const chartColor = computed(() => {
   switch(activeTab.value) { case 'views': return '#FF7A00'; case 'visitors': return '#2196F3'; case 'orders': return '#4CAF50'; case 'revenue': return '#9C27B0'; default: return '#333'; }
 });
 
-// Моковые данные для графика (SVG Paths)
 const chartDataMock = {
   views: { path: "M0,120 Q200,80 400,100 T600,90 T800,40 T1000,70", fill: "M0,120 Q200,80 400,100 T600,90 T800,40 T1000,70 V200 H0 Z" },
   visitors: { path: "M0,150 Q200,130 400,140 T600,100 T800,110 T1000,90", fill: "M0,150 Q200,130 400,140 T600,100 T800,110 T1000,90 V200 H0 Z" },
@@ -324,7 +348,6 @@ const chartDataMock = {
 };
 const currentChartData = computed(() => chartDataMock[activeTab.value]);
 
-// === ИСПРАВЛЕНИЕ: Логика диапазонов дат ===
 const currentPeriodDatesRange = computed(() => {
    const now = new Date();
    const start = new Date();
@@ -342,7 +365,6 @@ const currentPeriodDatesRange = computed(() => {
    return `${f.format(start)} — ${f.format(now)}`;
 });
 
-// === ИСПРАВЛЕНИЕ: Подписи оси X (динамические) ===
 const xAxisLabels = computed(() => {
   switch(selectedPeriod.value) {
     case 'day': return ['00:00', '06:00', '12:00', '18:00', '23:59'];
@@ -354,8 +376,6 @@ const xAxisLabels = computed(() => {
   }
 });
 
-// === ИСПРАВЛЕНИЕ: Подписи оси Y (динамические) ===
-// Значения идут сверху вниз (от max к 0)
 const yAxisValues = computed(() => {
   switch(activeTab.value) {
     case 'views': return ['60k', '45k', '30k', '15k', '0'];
@@ -367,43 +387,26 @@ const yAxisValues = computed(() => {
 });
 
 const database = {
-  categories: Array.from({length: 20}, (_, i) => ({ id: i, name: `Категория ${i+1}` })),
-  subcategories: Array.from({length: 50}, (_, i) => ({ id: i, name: `Подкатегория ${i+1}` })),
-  products: Array.from({length: 100}, (_, i) => ({ id: i, name: `Товар №${i+1} (Артикул ${1000+i})` }))
+  categories: [
+    { id: 1, name: 'Электроника' },
+    { id: 2, name: 'Одежда' },
+    { id: 3, name: 'Дом и сад' },
+    { id: 4, name: 'Спорт' },
+    { id: 5, name: 'Красота' },
+  ],
+  subcategories: [
+    { id: 1, name: 'Смартфоны', categoryId: 1 },
+    { id: 2, name: 'Ноутбуки', categoryId: 1 },
+    { id: 3, name: 'Мужская одежда', categoryId: 2 },
+    { id: 4, name: 'Женская одежда', categoryId: 2 },
+  ],
+  products: [
+    { id: 1, name: 'iPhone 15 Pro Max 256GB', categoryId: 1, subcategoryId: 1 },
+    { id: 2, name: 'Samsung Galaxy S24 Ultra', categoryId: 1, subcategoryId: 1 },
+    { id: 3, name: 'MacBook Pro 14"', categoryId: 1, subcategoryId: 2 },
+    { id: 4, name: 'Куртка зимняя мужская', categoryId: 2, subcategoryId: 3 },
+  ]
 };
-database.categories[0].name = "Электроника"; database.categories[1].name = "Одежда";
-database.products[0].name = "iPhone 15 Pro Max 256GB"; database.products[1].name = "Samsung Galaxy S24";
-
-const promotions = ref([
-  { 
-    id: 1, 
-    title: 'Распродажа телефонов', 
-    description: 'Скидка на флагманы', 
-    benefitType: 'discount',
-    value: 15,
-    valueType: 'percent',
-    dateStart: '2025-12-01',
-    dateEnd: '2025-12-30', 
-    status: 'active',
-    color: '#FFE0B2',
-    targetType: 'product',
-    selectedItems: [{ id: 0, name: 'iPhone 15 Pro Max 256GB' }, { id: 1, name: 'Samsung Galaxy S24' }]
-  },
-  { 
-    id: 2, 
-    title: 'Бонус за любой заказ', 
-    description: 'Дарим 500 рублей на счет', 
-    benefitType: 'bonus',
-    value: 500,
-    valueType: 'fixed',
-    dateStart: '2026-01-01',
-    dateEnd: '2026-02-15', 
-    status: 'active',
-    color: '#C8E6C9',
-    targetType: 'all',
-    selectedItems: []
-  }
-]);
 
 const showModal = ref(false);
 const modalMode = ref('create');
@@ -425,14 +428,23 @@ const form = reactive({
 });
 
 const searchQuery = ref('');
+const debouncedSearch = ref('');
+let searchTimeout = null;
 const isSearchFocused = ref(false);
 
-watch(() => form.value, (newVal) => {
-  if (form.valueType === 'percent') {
-    if (newVal > 100) form.value = 100;
-  }
-  if (newVal < 0) form.value = 0;
+watch(searchQuery, (newVal) => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    debouncedSearch.value = newVal;
+  }, 300);
 });
+
+watch(() => form.value, (newVal) => {
+  let correctedVal = Number(newVal);
+  if (isNaN(correctedVal) || correctedVal < 0) correctedVal = 0;
+  if (form.valueType === 'percent' && correctedVal > 100) correctedVal = 100;
+  form.value = correctedVal;
+}, { immediate: false });
 
 watch(() => form.valueType, (newType) => {
   if (newType === 'percent' && form.value > 100) {
@@ -440,25 +452,44 @@ watch(() => form.valueType, (newType) => {
   }
 });
 
-const filteredTargets = computed(() => {
-  if (!searchQuery.value) return [];
-  
-  let source = [];
-  if (form.targetType === 'category') source = database.categories;
-  else if (form.targetType === 'subcategory') source = database.subcategories;
-  else if (form.targetType === 'product') source = database.products;
+const activeStatusMenuId = ref(null);
 
-  const query = searchQuery.value.toLowerCase();
+function handleClickOutside(event) {
+  if (activeStatusMenuId.value !== null) {
+    const wrapper = document.querySelector('.status-dropdown-wrapper');
+    if (wrapper && !wrapper.contains(event.target)) {
+      activeStatusMenuId.value = null;
+    }
+  }
+}
+
+onMounted(() => document.addEventListener('click', handleClickOutside));
+onUnmounted(() => {document.removeEventListener('click', handleClickOutside); if (searchTimeout) clearTimeout(searchTimeout)});
+
+const filteredTargets = computed(() => {
+  if (!debouncedSearch.value) return [];
   
-  return source.filter(item => 
-    item.name.toLowerCase().includes(query) && 
-    !form.selectedItems.find(selected => selected.id === item.id)
-  ).slice(0, 10);
+  const sources = {
+    category: database.categories,
+    subcategory: database.subcategories,
+    product: database.products
+  };
+  
+  const source = sources[form.targetType] || [];
+  const query = debouncedSearch.value.toLowerCase();
+  
+  return source
+    .filter(item => 
+      item.name.toLowerCase().includes(query) && 
+      !form.selectedItems.some(selected => selected.id === item.id)
+    )
+    .slice(0, 10);
 });
 
 function selectTarget(item) {
-  form.selectedItems.push(item);
+  form.selectedItems.push({ id: item.id, name: item.name });
   searchQuery.value = '';
+  debouncedSearch.value = '';
 }
 
 function removeTarget(id) {
@@ -468,6 +499,7 @@ function removeTarget(id) {
 function resetTargets() {
   form.selectedItems = [];
   searchQuery.value = '';
+  debouncedSearch.value = '';
 }
 
 function blurSearch() {
@@ -478,11 +510,8 @@ function openModal(mode, promoData = null) {
   modalMode.value = mode;
   showModal.value = true;
   searchQuery.value = '';
-
-  errors.title = '';
-  errors.description = '';
-  errors.value = '';
-  errors.dateStart = '';
+  debouncedSearch.value = '';
+  clearErrors();
 
   if (mode === 'edit' && promoData) {
     editingId.value = promoData.id;
@@ -492,7 +521,7 @@ function openModal(mode, promoData = null) {
     form.value = promoData.value;
     form.valueType = promoData.valueType;
     form.dateStart = promoData.dateStart;
-    form.dateEnd = promoData.dateEnd;
+    form.dateEnd = promoData.dateEnd || '';
     form.targetType = promoData.targetType || 'all';
     form.selectedItems = JSON.parse(JSON.stringify(promoData.selectedItems || []));
   } else {
@@ -514,26 +543,21 @@ function closeModal() {
   activeStatusMenuId.value = null;
 }
 
-function savePromotion() {
-
-  errors.title = '';
-  errors.description = '';
-  errors.value = '';
-  errors.dateStart = '';
-
+function validateForm() {
+  clearErrors();
   let isValid = true;
 
-  if (!form.title || !form.title.trim()) {
+  if (!form.title?.trim()) {
     errors.title = 'Пожалуйста, добавьте название акции.';
     isValid = false;
   }
   
-  if (!form.description || !form.description.trim()) {
+  if (!form.description?.trim()) {
     errors.description = 'Пожалуйста, добавьте описание акции.';
     isValid = false;
   }
 
-  if (form.value <= 0) {
+  if (!form.value || form.value <= 0) {
     errors.value = 'Значение должно быть больше нуля.';
     isValid = false;
   }
@@ -544,43 +568,55 @@ function savePromotion() {
   } else {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const [year, month, day] = form.dateStart.split('-').map(Number);
-    const startDate = new Date(year, month - 1, day);
-    if (startDate < today) {
+    const startDate = new Date(form.dateStart);
+    if (modalMode.value === 'create' && startDate < today) {
       errors.dateStart = 'Дата начала акции не может быть в прошлом.';
       isValid = false;
     }
   }
 
-  if (!isValid) return;
+  if (form.dateEnd && form.dateStart) {
+    const start = new Date(form.dateStart);
+    const end = new Date(form.dateEnd);
+    if (end < start) {
+      errors.dateEnd = 'Дата окончания должна быть больше даты начала.';
+      isValid = false;
+    }
+  }
 
+  return isValid;
+}
+
+function savePromotion() {
+  if (!validateForm()) return;
   const dataToSave = {
-    title: form.title,
-    description: form.description,
+    title: form.title.trim(),
+    description: form.description.trim(),
     benefitType: form.benefitType,
-    value: form.value,
+    value: Number(form.value),
     valueType: form.valueType,
     dateStart: form.dateStart,
-    dateEnd: form.dateEnd || 'Бессрочно',
+    dateEnd: form.dateEnd || null,
     color: form.valueType === 'fixed' ? '#C8E6C9' : '#FFE0B2', 
     targetType: form.targetType,
-    selectedItems: JSON.parse(JSON.stringify(form.selectedItems))
+    selectedItems: JSON.parse(JSON.stringify(form.selectedItems)),
+    status: 'active'
   };
 
   if (modalMode.value === 'create') {
-    promotions.value.push({ ...dataToSave, id: Date.now(), status: 'active' });
+    createPromo(dataToSave);
   } else {
-    const index = promotions.value.findIndex(p => p.id === editingId.value);
-    if (index !== -1) {
-      promotions.value[index] = { ...promotions.value[index], ...dataToSave };
-    }
+    updatePromo(editingId.value, dataToSave);
   }
   closeModal();
 }
 
-const activeStatusMenuId = ref(null);
 function toggleStatusMenu(id) { activeStatusMenuId.value = activeStatusMenuId.value === id ? null : id; }
-function changeStatus(id, s) { const p = promotions.value.find(x => x.id === id); if(p) p.status = s; activeStatusMenuId.value = null; }
+function changeStatus(id, s) { 
+  changePromoStatus(id, s);
+  activeStatusMenuId.value = null; 
+}
+  
 function askDeletePromo(id) {
   promoIdToDelete.value = id;
   showDeleteModal.value = true;
@@ -589,21 +625,218 @@ function askDeletePromo(id) {
 
 function confirmDelete() {
   if (promoIdToDelete.value !== null) {
-    promotions.value = promotions.value.filter(p => p.id !== promoIdToDelete.value);
+    deletePromo(promoIdToDelete.value);
   }
   showDeleteModal.value = false;
   promoIdToDelete.value = null;
 }
 function getStatusLabel(s) { return s === 'active' ? 'Активна' : (s === 'archived' ? 'Архив' : s); }
-function formatDate(s) { if(!s) return '...'; const p = s.split('-'); return p.length<3?s:`${p[2]}.${p[1]}.${p[0]}`; }
+function formatDate(s) { if(!s) return '∞'; const p = s.split('-'); return p.length<3?s:`${p[2]}.${p[1]}.${p[0]}`; }
 function getTargetLabel(type) {
-  const labels = { all: 'Весь каталог', category: 'Категории', subcategory: 'Подкатегории', product: 'Товары' };
-  if (type === 'product') return 'Товара';
+  const labels = { 
+    all: 'Весь каталог', 
+    category: 'Категории', 
+    subcategory: 'Подкатегории', 
+    product: 'Товары' 
+  };
   return labels[type] || type;
+}
+
+function handleResetData() {
+  if (confirm('Вы уверены, что хотите сбросить все данные акций?')) {
+    resetToDefaults();
+  }
+}
+
+function handleExportData() {
+  const data = exportPromotions();
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `promotions-backup-${Date.now()}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function getTargetLabelGenitive(type) {
+  const labels = { 
+    category: 'категорий', 
+    subcategory: 'подкатегорий', 
+    product: 'товаров' 
+  };
+  return labels[type] || '';
 }
 </script>
 
 <style scoped>
+/* === HEADER ACTIONS === */
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.secondary-btn.small {
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+/* === LOADING & EMPTY STATES === */
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: #f9f9f9;
+  border-radius: 12px;
+  margin-top: 20px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  margin: 0 0 8px;
+  color: #333;
+}
+
+.empty-state p {
+  color: #666;
+  margin: 0 0 24px;
+}
+
+/* === CONFIRM MODAL === */
+.confirm-modal {
+  max-width: 400px;
+  text-align: center;
+}
+
+.confirm-icon {
+  margin-bottom: 16px;
+}
+
+.confirm-text {
+  color: #666;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.danger-btn {
+  background: #ff4d4f !important;
+}
+
+.danger-btn:hover {
+  background: #ff7875 !important;
+}
+
+/* === INPUT ERRORS === */
+.input-error {
+  border-color: #ff4d4f !important;
+}
+
+.input-error-text {
+  color: #ff4d4f;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+/* === CHART ANIMATIONS === */
+.chart-line-anim {
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 2000;
+  animation: drawLine 1.5s ease forwards;
+}
+
+@keyframes drawLine {
+  to { stroke-dashoffset: 0; }
+}
+
+.chart-fill-anim {
+  opacity: 0;
+  animation: fadeIn 0.8s ease 0.5s forwards;
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+.axis-text {
+  font-size: 11px;
+  fill: #888;
+  font-family: inherit;
+}
+
+/* Анимация линии графика */
+.chart-line-anim {
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 2000;
+  animation: drawLine 1.5s ease forwards;
+}
+
+@keyframes drawLine {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Анимация заливки */
+.chart-fill-anim {
+  opacity: 0;
+  animation: fadeIn 0.8s ease 0.5s forwards;
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+/* Стили для осей */
+.axis-text {
+  font-size: 11px;
+  fill: #888;
+  font-family: inherit;
+}
+
+.grid-lines line {
+  shape-rendering: crispEdges;
+}
+
+/* Стили для модалки подтверждения */
+.confirm-modal {
+  max-width: 400px;
+  text-align: center;
+}
+
+.confirm-icon {
+  margin-bottom: 16px;
+}
+
+.confirm-text {
+  color: #666;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.danger-btn {
+  background: #ff4d4f !important;
+}
+
+.danger-btn:hover {
+  background: #ff7875 !important;
+}
+
+/* Ошибки ввода */
+.input-error {
+  border-color: #ff4d4f !important;
+}
+
+.input-error-text {
+  color: #ff4d4f;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
 .admin-wrapper { padding: 20px 40px; min-height: 90vh; font-family: 'Inter', sans-serif; color: #333; }
 .custom-select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; background: #f9f9f9; font-weight: 600; color: #555; cursor: pointer; outline: none; }
 .chart-card { background: #fff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 40px; border: 1px solid #eee; }

@@ -215,3 +215,64 @@ export const adminProductApi = {
     delete: deleteProduct,
     getCategoryProducts: getCategoryProducts
 };
+
+export const getUserProfile = async (userId) => {
+    try {
+        const response = await api.get(`admin/user-info/profile`, { params: { userId } });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить профиль пользователя");
+    }
+};
+
+export const updateUserProfile = async (userId, name, lastName, phone, gender, birthDate, about, email) => {
+    try {
+        const response = await api.patch(`admin/user-info/profile`, { name, lastName, phone, gender, birthDate, about, email }, { params: { userId } });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось обновить профиль пользователя");
+    }
+};
+
+export const getUserAddress = async (userId) => {
+    try {
+        const response = await api.get(`admin/user-info/address`, { params: { userId } });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить адрес пользователя");
+    }
+};
+
+export const getUserOrders = async (userId, pageNumber = 1, pageSize = 10) => {
+    try {
+        const response = await api.get(`orders/list`, { params: { pageNumber, pageSize } });
+        const data = response.data;
+        const ordersList = data.orderList;
+        const userOrders = ordersList.filter(order => order.customerId === userId);
+        return userOrders;
+    } catch (error) {
+        throw new Error("Не удалось получить список заказов");
+    }
+};
+
+export const getUserProfiles = async (pageNumber = 1, pageSize = 10) => {
+    try {
+        const response = await api.get(`orders/list`, { params: { pageNumber, pageSize } });
+        const data = response.data;
+        const ordersList = data.orderList;
+        const userProfiles = ordersList.map(order => ({
+            id: order.customerId
+        }));
+        return userProfiles;
+    } catch (error) {
+        throw new Error("Не удалось получить список пользователей");
+    }
+};
+
+export const adminUserApi = {
+    getProfile: getUserProfile,
+    updateProfile: updateUserProfile,
+    getAddress: getUserAddress,
+    getOrders: getUserOrders,
+    getProfiles: getUserProfiles
+};

@@ -5,7 +5,10 @@
       <div v-if="!selectedProduct" class="stats-page">
         
         <div class="header-row">
-          <h1 class="page-title">Статистика товаров</h1>
+          <div class="header-left-group">
+            <img src="../../assets/chart.svg" class="folder-icon" style="filter: invert(50%) sepia(65%) saturate(2806%) hue-rotate(1deg) brightness(103%) contrast(105%)" />
+            <h1 class="page-title">Статистика товаров</h1>
+          </div>          
           <div class="total-badge">Всего товаров: {{ products.length }}</div>
         </div>
 
@@ -51,9 +54,9 @@
               <label>Категория:</label>
               <select v-model="filterCategory">
                 <option value="">Все категории</option>
-                <option value="Электроника">Электроника</option>
-                <option value="Одежда">Одежда</option>
-                <option value="Книги">Книги</option>
+                <option v-for="cat in categoriesList" :key="cat.categoryId" :value="cat.categoryName">
+                  {{ cat.categoryName }}
+                </option>
               </select>
             </div>
             <div class="filter-group">
@@ -67,45 +70,49 @@
             <span class="filter-tag">{{ sortLabel }} <button class="tag-remove" @click="sortOption = ''">×</button></span>
           </div>
         <div class="products-list">
-          <div class="product-row" v-for="(p, i) in filteredProducts" :key="p.id" @click="openProductStats(p)">
-            <div class="row-image">
-              <div class="img-placeholder" :style="{ backgroundImage: p.image ? `url(${p.image})` : '' }"></div>
-            </div>
-            <div class="row-content">
-              <div class="row-main">
-                <h2 class="p-name">{{ p.name }}</h2>
-                <div class="rat-pri">
-                  <div class="row-rating">
-                    <div class="stars-wrapper">
-                      <svg v-for="star in 5" :key="star" class="star-icon" width="24" height="24" viewBox="0 0 24 24">
-                        <defs>
-                          <linearGradient :id="'grad-' + p.id + '-' + star">
-                            <stop offset="0%" stop-color="#FF7A00" />
-                            <stop :offset="calculateOffset(p.rating, star)" stop-color="#FF7A00" />
-                            <stop :offset="calculateOffset(p.rating, star)" stop-color="#E5E7EB" />
-                            <stop offset="100%" stop-color="#E5E7EB" />
-                          </linearGradient>
-                        </defs>
-                        <path :fill="'url(#grad-' + p.id + '-' + star + ')'" d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-                      </svg>
+          <div v-if="isLoading" style="text-align: center; padding: 20px; color: #666;">Загрузка данных...</div>
+          
+          <template v-else>
+            <div class="product-row" v-for="(p, i) in filteredProducts" :key="p.id" @click="openProductStats(p)">
+              <div class="row-image">
+                <div class="img-placeholder" :style="{ backgroundImage: p.image ? `url(${p.image})` : '' }"></div>
+              </div>
+              <div class="row-content">
+                <div class="row-main">
+                  <h2 class="p-name">{{ p.name }}</h2>
+                  <div class="rat-pri">
+                    <div class="row-rating">
+                      <div class="stars-wrapper">
+                        <svg v-for="star in 5" :key="star" class="star-icon" width="24" height="24" viewBox="0 0 24 24">
+                          <defs>
+                            <linearGradient :id="'grad-' + p.id + '-' + star">
+                              <stop offset="0%" stop-color="#FF7A00" />
+                              <stop :offset="calculateOffset(p.rating, star)" stop-color="#FF7A00" />
+                              <stop :offset="calculateOffset(p.rating, star)" stop-color="#E5E7EB" />
+                              <stop offset="100%" stop-color="#E5E7EB" />
+                            </linearGradient>
+                          </defs>
+                          <path :fill="'url(#grad-' + p.id + '-' + star + ')'" d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                        </svg>
+                      </div>
+                      <span class="rating-value">{{ p.rating }}</span>
                     </div>
-                    <span class="rating-value">{{ p.rating }}</span>
-                  </div>
-                  <div class="row-replies">
-                    <img src="../../assets/messages-3.svg"/>
-                    <span class="replies-count">{{ p.reviewsCount }}</span>
-                  </div>
-                  <div class="row-price">{{ p.price }} ₽</div>
-                </div>      
-              </div>
-              <div class="row-meta">
-                <span class="p-cat">Категория: {{ getCategoryName(p.categoryId) || p.category }}</span>
+                    <div class="row-replies">
+                      <img src="../../assets/messages-3.svg"/>
+                      <span class="replies-count">{{ p.reviewsCount }}</span>
+                    </div>
+                    <div class="row-price">{{ p.price }} ₽</div>
+                  </div>      
+                </div>
+                <div class="row-meta">
+                  <span class="p-cat">Категория: {{ p.categoryName || 'Без категории' }}</span>
+                </div>
               </div>
             </div>
-          </div>
-          <div v-if="filteredProducts.length === 0" style="text-align:center; padding: 20px; color: #999;">
-              Товары не найдены
-          </div>
+            <div v-if="filteredProducts.length === 0" style="text-align:center; padding: 20px; color: #999;">
+                Товары не найдены
+            </div>
+          </template>
         </div>
       </div>
 
@@ -128,7 +135,7 @@
           <div class="metric-tab active">
             <div class="m-label">Заказы</div>
             <div class="m-value-row">
-              <span class="m-val">586</span>
+              <span class="m-val">{{ selectedProduct.mockSales }}</span>
               <span class="m-arrow up">↑</span>
             </div>
             <div class="m-sub">Больше на 26%</div>
@@ -137,7 +144,7 @@
           <div class="metric-tab">
             <div class="m-label">Добавление в избранное</div>
             <div class="m-value-row">
-              <span class="m-val">286</span>
+              <span class="m-val">{{ Math.round(selectedProduct.mockSales / 3) }}</span>
               <span class="m-arrow down">↓</span>
             </div>
             <div class="m-sub">Меньше на 26%</div>
@@ -146,7 +153,7 @@
           <div class="metric-tab">
             <div class="m-label">Просмотры</div>
             <div class="m-value-row">
-              <span class="m-val">1,3 тыс.</span>
+              <span class="m-val">{{ (selectedProduct.mockSales * 4.5).toFixed(0) }}</span>
               <span class="m-arrow up">↑</span>
             </div>
             <div class="m-sub">Больше на 26%</div>
@@ -154,7 +161,10 @@
         </div>
 
         <div class="big-chart-area">
+          <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#ccc;">
+             График активности (нет API)
           </div>
+        </div>
 
         <div class="rating-section card-box">
           <div class="rating-header">
@@ -188,7 +198,7 @@
 
         <div class="reviews-wrapper">
           <div class="reviews-title-row">
-            <h2>Отзывы <span class="reviews-total">11 111</span></h2>
+            <h2>Отзывы <span class="reviews-total">{{ selectedProduct.reviewsCount }}</span></h2>
           </div>
 
           <div class="reviews-sort-row">
@@ -199,53 +209,25 @@
           </div>
 
           <div class="review-item card-box">
-            <div class="review-header">
-              <div class="review-title">Ваш ответ</div>
-            </div>
-            
-            <div class="review-body">
-              <p class="review-text-content">
-                Lorem Ipsum - это текст-"рыба", часто используемый в печати и веб-дизайне. Lorem Ipsum является стандартной "рыбой" для текстов на латинице с начала XVI века.
-              </p>
-              
-              <div class="admin-reply-block">
-                 <div class="reply-line"></div>
-                 <div class="reply-content">
-                   <p>Lorem Ipsum - это текст-"рыба", часто используемый в печати и веб-дизайне. Lorem Ipsum является стандартной "рыбой" для текстов на латинице с начала XVI века.</p>
-                 </div>
-              </div>
-            </div>
-
-            <div class="review-footer">
-              <span class="pub-date">Дата публикации: 13.05.25</span>
-              <div class="review-actions">
-                <button class="act-btn"><span class="icon-eye-off">ø</span> Скрыть комментарий</button>
-                <button class="act-btn"><span class="icon-reply">↩</span> Ответить на комментарий</button>
-                <button class="act-btn delete"><span class="icon-trash">🗑</span> Удалить комментарий</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="review-item card-box">
             <div class="user-header">
               <div class="u-avatar-placeholder">👤</div>
-              <span class="u-name">Аноним</span>
+              <span class="u-name">Иван П.</span>
               <div class="u-stars">
-                 <span class="star-f filled">★</span><span class="star-f filled">★</span><span class="star-f filled">★</span><span class="star-f half">★</span><span class="star-f">★</span>
-                 <span class="u-score">3,6</span>
+                 <span class="star-f filled">★</span><span class="star-f filled">★</span><span class="star-f filled">★</span><span class="star-f filled">★</span><span class="star-f">★</span>
+                 <span class="u-score">4.0</span>
               </div>
             </div>
              <div class="review-body">
               <p class="review-text-content">
-                Lorem Ipsum - это текст-"рыба", часто используемый в печати и веб-дизайне. Lorem Ipsum является стандартной "рыбой" для текстов на латинице с начала XVI века.
+                Отличный товар {{ selectedProduct.name }}, полностью соответствует описанию. Доставили быстро.
               </p>
             </div>
             <div class="review-footer">
               <span class="pub-date">Дата публикации: 13.05.25</span>
               <div class="review-actions">
                 <button class="act-btn"><span class="icon-eye">👁</span> Показать комментарий</button>
-                <button class="act-btn"><span class="icon-reply">↩</span> Ответить на комментарий</button>
-                <button class="act-btn delete"><span class="icon-trash">🗑</span> Удалить комментарий</button>
+                <button class="act-btn"><span class="icon-reply">↩</span> Ответить</button>
+                <button class="act-btn delete"><span class="icon-trash">🗑</span> Удалить</button>
               </div>
             </div>
           </div>
@@ -258,8 +240,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import AdminLayout from './AdminLayout.vue';
+import { adminProductApi, categoryApi } from '@/services/api';
 import './admin.css';
 
 // === СОСТОЯНИЕ (STATE) ===
@@ -270,29 +253,78 @@ const showSortDropdown = ref(false);
 const sortOption = ref(''); 
 const filterCategory = ref('');
 const filterRatingMin = ref(0);
+const isLoading = ref(false);
 
-// === ДАННЫЕ (MOCK DATA) ===
-// Добавил 'starCounts' для отрисовки полосок рейтинга
-const products = ref([
-  { id: 1, name: 'iPhone 14 Pro Max 256GB', category: 'Электроника', rating: 4.8, reviewsCount: 1250, sales: 5400, price: 120000, starCounts: {5: 900, 4: 200, 3: 100, 2: 30, 1: 20} },
-  { id: 2, name: 'Футболка Cotton Basic White', category: 'Одежда', rating: 3.6, reviewsCount: 125, sales: 8900, price: 1500, starCounts: {5: 36, 4: 36, 3: 36, 2: 36, 1: 0} }, // Данные как на макете
-  { id: 3, name: 'Наушники Sony WH-1000XM5', category: 'Электроника', rating: 4.9, reviewsCount: 850, sales: 1200, price: 35000, starCounts: {5: 800, 4: 40, 3: 10, 2: 0, 1: 0} },
-  { id: 4, name: 'Кроссовки Nike Air Force 1', category: 'Одежда', rating: 4.2, reviewsCount: 2100, sales: 3200, price: 12000, starCounts: {5: 1000, 4: 800, 3: 200, 2: 50, 1: 50} },
-]);
+const products = ref([]);
+const categoriesList = ref([]);
+const categoriesMap = ref({});
 
-const rawCategories = ref([]);
+// === ЗАГРУЗКА ДАННЫХ ===
+const loadData = async () => {
+  isLoading.value = true;
+  try {
+    // 1. Загружаем категории для фильтров и маппинга имен
+    const catsData = await categoryApi.get();
+    categoriesList.value = catsData;
+    catsData.forEach(c => {
+      categoriesMap.value[c.categoryId] = c.categoryName;
+    });
+
+    // 2. Загружаем реальные товары
+    // Запрашиваем первую страницу с большим размером, чтобы получить список для демо
+    const prodResponse = await adminProductApi.get(1, 100);
+    const rawProducts = prodResponse.productList || [];
+
+    // 3. Объединяем реальные данные с моковыми статистическими данными
+    products.value = rawProducts.map(p => {
+      // Генерируем случайный рейтинг для демо (от 3.0 до 5.0)
+      const mockRating = (Math.random() * 2 + 3).toFixed(1);
+      const mockReviews = Math.floor(Math.random() * 500) + 10;
+      const mockSales = Math.floor(Math.random() * 5000) + 100;
+      
+      // Генерация распределения звезд
+      const stars = {};
+      let remaining = mockReviews;
+      stars[5] = Math.floor(remaining * 0.6); remaining -= stars[5];
+      stars[4] = Math.floor(remaining * 0.2); remaining -= stars[4];
+      stars[3] = Math.floor(remaining * 0.1); remaining -= stars[3];
+      stars[2] = Math.floor(remaining * 0.05); remaining -= stars[2];
+      stars[1] = remaining; // Остаток
+
+      return {
+        id: p.id,
+        name: p.name,
+        price: p.price,
+        categoryId: p.categoryId,
+        categoryName: categoriesMap.value[p.categoryId] || 'Не указана',
+        description: p.description,
+        image: '', // API пока не возвращает картинку
+        // Моковые данные статистики:
+        rating: mockRating,
+        reviewsCount: mockReviews,
+        mockSales: mockSales,
+        starCounts: stars
+      };
+    });
+
+  } catch (error) {
+    console.error("Ошибка загрузки статистики:", error);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+onMounted(() => {
+  loadData();
+});
 
 // === МЕТОДЫ ===
 
-// Расчет % заполнения полоски рейтинга
 const getStarPercent = (star) => {
   if (!selectedProduct.value || !selectedProduct.value.starCounts) return 0;
   const count = selectedProduct.value.starCounts[star] || 0;
   const total = selectedProduct.value.reviewsCount || 1; 
-  // Для демо: если reviewsCount на макете 125, а сумма counts другая, берем макс значение как 100% для красоты или честный процент
-  // Здесь сделаем упрощенно: count / reviewsCount * 100
-  // Но на макете визуально полоски одинаковой длины (36), поэтому просто вернем процент от некоего максимума
-  return (count / 100) * 100; // Условная логика для демо
+  return (count / total) * 100;
 };
 
 const getStarCount = (star) => {
@@ -300,7 +332,6 @@ const getStarCount = (star) => {
    return selectedProduct.value.starCounts[star] || 0;
 }
 
-// ... Остальная логика без изменений ...
 const resetFilters = () => {
   filterCategory.value = '';
   filterRatingMin.value = 0;
@@ -349,7 +380,7 @@ const filteredProducts = computed(() => {
     result = result.filter(p => p.name.toLowerCase().includes(q));
   }
   if (filterCategory.value) {
-    result = result.filter(p => p.category === filterCategory.value);
+    result = result.filter(p => p.categoryName === filterCategory.value);
   }
   if (filterRatingMin.value > 0) {
     result = result.filter(p => p.rating >= filterRatingMin.value);
@@ -376,8 +407,6 @@ const calculateOffset = (rating, starIndex) => {
   if (rating <= starIndex - 1) return '0%';
   return ((rating % 1) * 100) + '%';
 };
-
-const getCategoryName = (id) => { return 'Категория'; } // Заглушка
 </script>
 
 <style scoped>
@@ -578,4 +607,5 @@ const getCategoryName = (id) => { return 'Категория'; } // Заглуш
 /* Dropdown styles reused */
 .sort-btn-styled { /* ... */ }
 .custom-dropdown-menu { /* ... */ }
+.header-left-group{ display: flex; align-items: center; gap: 12px; }
 </style>
