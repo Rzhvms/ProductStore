@@ -43,6 +43,7 @@
 </script>
 
 <style scoped>
+  
 /* === FOOTER === */
 .lk-footer {
   width: 100%;
@@ -53,6 +54,7 @@
   justify-content: space-between;
   box-sizing: border-box;
   gap: 30px;
+  flex-shrink: 0;
 }
 
 .lk-footer .footer-col {

@@ -1,66 +1,94 @@
 <template>
-  <Header />
+  <div class="page-container">
+    <Header />
 
-  <main class="home">
-    <section class="search-section">
-      <div class="search-bar">
-        <span class="search-icon">🔍</span>
-        <input type="text" placeholder="Поиск товаров..." />
-        <button class="search-btn">Найти</button>
-      </div>
-    </section>
+    <main class="home">
+      <section class="search-section">
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input type="text" placeholder="Поиск товаров..." />
+          <button class="search-btn">Найти</button>
+        </div>
+      </section>
 
-    <section class="promo">
-      <div class="promo-banner">
-        Рекламный баннер / акции
-      </div>
-    </section>
+      <section class="promo">
+        <div class="promo-banner">
+          Рекламный баннер / акции
+        </div>
+      </section>
 
-    <section class="popular">
-      <h2>Популярные товары</h2>
+      <section class="popular">
+        <h2>Популярные товары</h2>
 
-      <div class="slider-container">
-        <button v-if="canScrollLeft" class="nav-btn left" @click="scrollLeft">‹</button>
+        <div class="slider-container">
+          <button v-if="canScrollLeft" class="nav-btn left" @click="scrollLeft">‹</button>
 
-        <div class="slider-wrapper" ref="wrapperRef">
-          <div
-            class="slider"
-            ref="sliderRef"
-            :style="{ transform: `translateX(-${offset}px)` }"
-          >
-            <div 
-              class="product-card" 
-              v-for="product in products" 
-              :key="product.id"
-              @click="goToProduct(product.id)" 
-              style="cursor: pointer;"
+          <div class="slider-wrapper" ref="wrapperRef">
+            <div
+              class="slider"
+              ref="sliderRef"
+              :style="{ transform: `translateX(-${offset}px)` }"
             >
-              <div class="product-image">
-                <img v-if="product.image" :src="product.image" :alt="product.name" class="img-fluid" />
-                <span v-else>🖼️</span>
-              </div>
-              <div class="product-name">
-                {{ product.name }}
-              </div>
-              <div class="product-bottom">
-                <div class="product-price">₽{{ product.price }}</div>
-                <button class="add-cart-btn" @click.stop="addToCart(product)">Добавить</button>
+              <div 
+                class="product-card" 
+                v-for="product in products" 
+                :key="product.id"
+                @click="goToProduct(product.id)" 
+                style="cursor: pointer;"
+              >
+                <div class="product-image">
+                  <img
+                    v-if="product.image"
+                    :src="product.image"
+                    :alt="product.name"
+                    class="img-fluid"
+                  />
+                  <span v-else>🖼️</span>
+                </div>
+
+                <div class="product-name">{{ product.name }}</div>
+
+                <div class="product-bottom">
+                  <div class="product-price">₽{{ product.price }}</div>
+
+                  <!-- Счётчик -->
+                  <div v-if="product.count === 0">
+                    <button
+                      class="add-cart-btn"
+                      @click.stop="increment(product)"
+                      @mouseenter="hoverBtn = product.id"
+                      @mouseleave="hoverBtn = null"
+                      @mousedown="activeBtn = product.id"
+                      @mouseup="activeBtn = null"
+                      :class="{ hover: hoverBtn === product.id, active: activeBtn === product.id }"
+                    >
+                      Добавить
+                    </button>
+                  </div>
+
+                  <div v-else class="counter-pill">
+                    <button class="counter-btn" @click.stop="decrement(product)"></button>
+                    <span class="counter-value">{{ product.count }}</span>
+                    <button class="counter-btn" @click.stop="increment(product)"></button>
+                  </div>
+                  <!-- Конец счётчика -->
+                </div>
               </div>
             </div>
           </div>
+
+          <button v-if="canScrollRight" class="nav-btn right" @click="scrollRight">›</button>
         </div>
+      </section>
+    </main>
 
-        <button v-if="canScrollRight" class="nav-btn right" @click="scrollRight">›</button>
-      </div>
-    </section>
-  </main>
-
-  <Footer />
+    <Footer />
+  </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router' // Импортируем роутер
+import { useRouter } from 'vue-router'
 import Header from './Header.vue'
 import Footer from './Footer.vue'
 import { productApi, cartApi } from '@/services/api'
@@ -72,33 +100,45 @@ const pageSize = ref(10)
 
 const wrapperRef = ref(null)
 const sliderRef = ref(null)
-const CARD_WIDTH = 220 
+const CARD_WIDTH = 220
 const offset = ref(0)
+
+const hoverBtn = ref(null)
+const activeBtn = ref(null)
 
 // ЗАГРУЗКА ДАННЫХ
 const loadData = async () => {
   try {
     const data = await productApi.getList(pageNumber.value, pageSize.value)
-    // Предполагаем, что API возвращает объект с полем productList
-    products.value = data.productList || []
+    products.value = data.productList?.map(p => ({
+      ...p,
+      count: 0
+    })) || []
   } catch (error) {
-    console.error("Ошибка при загрузке товаров:", error)
+    console.error('Ошибка загрузки товаров:', error)
+    products.value = []
   }
 }
 
 // НАВИГАЦИЯ
-const goToProduct = (id) => {
-  router.push(`/catalog/product/${id}`) // Путь должен соответствовать вашему router/index.js
+const goToProduct = (id) => router.push(`/catalog/product/${id}`)
+
+// ДОБАВЛЕНИЕ / УМЕНЬШЕНИЕ
+const increment = async (product) => {
+  product.count++
+  await cartApi.add(product.id, 1)
 }
 
-const addToCart = async (product) => {
-  console.log('Добавлено в корзину:', product.name)
-  await cartApi.add(product.id, 1)
+const decrement = (product) => {
+  if (product.count > 0) product.count--
 }
 
 const maxOffset = computed(() => {
   if (!wrapperRef.value || !sliderRef.value || products.value.length === 0) return 0
-  return Math.max(sliderRef.value.scrollWidth - wrapperRef.value.clientWidth, 0)
+  return Math.max(
+    sliderRef.value.scrollWidth - wrapperRef.value.clientWidth,
+    0
+  )
 })
 
 const canScrollLeft = computed(() => offset.value > 0)
@@ -119,7 +159,7 @@ const handleResize = () => {
 }
 
 onMounted(() => {
-  loadData() // Вызываем загрузку при монтировании
+  loadData()
   window.addEventListener('resize', handleResize)
 })
 
@@ -129,22 +169,20 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.product-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 16px;
+.page-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 .home {
+  flex: 1;
   padding: 40px 48px;
   background: #fafafa;
 }
 
 /* SEARCH */
-.search-section {
-  margin-bottom: 40px;
-}
+.search-section { margin-bottom: 40px; }
 .search-bar {
   display: flex;
   align-items: center;
@@ -154,9 +192,7 @@ onBeforeUnmount(() => {
   padding: 8px 20px;
   gap: 12px;
 }
-.search-icon {
-  color: #999;
-}
+.search-icon { color: #999; }
 .search-bar input {
   flex: 1;
   border: none;
@@ -173,9 +209,7 @@ onBeforeUnmount(() => {
 }
 
 /* PROMO */
-.promo {
-  margin-bottom: 60px;
-}
+.promo { margin-bottom: 60px; }
 .promo-banner {
   height: 220px;
   background: #e5e5e5;
@@ -188,35 +222,18 @@ onBeforeUnmount(() => {
 }
 
 /* POPULAR */
-.popular h2 {
-  margin-bottom: 20px;
-}
-
-.slider-container {
-  display: flex;
-  align-items: center;
-  position: relative;
-}
-
+.popular h2 { margin-bottom: 20px; }
+.slider-container { display: flex; align-items: center; }
 .nav-btn {
   font-size: 32px;
   background: none;
   border: none;
   cursor: pointer;
   color: #888;
-  z-index: 2;
 }
+.nav-btn:hover { color: #ff8800; }
 
-.nav-btn:hover {
-  color: #ff8800;
-}
-
-.slider-wrapper {
-  overflow: hidden;
-  flex: 1;
-  margin: 0 10px;
-}
-
+.slider-wrapper { overflow: hidden; flex: 1; margin: 0 10px; }
 .slider {
   display: flex;
   gap: 20px;
@@ -224,14 +241,12 @@ onBeforeUnmount(() => {
 }
 
 .product-card {
-  width: 200px;
-  flex-shrink: 0;
   border-radius: 16px;
   background: #fff;
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.05);
   padding: 12px;
 }
 
@@ -248,16 +263,8 @@ onBeforeUnmount(() => {
 }
 
 .product-name {
-  width: 100%;
   font-size: 14px;
   font-weight: 500;
-  line-height: 18px;
-  height: 36px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
   text-align: center;
   margin-bottom: 8px;
 }
@@ -265,7 +272,6 @@ onBeforeUnmount(() => {
 .product-bottom {
   display: flex;
   justify-content: space-between;
-  align-items: center;
   width: 100%;
 }
 
@@ -274,6 +280,7 @@ onBeforeUnmount(() => {
   color: #ff8800;
 }
 
+/* Кнопка Добавить */
 .add-cart-btn {
   background: #ff8800;
   color: #fff;
@@ -282,5 +289,58 @@ onBeforeUnmount(() => {
   padding: 6px 10px;
   font-size: 12px;
   cursor: pointer;
+}
+.add-cart-btn.hover { background: #ffa533; }
+.add-cart-btn.active { background: #cc6600; }
+
+/* Капсула счётчика */
+.counter-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #ff8800;
+  border-radius: 16px;
+  height: 30px;
+  padding: 0 4px;
+  min-width: 78px;
+}
+
+.counter-btn {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  background: #ff8800;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* - */
+.counter-btn:first-child::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 2px;
+  background: #fff;
+  transform: translate(-50%, -50%);
+}
+
+/* + */
+.counter-btn:last-child::before,
+.counter-btn:last-child::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 2px;
+  background: #fff;
+  transform: translate(-50%, -50%);
+}
+
+.counter-btn:last-child::after {
+  transform: translate(-50%, -50%) rotate(90deg);
 }
 </style>
