@@ -1,5 +1,3 @@
-using Domain.Product.Enum;
-
 namespace Domain.Image;
 
 /// <summary>
@@ -26,9 +24,4 @@ public record ImageModel
     /// Основная картинка
     /// </summary>
     public bool IsMain { get; set; }
-    
-    /// <summary>
-    /// Порядок сортировки изображений
-    /// </summary>
-    public ImageSortOrder SortOrder { get; init; }
 }

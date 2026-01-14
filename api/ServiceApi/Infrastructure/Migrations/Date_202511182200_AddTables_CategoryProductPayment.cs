@@ -52,8 +52,7 @@ public class Date_202511182200_AddTables_CategoryProductPayment : Migration
                 .WithColumn(nameof(ImageModel.Id)).AsGuid().PrimaryKey()
                 .WithColumn(nameof(ImageModel.ProductId)).AsGuid().NotNullable()
                 .WithColumn(nameof(ImageModel.ObjectPath)).AsString().NotNullable()
-                .WithColumn(nameof(ImageModel.IsMain)).AsBoolean().NotNullable()
-                .WithColumn(nameof(ImageModel.SortOrder)).AsInt32().Nullable();
+                .WithColumn(nameof(ImageModel.IsMain)).AsBoolean().NotNullable();
             
             Create.ForeignKey($"fk_{_productImageTb}_product")
                 .FromTable(_productImageTb).ForeignColumn(nameof(ImageModel.ProductId))
@@ -116,7 +115,7 @@ public class Date_202511182200_AddTables_CategoryProductPayment : Migration
                                                        .Constraint("FK_ProductImage_Product").Exists())
         {
             Create.ForeignKey("FK_ProductImage_Product")
-                .FromTable(_productImageTb).ForeignColumn(nameof(ProductImageModel.ProductId))
+                .FromTable(_productImageTb).ForeignColumn(nameof(ImageModel.ProductId))
                 .ToTable(nameof(ProductModel)).PrimaryColumn(nameof(ProductModel.Id))
                 .OnDeleteOrUpdate(System.Data.Rule.Cascade);
         }

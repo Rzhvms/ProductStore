@@ -1,9 +1,7 @@
 using Application.UseCases.Image.Interfaces;
-using Application.UseCases.Product;
 using Application.UseCases.Product.Dto.Request;
 using Application.UseCases.Product.Dto.Response;
 using Application.UseCases.Product.Interfaces;
-using Domain.Product.Enum;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,6 +12,7 @@ namespace Api.Controllers.ProductController;
 /// </summary>
 [ApiController]
 [Route("api/admin-product")]
+[Authorize]
 public class AdminProductController : ControllerBase
 {
     private readonly IProductUseCase _productUseCase;
@@ -95,13 +94,15 @@ public class AdminProductController : ControllerBase
     public async Task<IActionResult> UploadProductImageAsync(
         [FromRoute] Guid id,
         IFormFile file, 
-        bool isMain = true,
-        ImageSortOrder sortOrder = 0)
+        bool isMain = true)
     {
-        await _imageUseCase.AddProductImageAsync(id, file, isMain, sortOrder);
+        await _imageUseCase.AddProductImageAsync(id, file, isMain);
         return Ok();
     }
     
+    /// <summary>
+    /// Удалить картинку продукта
+    /// </summary>
     [HttpDelete("{id}/images/{imageId}")]
     public async Task<IActionResult> DeleteProductImageAsync(
         Guid id,

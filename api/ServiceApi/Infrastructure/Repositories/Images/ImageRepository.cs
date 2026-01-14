@@ -1,9 +1,11 @@
 using System.Data;
 using Application.Ports.Repositories;
+using Dapper;
 using Domain.Image;
 
 namespace Infrastructure.Repositories.Images;
 
+/// <inheritdoc />
 internal class ImageRepository :  IImageRepository
 {
     private readonly IDbConnection _connection;
@@ -12,33 +14,109 @@ internal class ImageRepository :  IImageRepository
     {
         _connection = connection;
     }
-    public Task<Guid> CreateAsync(ImageModel image)
+
+    /// <inheritdoc />
+    public async Task<Guid> CreateAsync(ImageModel image)
     {
-        throw new NotImplementedException();
+        var sql = $@"
+            INSERT INTO ""{nameof(ImageModel)}""
+            (
+                ""{nameof(ImageModel.Id)}"",
+                ""{nameof(ImageModel.ProductId)}"",
+                ""{nameof(ImageModel.ObjectPath)}"",
+                ""{nameof(ImageModel.IsMain)}""
+            )
+            VALUES
+            (
+                @Id,
+                @ProductId,
+                @ObjectPath,
+                @IsMain
+            );";
+
+        await _connection.ExecuteAsync(sql, new
+        {
+            image.Id,
+            image.ProductId,
+            image.ObjectPath,
+            image.IsMain
+        });
+
+        return image.Id;
     }
 
-    public Task<ImageModel> GetByIdAsync(Guid id)
+    /// <inheritdoc />
+    public async Task<ImageModel> GetByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        var sql = $@"
+            SELECT *
+            FROM ""{nameof(ImageModel)}""
+            WHERE ""{nameof(ImageModel.Id)}"" = @Id;";
+
+        var image = await _connection.QueryFirstOrDefaultAsync<ImageModel>(sql, new { Id = id });
+
+        if (image == null)
+            throw new InvalidOperationException("Изображение не найдено");
+
+        return image;
     }
 
-    public Task<IEnumerable<ImageModel>> GetAllByProductIdAsync(Guid productId)
+    /// <inheritdoc />
+    public async Task<IEnumerable<ImageModel>> GetAllByProductIdAsync(Guid productId)
     {
-        throw new NotImplementedException();
+        var sql = $@"
+            SELECT *
+            FROM ""{nameof(ImageModel)}""
+            WHERE ""{nameof(ImageModel.ProductId)}"" = @ProductId
+            ORDER BY ""{nameof(ImageModel.IsMain)}"" DESC;";
+
+        return await _connection.QueryAsync<ImageModel>(sql, new { ProductId = productId });
     }
 
-    public Task<ImageModel> GetMainImageAsync(Guid productId)
+    /// <inheritdoc />
+    public async Task<ImageModel> GetMainImageAsync(Guid productId)
     {
-        throw new NotImplementedException();
+        var sql = $@"
+            SELECT *
+            FROM ""{nameof(ImageModel)}""
+            WHERE ""{nameof(ImageModel.ProductId)}"" = @ProductId
+              AND ""{nameof(ImageModel.IsMain)}"" = TRUE
+            LIMIT 1;";
+
+        var image = await _connection.QueryFirstOrDefaultAsync<ImageModel>(sql, new { ProductId = productId });
+
+        if (image == null)
+            throw new InvalidOperationException("Основное изображение не найдено");
+
+        return image;
     }
 
-    public Task<ImageModel> UpdateAsync(ImageModel image)
+    /// <inheritdoc />
+    public async Task<ImageModel> UpdateAsync(ImageModel image)
     {
-        throw new NotImplementedException();
+        var sql = $@"
+            UPDATE ""{nameof(ImageModel)}""
+            SET ""{nameof(ImageModel.ObjectPath)}"" = @ObjectPath,
+                ""{nameof(ImageModel.IsMain)}"" = @IsMain
+            WHERE ""{nameof(ImageModel.Id)}"" = @Id;";
+
+        await _connection.ExecuteAsync(sql, new
+        {
+            image.Id,
+            image.ObjectPath,
+            image.IsMain
+        });
+
+        return image;
     }
 
-    public Task DeleteAsync(Guid id)
+    /// <inheritdoc />
+    public async Task DeleteAsync(Guid id)
     {
-        throw new NotImplementedException();
+        var sql = $@"
+            DELETE FROM ""{nameof(ImageModel)}""
+            WHERE ""{nameof(ImageModel.Id)}"" = @Id;";
+
+        await _connection.ExecuteAsync(sql, new { Id = id });
     }
 }
