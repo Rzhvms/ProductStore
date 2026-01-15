@@ -16,10 +16,27 @@
         <router-link to="/admin/users" class="menu-item" active-class="active">
           Пользователи
         </router-link>
+
+        <!-- PROFILE -->
         <div class="profile-wrapper" @click.stop="toggleMenu">
-          <div class="profile-icon">
-            <img src="../../assets/User.svg" alt="User">
-          </div>
+          <button
+            class="icon-btn icon-profile"
+            :class="{ active: menuOpen }"
+            aria-label="Профиль"
+          >
+            <svg width="36" height="36" viewBox="0 0 36 36">
+              <rect class="icon-bg" width="36" height="36" rx="18" />
+              <path
+                d="M18 18.75C14.83 18.75 12.25 16.17 12.25 13C12.25 9.83 14.83 7.25 18 7.25C21.17 7.25 23.75 9.83 23.75 13C23.75 16.17 21.17 18.75 18 18.75Z"
+                fill="currentColor"
+              />
+              <path
+                d="M26.59 28.75C26.18 28.75 25.84 28.41 25.84 28C25.84 24.55 22.32 21.75 18 21.75C13.68 21.75 10.16 24.55 10.16 28C10.16 28.41 9.82 28.75 9.41 28.75C9 28.75 8.66 28.41 8.66 28C8.66 23.73 12.85 20.25 18 20.25C23.15 20.25 27.34 23.73 27.34 28C27.34 28.41 27 28.75 26.59 28.75Z"
+                fill="currentColor"
+              />
+            </svg>
+          </button>
+
           <div v-if="menuOpen" class="profile-menu">
             <button @click="goToCatalog">Назад к магазину</button>
             <button @click="goToProfile">Профиль</button>
@@ -28,8 +45,6 @@
           </div>
         </div>
       </nav>
-
-      
     </header>
 
     <main class="content">
@@ -135,16 +150,37 @@ html, body {
   position: relative;
 }
 
-.profile-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* PROFILE ICON STATES */
+.icon-btn {
+  background: none;
+  border: none;
   cursor: pointer;
+  padding: 0;
+  color: #ddd;
 }
 
+.icon-bg {
+  fill: #f9f9f9;
+  transition: fill 0.2s;
+}
+
+.icon-btn:hover {
+  color: #ff7a00;
+}
+
+.icon-btn:hover .icon-bg {
+  fill: #fff1e6;
+}
+
+.icon-btn.active {
+  color: #fff;
+}
+
+.icon-btn.active .icon-bg {
+  fill: #ff7a00;
+}
+
+/* MENU */
 .profile-menu {
   position: absolute;
   top: 44px;
@@ -186,5 +222,4 @@ html, body {
   flex: 1;
   padding: 20px 30px;
 }
-
 </style>

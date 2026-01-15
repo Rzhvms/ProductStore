@@ -152,7 +152,10 @@
             
             <!-- Режим просмотра заголовка -->
             <div v-else>
-              <h1>{{ form.title }}, {{ form.weight }}{{ form.unit }}</h1>
+              <h1 class="product-title">
+                <span class="title-text">{{ form.title }}</span>
+                <span class="weight-text">, {{ form.weight }}{{ form.unit }}</span>
+              </h1>
               <div class="row-rating">
                 <div class="stars-wrapper">
                   <svg 
@@ -1235,6 +1238,25 @@ span { font-weight: 600; font-size: 18px; }
   margin: 0 auto;
   padding: 20px;
   color: $text-dark;
+}
+
+.product-title {
+  font-size: 2em;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.product-title span {
+  font-size: inherit;
+}
+
+.title-text {
+  color: #000000;         // чёрный текст
+}
+
+.weight-text {
+  color: #7A7A7A;         // серый для веса
+  font-weight: 500;       // чуть легче, по желанию
 }
 
 .breadcrumbs {
