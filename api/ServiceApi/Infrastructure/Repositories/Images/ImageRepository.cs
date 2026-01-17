@@ -74,7 +74,7 @@ internal class ImageRepository :  IImageRepository
     }
 
     /// <inheritdoc />
-    public async Task<ImageModel> GetMainImageAsync(Guid productId)
+    public async Task<ImageModel?> GetMainImageAsync(Guid productId)
     {
         var sql = $@"
             SELECT *
@@ -84,9 +84,6 @@ internal class ImageRepository :  IImageRepository
             LIMIT 1;";
 
         var image = await _connection.QueryFirstOrDefaultAsync<ImageModel>(sql, new { ProductId = productId });
-
-        if (image == null)
-            throw new InvalidOperationException("Основное изображение не найдено");
 
         return image;
     }

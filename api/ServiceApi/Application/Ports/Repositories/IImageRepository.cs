@@ -33,7 +33,7 @@ public interface IImageRepository
     /// </summary>
     /// <param name="productId"></param>
     /// <returns></returns>
-    Task<ImageModel> GetMainImageAsync(Guid productId);
+    Task<ImageModel?> GetMainImageAsync(Guid productId);
     
     /// <summary>
     /// Обновить изображение 

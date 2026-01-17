@@ -49,7 +49,7 @@ public class ImageUseCase : IImageUseCase
         }
 
         var fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
-        var objectPath = $"products/{productId}/{fileName}";
+        var objectPath = $"{productId}/{fileName}";
         try
         {
             // Загрузка в MinIO
@@ -63,8 +63,11 @@ public class ImageUseCase : IImageUseCase
             if (isMain)
             {
                 var existingMain = await _imageRepository.GetMainImageAsync(productId);
-                existingMain.IsMain = false;
-                await _imageRepository.UpdateAsync(existingMain);
+                if (existingMain != null)
+                {
+                    existingMain.IsMain = false;
+                    await _imageRepository.UpdateAsync(existingMain);
+                }
             }
 
             var image = new ImageModel

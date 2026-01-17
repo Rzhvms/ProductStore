@@ -8,7 +8,7 @@ namespace Infrastructure.Migrations;
 /// Добавление таблицы избранного
 /// </summary>
 [Migration(202601071200)]
-public class AddFavoritesTable : Migration
+public class Date_202601071200_AddFavoritesTable : Migration
 {
     private readonly string _tbName = nameof(FavoriteProductsModel);
     
