@@ -128,7 +128,7 @@ volumes:
 
 ## Конфигурация приложения
 
-Конфигурация приложения хранится в appsettings.json. Ключевые секции включают настройки логирования, JWT, соединение с БД, Redis, внешний адрес приложения и ключи внешних API.
+Конфигурация приложения хранится в appsettings.json. Ключевые секции включают настройки логирования, JWT, соединение с БД, Redis, внешний адрес приложения, настройки MinIO и ключи внешних API.
 
 Примеры конфигурационных параметров:
 
@@ -143,6 +143,13 @@ volumes:
   "App": {
     "PublicBaseUrl": "http://localhost:8080"
   },
+  "Minio": {
+    "Endpoint": "http://localhost:9000",
+    "AccessKey": "minioadmin",
+    "SecretKey": "minioadmin123",
+    "Bucket": "products",
+    "PublicUrl": "http://localhost:9000/products"
+  }
 }
 ```
 
