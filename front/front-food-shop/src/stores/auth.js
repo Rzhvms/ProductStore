@@ -64,9 +64,9 @@ export const useAuthStore = defineStore('auth', {
       sessionStorage.setItem('accessToken', accessToken);
     },
 
-    logoutRe() {
+    async logoutRe() {
       try {
-        logout(); // вызываем API logout
+        await logout();
       } catch (error) {
         console.error(error);
       } finally {
