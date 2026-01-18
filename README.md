@@ -28,6 +28,9 @@ docker-compose up -d
 - Клиентское приложение: http://localhost:80
 - API: http://localhost:8080
 - Swagger для просмотра запросов REST-API: http://localhost:8080/swagger/index.html
+- База данных PostgreSQL: localhost:5433
+- Redis: localhost:6379
+- MinIO: localhost:9000 / localhost:9001
 
 ## Конфигурация Docker Compose
 
