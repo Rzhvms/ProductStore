@@ -21,7 +21,7 @@ export default {
   phoneLabel: 'Введите ваш номер телефона: <span class="required">*</span>',
   phonePlaceholder: '+7 (999) 999-99-99',
 
-  termsLabel: 'Даёю согласие на обработку персональных данных <span class="required">*</span>',
+  termsLabel: 'Даю согласие на обработку персональных данных <span class="required">*</span>',
   newsLabel: 'Я хочу получать уведомления о скидках и акциях',
 
   submit: 'Далее',
