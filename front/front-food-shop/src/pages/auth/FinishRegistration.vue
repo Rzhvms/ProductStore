@@ -1,6 +1,6 @@
 <template>
   <div class="page-bg">
-    <div class="login-card" style="height: 920px;">
+    <div class="login-card" style="height: 890px;">
       <h1 class="login-title" v-html="$t('auth.finishRegistration.title')"></h1>
 
       <form class="form" @submit.prevent="handleSubmit">
