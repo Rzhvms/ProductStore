@@ -1,20 +1,5 @@
 <template>
   <ProfileLayout>
-    <div class="loyalty-card">
-      <div class="loyalty-left">
-        <h3 class="loyalty-title">Карта лояльности</h3>
-        <button class="status-btn">статус карты</button>
-        <div class="loyalty-bonuses">
-          Ваши бонусы: <span>100</span>
-        </div>
-      </div>
-      
-      <div class="loyalty-right">
-        <div class="card-visual-placeholder"></div>
-        <div class="card-number-text">000 000 000 000</div>
-      </div>
-    </div>
-
     <!-- ЛИЧНЫЕ ДАННЫЕ -->
     <div class="personal-data">
       <div class="pd-header">
@@ -352,6 +337,16 @@ export default {
 
 <style scoped>
 @import './profile.css';
+
+.form-grid-3x2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.content {
+  min-width: 0;
+}
 
 .modal-overlay {
   position: fixed;
