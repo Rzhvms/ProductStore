@@ -162,7 +162,7 @@ const errors = ref({ email: null, password: null });
 const regexEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 // Базовая высота карты
-const baseCardHeight = 570;
+const baseCardHeight = 595;
 const cardHeight = ref(baseCardHeight);
 
 // --- САНИТАЙЗИНГ ---
