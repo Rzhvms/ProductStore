@@ -1,6 +1,8 @@
 using System.Data;
 using Application.Ports.Repositories;
 using Dapper;
+using Domain.ExtensionModels;
+using Domain.Order;
 using Domain.User;
 using Infrastructure.Repositories.Auth;
 using Microsoft.Extensions.Logging;
@@ -95,5 +97,37 @@ internal class UserRepository : IUserRepository
                     WHERE ""{nameof(UserModel.Id)}"" = @Id";
         
         await _dbConnection.ExecuteAsync(sql, new { Id = id });
+    }
+
+    /// <inheritdoc />
+    public async Task<List<UserExtensionModel>> GetUserListAsync()
+    {
+        var sqlGetUserInfo = $@"SELECT 
+                                u.""{nameof(UserModel.Id)}"",
+                                u.""{nameof(UserModel.Email)}"",
+                                u.""{nameof(UserModel.Name)}"",
+                                u.""{nameof(UserModel.LastName)}"",
+                                u.""{nameof(UserModel.Phone)}"",
+                                p.""{nameof(UserProfileModel.BirthDate)}"",
+                                a.""{nameof(UserAddressModel.City)}"",
+                                COUNT(o.""{nameof(OrderModel.CustomerId)}"") as ""OrdersCount""
+                                FROM ""{nameof(UserModel)}"" u 
+                                LEFT JOIN ""{nameof(UserProfileModel)}"" p 
+                                    ON u.""{nameof(UserModel.Id)}"" = p.""{nameof(UserProfileModel.UserId)}"" 
+                                LEFT JOIN ""{nameof(UserAddressModel)}"" a 
+                                    ON u.""{nameof(UserModel.Id)}"" = a.""{nameof(UserAddressModel.UserId)}""
+                                LEFT JOIN ""{nameof(OrderModel)}"" o 
+                                    ON o.""{nameof(OrderModel.CustomerId)}"" = u.""{nameof(UserModel.Id)}""
+                                GROUP BY 
+                                    u.""{nameof(UserModel.Id)}"",
+                                    u.""{nameof(UserModel.Email)}"",
+                                    u.""{nameof(UserModel.Name)}"",
+                                    u.""{nameof(UserModel.LastName)}"",
+                                    u.""{nameof(UserModel.Phone)}"",
+                                    p.""{nameof(UserProfileModel.BirthDate)}"",
+                                    a.""{nameof(UserAddressModel.City)}""";
+
+        var response = await _dbConnection.QueryAsync<UserExtensionModel>(sqlGetUserInfo);
+        return response.AsList();
     }
 }
