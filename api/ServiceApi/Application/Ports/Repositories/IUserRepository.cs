@@ -1,3 +1,4 @@
+using Domain.ExtensionModels;
 using Domain.User;
 
 namespace Application.Ports.Repositories;
@@ -26,4 +27,9 @@ public interface IUserRepository
     /// Удаление пользователя
     /// </summary>
     Task DeleteUserAsync(Guid id);
+    
+    /// <summary>
+    /// Получить список всех пользователей
+    /// </summary>
+    Task<List<UserExtensionModel>> GetUserListAsync();
 }

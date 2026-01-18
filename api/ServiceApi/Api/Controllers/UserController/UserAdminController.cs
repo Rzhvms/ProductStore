@@ -5,6 +5,8 @@ using Application.UseCases.User.ChangeUserPassword.Response;
 using Application.UseCases.User.GetUserInfo;
 using Application.UseCases.User.GetUserInfo.Request;
 using Application.UseCases.User.GetUserInfo.Response;
+using Application.UseCases.User.GetUserList;
+using Application.UseCases.User.GetUserList.Response;
 using Application.UseCases.User.UpdateUserInfo;
 using Application.UseCases.User.UpdateUserInfo.Request;
 using Application.UseCases.User.UpdateUserInfo.Response;
@@ -22,7 +24,7 @@ namespace Api.Controllers.UserController;
 /// <summary>
 /// Контроллер по изменению данных пользователя со стороны админа
 /// </summary>
-[Authorize]
+// [Authorize]
 [Route("api/admin/user-info")]
 [ApiController]
 public class UserAdminController : ControllerBase
@@ -31,20 +33,23 @@ public class UserAdminController : ControllerBase
     private readonly IUpdateUserInfoUseCase _updateUserInfoUseCase;
     private readonly IChangeUserPasswordUseCase _changeUserPasswordUseCase;
     private readonly IUserProfileUseCase _userProfileUseCase;
-    private IUserAddressUseCase _userAddressUseCase;
+    private readonly IUserAddressUseCase _userAddressUseCase;
+    private readonly IGetUserListUseCase _getUserListUseCase;
     
     public UserAdminController(
         IGetUserInfoUseCase getUserInfoUseCase,
         IUpdateUserInfoUseCase updateUserInfoUseCase,
         IChangeUserPasswordUseCase changeUserPasswordUseCase,
         IUserProfileUseCase userProfileUseCase,
-        IUserAddressUseCase userAddressUseCase)
+        IUserAddressUseCase userAddressUseCase,
+        IGetUserListUseCase getUserListUseCase)
     {
         _getUserInfoUseCase = getUserInfoUseCase;
         _updateUserInfoUseCase = updateUserInfoUseCase;
         _changeUserPasswordUseCase = changeUserPasswordUseCase;
         _userProfileUseCase = userProfileUseCase;
         _userAddressUseCase = userAddressUseCase;
+        _getUserListUseCase = getUserListUseCase;
     }
 
     /// <summary>
@@ -137,5 +142,15 @@ public class UserAdminController : ControllerBase
     public async Task<DeleteUserAddressResponse> DeleteUserAddressAsync(Guid userId)
     {
         return await _userAddressUseCase.DeleteUserAddressAsync(userId);
+    }
+
+    /// <summary>
+    /// Получить список всех пользователей
+    /// </summary>
+    [HttpGet("user-list")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<GetUserListResponse> GetUserListAsync()
+    {
+        return await _getUserListUseCase.GetUserListAsync();
     }
 }

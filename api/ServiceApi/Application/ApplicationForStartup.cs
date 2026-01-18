@@ -19,6 +19,7 @@ using Application.UseCases.Product.Interfaces;
 using Application.UseCases.User.ChangeUserPassword;
 using Application.UseCases.User.DeleteUser;
 using Application.UseCases.User.GetUserInfo;
+using Application.UseCases.User.GetUserList;
 using Application.UseCases.User.UpdateUserInfo;
 using Application.UseCases.UserAddress;
 using Application.UseCases.UserProfile;
@@ -55,6 +56,7 @@ public static class ApplicationForStartup
         services.AddScoped<IFavoriteProductsUseCase, FavoriteProductsUseCase>();
         services.AddScoped<IProductReviewUseCase, ProductReviewUseCase>();
         services.AddScoped<IYandexMapsAddressUseCase, YandexMapsAddressUseCase>();
+        services.AddScoped<IGetUserListUseCase, GetUserListUseCase>();
         
         SqlMapper.AddTypeHandler(new JsonObjectTypeHandler());
         SqlMapper.AddTypeHandler(new JsonArrayTypeHandler());
