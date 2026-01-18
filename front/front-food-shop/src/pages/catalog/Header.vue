@@ -179,7 +179,7 @@ const goCart = () => router.push('/cart')
 }
 
 .icon-btn.active {
-  color: #fff;
+  color: #ff7a00;
 }
 
 .icon-bg {
