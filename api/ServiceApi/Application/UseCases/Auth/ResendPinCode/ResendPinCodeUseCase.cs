@@ -1,4 +1,4 @@
-using Application.Exceptions;
+using Application.Exceptions.Email;
 using Application.Ports.Repositories;
 using Application.Ports.Services.Email;
 using Application.UseCases.Auth.ResendPinCode.Request;

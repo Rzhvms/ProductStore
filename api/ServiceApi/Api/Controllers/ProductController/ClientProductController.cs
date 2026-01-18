@@ -1,5 +1,7 @@
-using Application.UseCases.Product;
+using Application.UseCases.Image.Dto;
+using Application.UseCases.Image.Interfaces;
 using Application.UseCases.Product.Dto.Response;
+using Application.UseCases.Product.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers.ProductController;
@@ -12,10 +14,12 @@ namespace Api.Controllers.ProductController;
 public class ClientProductController : ControllerBase
 {
     private readonly IProductUseCase _productUseCase;
+    private readonly IImageUseCase _imageUseCase;
     
-    public ClientProductController(IProductUseCase productUseCase)
+    public ClientProductController(IProductUseCase productUseCase, IImageUseCase imageUseCase)
     {
         _productUseCase = productUseCase;
+        _imageUseCase = imageUseCase;
     }
     
     /// <summary>
@@ -47,5 +51,12 @@ public class ClientProductController : ControllerBase
         [FromRoute] Guid categoryId)
     {
         return await _productUseCase.GetProductListByCategoryIdAsync(categoryId, pageNumber, pageSize);
+    }
+
+    [HttpGet("{id}/images")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IEnumerable<ProductImageResponse>> GetProductImagesByProductId([FromRoute] Guid id)
+    {
+        return await _imageUseCase.GetProductImagesAsync(id);
     }
 }

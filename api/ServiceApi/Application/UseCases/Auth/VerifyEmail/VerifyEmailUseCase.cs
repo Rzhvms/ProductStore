@@ -1,4 +1,4 @@
-using Application.Exceptions;
+using Application.Exceptions.Email;
 using Application.Ports.Repositories;
 using Application.UseCases.Auth.VerifyEmail.Cache;
 using Application.UseCases.Auth.VerifyEmail.Request;

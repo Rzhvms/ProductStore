@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Application.UseCases.Auth.CreateUser.Request;
+namespace Application.UseCases.Auth.Register.Request;
 
 /// <summary>
 /// Представляет право или роль пользователя.

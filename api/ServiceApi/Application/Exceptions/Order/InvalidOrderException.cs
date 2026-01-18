@@ -1,6 +1,6 @@
 using Application.Exceptions.Base;
 
-namespace Application.Exceptions;
+namespace Application.Exceptions.Order;
 
 /// <summary>
 /// Общая ошибка, связанная с валидацией и обработкой заказа

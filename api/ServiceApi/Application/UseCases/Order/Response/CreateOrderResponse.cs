@@ -1,4 +1,4 @@
-namespace Application.UseCases.Order;
+namespace Application.UseCases.Order.Response;
 
 /// <summary>
 /// Выходная модель для создания заказа

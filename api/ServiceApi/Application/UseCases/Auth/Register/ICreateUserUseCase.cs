@@ -1,9 +1,8 @@
-using Application.UseCases.Auth.CreateUser.Request;
 using Application.UseCases.Auth.CreateUser.Response;
 using Application.UseCases.Auth.Register.Request;
 using Application.UseCases.Auth.Register.Response;
 
-namespace Application.UseCases.Auth.CreateUser;
+namespace Application.UseCases.Auth.Register;
 
 /// <summary>
 /// Интерфейс для Use Case создания нового пользователя.

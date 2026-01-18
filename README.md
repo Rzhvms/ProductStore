@@ -49,6 +49,39 @@ services:
     container_name: redis
     ports:
       - "${REDIS_PORT_EXTERNAL}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "${MINIO_PORT_EXTERNAL}:9000"
+      - "${MINIO_CONSOLE_PORT_EXTERNAL}:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} &&
+      mc mb --ignore-existing myminio/${MINIO_BUCKET} &&
+      mc anonymous set download myminio/${MINIO_BUCKET}
+      "
 
   api:
     build:
@@ -58,19 +91,28 @@ services:
     ports:
       - "${API_PORT_EXTERNAL}:8080"
     environment:
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
-      - Redis__ConnectionString=redis:6379
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      Redis__ConnectionString: redis:6379
+
+      Minio__Endpoint: ${MINIO_ENDPOINT}
+      Minio__AccessKey: ${MINIO_ROOT_USER}
+      Minio__SecretKey: ${MINIO_ROOT_PASSWORD}
+      Minio__Bucket: ${MINIO_BUCKET}
     restart: on-failure
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_started
+      minio:
+        condition: service_healthy
 
   web:
     build:
       context: ./front/front-food-shop
       dockerfile: Dockerfile
+      network: host
     container_name: web
     ports:
       - "${WEB_PORT_EXTERNAL}:80"
@@ -79,8 +121,10 @@ services:
 
 volumes:
   pgdata:
+  minio-data:
+
 ```
-Файл .env содержит значения переменных окружения: POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, POSTGRES_PORT_EXTERNAL, REDIS_PORT_EXTERNAL, API_PORT_EXTERNAL, WEB_PORT_EXTERNAL.
+Файл .env содержит значения переменных окружения: POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, POSTGRES_PORT_EXTERNAL, REDIS_PORT_EXTERNAL, API_PORT_EXTERNAL, WEB_PORT_EXTERNAL, MINIO_ENDPOINT, MINIO_ROOT_USER, MINIO_ROOT_PASSWORD, MINIO_BUCKET .
 
 ## Конфигурация приложения
 
@@ -247,7 +291,7 @@ UserProfileModel и UserAddressModel содержат расширенные д�
 
 FavoriteProductsModel реализует связь многие-ко-многим между пользователем и продуктом.
 
-ProductImageModel хранит URL изображений и порядок отображения.
+ImageModel хранит URL изображений, а также основное ли это изображение товара.
 
 ## Перечисления и статусы
 

@@ -8,7 +8,7 @@ namespace Infrastructure.Migrations;
 /// (Id, CategoryId)
 /// </summary>
 [Migration(202601050000)]
-public class AddIndexToProductModelTable : Migration
+public class Date_202601050000_AddIndexToProductModelTable : Migration
 {
     private readonly string _tableName = nameof(ProductModel);
     private readonly string _idColumnName = nameof(ProductModel.Id);

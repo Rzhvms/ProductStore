@@ -1,4 +1,5 @@
 using Domain.Delivery;
+using Domain.Image;
 using Domain.Order;
 using Domain.Payment;
 using Domain.Product;
@@ -13,7 +14,8 @@ public class Date_202511182200_AddTables_CategoryProductPayment : Migration
 {
     private readonly string _paymentTb = nameof(PaymentModel);
     private readonly string _categoryTb = nameof(CategoryModel);
-    private readonly string _productImageTb = nameof(ProductImageModel);
+    private readonly string _productTb = nameof(ProductModel);
+    private readonly string _imageTb = nameof(ImageModel);
     private readonly string _productReviewTb = nameof(ProductReviewModel);
     
     /// <inheritdoc />
@@ -45,13 +47,27 @@ public class Date_202511182200_AddTables_CategoryProductPayment : Migration
                 .WithColumn(nameof(CategoryModel.ParentId)).AsGuid().Nullable();
         }
         
-        if (!Schema.Table(_productImageTb).Exists())
+        if (!Schema.Table(_imageTb).Exists())
         {
-            Create.Table(_productImageTb)
-                .WithColumn(nameof(ProductImageModel.Id)).AsGuid().PrimaryKey()
-                .WithColumn(nameof(ProductImageModel.ProductId)).AsGuid().NotNullable()
-                .WithColumn(nameof(ProductImageModel.Url)).AsString().NotNullable()
-                .WithColumn(nameof(ProductImageModel.SortOrder)).AsInt32().Nullable();
+            Create.Table(_imageTb)
+                .WithColumn(nameof(ImageModel.Id)).AsGuid().PrimaryKey()
+                .WithColumn(nameof(ImageModel.ProductId)).AsGuid().NotNullable()
+                .WithColumn(nameof(ImageModel.ObjectPath)).AsString().NotNullable()
+                .WithColumn(nameof(ImageModel.IsMain)).AsBoolean().NotNullable();
+            
+            Create.ForeignKey($"fk_{_imageTb}_product")
+                .FromTable(_imageTb).ForeignColumn(nameof(ImageModel.ProductId))
+                .ToTable(_productTb).PrimaryColumn("Id")
+                .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+
+            Create.Index($"ix_{_imageTb}_productid")
+                .OnTable(_imageTb)
+                .OnColumn(nameof(ImageModel.ProductId))
+                .Ascending();
+            Execute.Sql(
+                $@"CREATE UNIQUE INDEX ux_{_imageTb}_main 
+                ON ""{_imageTb}"" (""ProductId"") WHERE ""IsMain"" = true;");
+
         }
         
         if (!Schema.Table(_productReviewTb).Exists())
@@ -95,12 +111,12 @@ public class Date_202511182200_AddTables_CategoryProductPayment : Migration
                 .OnDeleteOrUpdate(System.Data.Rule.Cascade);
         }
 
-        if (Schema.Table(_productImageTb).Exists() && Schema.Table(nameof(ProductModel)).Exists()
-                                                   && !Schema.Table(_productImageTb)
+        if (Schema.Table(_imageTb).Exists() && Schema.Table(nameof(ProductModel)).Exists()
+                                                   && !Schema.Table(_imageTb)
                                                        .Constraint("FK_ProductImage_Product").Exists())
         {
             Create.ForeignKey("FK_ProductImage_Product")
-                .FromTable(_productImageTb).ForeignColumn(nameof(ProductImageModel.ProductId))
+                .FromTable(_imageTb).ForeignColumn(nameof(ImageModel.ProductId))
                 .ToTable(nameof(ProductModel)).PrimaryColumn(nameof(ProductModel.Id))
                 .OnDeleteOrUpdate(System.Data.Rule.Cascade);
         }
@@ -141,7 +157,7 @@ public class Date_202511182200_AddTables_CategoryProductPayment : Migration
     {
         Delete.ForeignKey("FK_ProductReview_Product").OnTable(_productReviewTb);
         Delete.ForeignKey("FK_ProductReview_User").OnTable(_productReviewTb);
-        Delete.ForeignKey("FK_ProductImage_Product").OnTable(_productImageTb);
+        Delete.ForeignKey("FK_ProductImage_Product").OnTable(_imageTb);
         Delete.ForeignKey("FK_CategoryParent_CategoryId").OnTable(_categoryTb);
         Delete.ForeignKey("FK_Payment_User").OnTable(_paymentTb);
         Delete.ForeignKey("FK_Payment_Order").OnTable(_paymentTb);
@@ -151,9 +167,9 @@ public class Date_202511182200_AddTables_CategoryProductPayment : Migration
             Delete.Table(_productReviewTb);
         }
         
-        if (Schema.Table(_productImageTb).Exists())
+        if (Schema.Table(_imageTb).Exists())
         {
-            Delete.Table(_productImageTb);
+            Delete.Table(_imageTb);
         }
         
         if (Schema.Table(_categoryTb).Exists())

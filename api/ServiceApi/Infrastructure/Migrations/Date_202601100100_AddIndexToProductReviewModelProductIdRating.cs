@@ -7,7 +7,7 @@ namespace Infrastructure.Migrations;
 /// Добавление индекса для таблицы ProductReviewModel
 /// </summary>
 [Migration(202601100100)]
-public class AddIndexToProductReviewModelProductIdRating : Migration
+public class Date_202601100100_AddIndexToProductReviewModelProductIdRating : Migration
 {
     private readonly string _tableName = nameof(ProductReviewModel);
     private readonly string _indexName = "IX_ProductReviewModel_ProductId_Rating";
