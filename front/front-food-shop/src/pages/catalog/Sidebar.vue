@@ -14,34 +14,42 @@
     <!-- КАТЕГОРИИ -->
     <Transition name="fade">
       <div v-if="isCatalogOpen" class="catalog-list">
-        <div
-          v-for="cat in categories"
-          :key="cat.name"
-          class="category-item"
-        >
-          <!-- КАТЕГОРИЯ -->
+        <div v-if="loading" class="loading-row">Загрузка...</div>
+        <div v-else-if="error" class="error-row">Ошибка загрузки категорий</div>
+        <div v-else>
           <div
-            class="category-title"
-            :class="{ active: activeCategory === cat.name }"
-            @click="selectCategory(cat.name)"
+              v-for="cat in categories"
+              :key="cat.id"
+              class="category-item"
           >
-            {{ cat.name }}
+            <!-- КАТЕГОРИЯ (показываем name) -->
+            <div
+                class="category-title"
+                :class="{ active: String(activeCategoryId) === String(cat.id) }"
+                @click="selectCategory(cat)"
+            >
+              {{ cat.name }}
+            </div>
+
+            <!-- ПОДКАТЕГОРИИ (показываем name) -->
+            <div
+                v-if="cat.sub && String(activeCategoryId) === String(cat.id)"
+                class="subcategory-list"
+            >
+              <div
+                  v-for="sub in cat.sub"
+                  :key="sub.id"
+                  class="subcategory-item"
+                  :class="{ active: String(activeSubcategoryId) === String(sub.id) }"
+                  @click.stop="selectSubcategory(sub, cat)"
+              >
+                {{ sub.name }}
+              </div>
+            </div>
           </div>
 
-          <!-- ПОДКАТЕГОРИИ -->
-          <div
-            v-if="cat.sub && activeCategory === cat.name"
-            class="subcategory-list"
-          >
-            <div
-              v-for="sub in cat.sub"
-              :key="sub"
-              class="subcategory-item"
-              :class="{ active: activeSubcategory === sub }"
-              @click.stop="selectSubcategory(sub)"
-            >
-              {{ sub }}
-            </div>
+          <div v-if="categories.length === 0" class="empty-row">
+            Категории не найдены
           </div>
         </div>
       </div>
@@ -50,7 +58,8 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
+import api from '@/api/instance'
 
 const emit = defineEmits(['update:filters'])
 
@@ -61,42 +70,251 @@ const props = defineProps({
   }
 })
 
+/* state */
 const isCatalogOpen = ref(true)
-const activeCategory = ref(null)
-const activeSubcategory = ref(null)
+const loading = ref(false)
+const error = ref(false)
 
-/* те же категории, что в админке */
-const categories = [
-  { name: 'Фрукты', sub: ['Цитрусовые', 'Ягоды', 'Тропические'] },
-  { name: 'Овощи', sub: ['Корнеплоды', 'Листовые', 'Бобовые'] },
-  { name: 'Напитки', sub: ['Соки', 'Чай', 'Кофе'] }
-]
+const categories = ref([]) // normalized: [{ id, name, sub: [{id,name}, ...] }]
 
-const selectCategory = (name) => {
-  activeCategory.value = name
-  activeSubcategory.value = null
-}
+const activeCategoryId = ref(null)
+const activeCategoryName = ref(null)
+const activeSubcategoryId = ref(null)
+const activeSubcategoryName = ref(null)
 
-const selectSubcategory = (sub) => {
-  activeSubcategory.value = sub
-}
+/* normalize server list to hierarchy
+   server items: { categoryId, categoryName, parentCategoryId }
+*/
+const buildHierarchy = (raw) => {
+  if (!Array.isArray(raw)) return []
 
-/* ⬅️ СИНХРОНИЗАЦИЯ СО СБРОСОМ ИЗ CATALOG */
-watch(
-  () => props.filters,
-  (newFilters) => {
-    activeCategory.value = newFilters.category
-    activeSubcategory.value = newFilters.subcategory
-  },
-  { immediate: true, deep: true }
-)
-
-/* ⬆️ ОТПРАВКА ФИЛЬТРОВ В CATALOG */
-watch([activeCategory, activeSubcategory], () => {
-  emit('update:filters', {
-    category: activeCategory.value,
-    subcategory: activeSubcategory.value
+  // map by id
+  const map = new Map()
+  raw.forEach(item => {
+    const id = item.categoryId
+    const name = item.categoryName ?? ''
+    map.set(id, { id, name, parentId: item.parentCategoryId ?? null, sub: [] })
   })
+
+  // determine roots and attach children
+  const roots = []
+  for (const [id, node] of map) {
+    const parentId = node.parentId
+    // treat parentId === id or null or undefined as root
+    if (!parentId || String(parentId) === String(id)) {
+      roots.push(node)
+    } else {
+      const parent = map.get(parentId)
+      if (parent) {
+        parent.sub.push({ id: node.id, name: node.name })
+      } else {
+        // parent not found -> treat as root
+        roots.push(node)
+      }
+    }
+  }
+
+  // sort for nicer UI
+  roots.sort((a,b) => String(a.name).localeCompare(String(b.name)))
+  roots.forEach(r => r.sub.sort((a,b) => String(a.name).localeCompare(String(b.name))))
+
+  return roots
+}
+
+/* load categories from API */
+const loadCategories = async () => {
+  loading.value = true
+  error.value = false
+  try {
+    const resp = await api.get('categories/list')
+    // response expected: array of { categoryId, categoryName, parentCategoryId }
+    const raw = resp.data ?? []
+    categories.value = buildHierarchy(raw)
+  } catch (e) {
+    console.error('Ошибка получения категорий', e)
+    error.value = true
+    categories.value = []
+  } finally {
+    loading.value = false
+    // sync props after categories loaded
+    syncFromProps(props.filters)
+  }
+}
+
+/* selection handlers */
+const selectCategory = (cat) => {
+  if (!cat) return
+  // если кликаем по уже выбранной категории — сбрасываем подкатегорию
+  if (String(activeCategoryId.value) === String(cat.id)) {
+    activeCategoryId.value = cat.id
+    activeCategoryName.value = cat.name
+    activeSubcategoryId.value = null
+    activeSubcategoryName.value = null
+  } else {
+    activeCategoryId.value = cat.id
+    activeCategoryName.value = cat.name
+    activeSubcategoryId.value = null
+    activeSubcategoryName.value = null
+  }
+  emitFilters()
+}
+
+const selectSubcategory = (sub, parentCat) => {
+  if (!sub) return
+  // выставляем подкатегорию и гарантируем, что активная категория — её родитель
+  activeSubcategoryId.value = sub.id
+  activeSubcategoryName.value = sub.name
+
+  if (parentCat) {
+    activeCategoryId.value = parentCat.id
+    activeCategoryName.value = parentCat.name
+  }
+
+  // При выборе подкатегории эмитим categoryId = sub.id (т.к. продукты хранят categoryId)
+  emitFilters()
+}
+
+/* emit filters in backward-compatible format:
+   { category: <name>, categoryId: <id>, subcategory: <name>, subcategoryId: <id> }
+   IMPORTANT: categoryId должен содержать subcategoryId, если выбрана подкатегория
+*/
+const emitFilters = () => {
+  // если выбрана подкатегория — используем её id в поле categoryId
+  const effectiveCategoryId = activeSubcategoryId.value ?? activeCategoryId.value ?? null
+  const effectiveCategoryName = activeSubcategoryId.value ? activeSubcategoryName.value : (activeCategoryName.value ?? null)
+
+  emit('update:filters', {
+    // legacy visible fields
+    category: activeCategoryName.value ?? null,
+    subcategory: activeSubcategoryName.value ?? null,
+    // ids — categoryId для backend фильтрации всегда содержит id выбранного уровня (subcategory or category)
+    categoryId: effectiveCategoryId,
+    subcategoryId: activeSubcategoryId.value ?? null
+  })
+}
+
+/* sync from parent props.filters */
+const syncFromProps = (newFilters) => {
+  if (!newFilters) {
+    activeCategoryId.value = null
+    activeCategoryName.value = null
+    activeSubcategoryId.value = null
+    activeSubcategoryName.value = null
+    return
+  }
+
+  // If parent sent subcategoryId, find it in our tree and set parent accordingly
+  if (newFilters.subcategoryId) {
+    const subId = String(newFilters.subcategoryId)
+    let foundParent = null
+    let foundSub = null
+
+    for (const cat of categories.value) {
+      const s = cat.sub.find(x => String(x.id) === subId)
+      if (s) {
+        foundParent = cat
+        foundSub = s
+        break
+      }
+    }
+
+    if (foundSub && foundParent) {
+      activeCategoryId.value = foundParent.id
+      activeCategoryName.value = foundParent.name
+      activeSubcategoryId.value = foundSub.id
+      activeSubcategoryName.value = foundSub.name
+      return
+    } else {
+      // если не нашли — просто применим из incoming filters (fallback)
+      activeSubcategoryId.value = newFilters.subcategoryId
+      activeSubcategoryName.value = newFilters.subcategory ?? null
+      // если пришёл categoryId, установим его как активную категорию
+      if (newFilters.categoryId) {
+        activeCategoryId.value = newFilters.categoryId
+        activeCategoryName.value = newFilters.category ?? null
+      }
+      return
+    }
+  }
+
+  // Если пришёл только categoryId — ищем категорию по id
+  if (newFilters.categoryId) {
+    const cat = categories.value.find(c => String(c.id) === String(newFilters.categoryId))
+    if (cat) {
+      activeCategoryId.value = cat.id
+      activeCategoryName.value = cat.name
+      activeSubcategoryId.value = null
+      activeSubcategoryName.value = null
+      return
+    } else {
+      // возможно пришло id подкатегории в поле categoryId (старый бек)
+      const subId = String(newFilters.categoryId)
+      let foundParent = null
+      let foundSub = null
+      for (const c of categories.value) {
+        const s = c.sub.find(x => String(x.id) === subId)
+        if (s) {
+          foundParent = c
+          foundSub = s
+          break
+        }
+      }
+      if (foundSub && foundParent) {
+        activeCategoryId.value = foundParent.id
+        activeCategoryName.value = foundParent.name
+        activeSubcategoryId.value = foundSub.id
+        activeSubcategoryName.value = foundSub.name
+        return
+      }
+      // fallback: set category name/id from incoming
+      activeCategoryId.value = newFilters.categoryId
+      activeCategoryName.value = newFilters.category ?? null
+      activeSubcategoryId.value = null
+      activeSubcategoryName.value = null
+      return
+    }
+  }
+
+  // If only names provided, try to match by name
+  if (newFilters.category) {
+    const found = categories.value.find(c => String(c.name) === String(newFilters.category))
+    if (found) {
+      activeCategoryId.value = found.id
+      activeCategoryName.value = found.name
+    } else {
+      activeCategoryId.value = null
+      activeCategoryName.value = newFilters.category
+    }
+  } else {
+    activeCategoryId.value = null
+    activeCategoryName.value = null
+  }
+
+  if (newFilters.subcategory) {
+    const cat = categories.value.find(c => String(c.id) === String(activeCategoryId.value))
+    const foundSub = cat?.sub?.find(s => String(s.name) === String(newFilters.subcategory))
+    if (foundSub) {
+      activeSubcategoryId.value = foundSub.id
+      activeSubcategoryName.value = foundSub.name
+    } else {
+      activeSubcategoryId.value = null
+      activeSubcategoryName.value = newFilters.subcategory
+    }
+  } else {
+    activeSubcategoryId.value = null
+    activeSubcategoryName.value = null
+  }
+}
+
+/* watch prop changes */
+watch(() => props.filters, (nf) => {
+  // when parent changes filters (e.g., reset) — sync local state
+  syncFromProps(nf)
+}, { immediate: true, deep: true })
+
+/* load on mount */
+onMounted(() => {
+  loadCategories()
 })
 </script>
 
@@ -142,6 +360,13 @@ watch([activeCategory, activeSubcategory], () => {
 
 .catalog-list {
   padding: 10px 0;
+}
+
+.loading-row,
+.error-row,
+.empty-row {
+  padding: 12px 20px;
+  color: #666;
 }
 
 .category-item {
