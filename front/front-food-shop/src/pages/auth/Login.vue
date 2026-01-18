@@ -123,7 +123,7 @@ const errors = ref({ email: false, password: false });
 const errorMessage = ref("");
 
 // --- Динамическая высота ---
-const baseCardHeight = 508;
+const baseCardHeight = 528;
 const cardHeight = ref(baseCardHeight);
 
 watch(errorMessage, () => {
