@@ -1,6 +1,7 @@
-using Application.UseCases.Product;
+using Application.UseCases.Image.Interfaces;
 using Application.UseCases.Product.Dto.Request;
 using Application.UseCases.Product.Dto.Response;
+using Application.UseCases.Product.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,10 +16,12 @@ namespace Api.Controllers.ProductController;
 public class AdminProductController : ControllerBase
 {
     private readonly IProductUseCase _productUseCase;
+    private readonly IImageUseCase _imageUseCase;
     
-    public AdminProductController(IProductUseCase productUseCase)
+    public AdminProductController(IProductUseCase productUseCase, IImageUseCase imageUseCase)
     {
         _productUseCase = productUseCase;
+        _imageUseCase = imageUseCase;
     }
     
     /// <summary>
@@ -40,7 +43,6 @@ public class AdminProductController : ControllerBase
     {
         return await _productUseCase.GetAdminProductAsync(id);
     }
-
     /// <summary>
     /// Получить список продуктов
     /// </summary>
@@ -82,5 +84,33 @@ public class AdminProductController : ControllerBase
     public async Task<DeleteProductResponse> DeleteProductAsync([FromRoute] Guid id)
     {
         return await _productUseCase.DeleteProductAsync(id);
+    }
+    
+    
+    /// <summary>
+    /// Загрузить картинку продукта
+    /// </summary>
+    [HttpPost("{id}/image")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> UploadProductImageAsync(
+        [FromRoute] Guid id,
+        IFormFile file, 
+        bool isMain = true)
+    {
+        await _imageUseCase.AddProductImageAsync(id, file, isMain);
+        return Ok();
+    }
+    
+    /// <summary>
+    /// Удалить картинку продукта
+    /// </summary>
+    [HttpDelete("{id}/images/{imageId}")]
+    public async Task<IActionResult> DeleteProductImageAsync(
+        Guid id,
+        Guid imageId)
+    {
+        await _imageUseCase.DeleteProductImageAsync(id, imageId);
+        return Ok();
     }
 }

@@ -1,7 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using Application.Exceptions;
+using Application.Exceptions.Token;
 using Application.Ports.Services;
 using Domain.User;
 using Microsoft.Extensions.Options;

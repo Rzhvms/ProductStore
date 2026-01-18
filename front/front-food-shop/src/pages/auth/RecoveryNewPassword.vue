@@ -1,7 +1,7 @@
 <template>
   <div class="page-bg">
     <div class="login-card" :style="{ height: cardHeight + 'px' }">
-      <h1 class="login-title">Придумайте<br> новый пароль</h1>
+      <h1 class="login-title" v-html="$t('auth.recoveryPassword.title')"></h1>
 
       <form @submit.prevent="handleSubmit" class="form">
 
@@ -11,7 +11,7 @@
             <input
               v-model="password"
               :type="showPassword.password ? 'text' : 'password'"
-              placeholder="Введите пароль"
+              :placeholder="$t('auth.recoveryPassword.passwordPlaceholder')"
               class="input"
               maxlength="30"
               @input="onPasswordInput"
@@ -25,12 +25,15 @@
           <transition name="fade-slide">
             <div v-if="showPasswordStrength.password" class="password-strength-wrapper">
               <p class="contact-text" style="font-size: 16px; text-align: left; margin-bottom: 4px;">
-                Сложность пароля:
+                {{ $t('auth.recoveryPassword.passwordStrengthText') }}
               </p>
               <div class="password-strength-bg">
-                <div class="strength-bar" :style="{ width: strengthWidth.password, background: strengthColor.password }"></div>
+                <div
+                  class="strength-bar"
+                  :style="{ width: strengthWidth.password, background: strengthColor.password }"
+                ></div>
               </div>
-              <span class="strength-label" style="color: #7A7A7A;">{{ strengthLabel }}</span>
+              <span class="strength-label">{{ strengthLabel }}</span>
             </div>
           </transition>
         </div>
@@ -41,7 +44,7 @@
             <input
               v-model="confirmPassword"
               :type="showPassword.confirm ? 'text' : 'password'"
-              placeholder="Повторите пароль"
+              :placeholder="$t('auth.recoveryPassword.confirmPasswordPlaceholder')"
               class="input"
               maxlength="30"
               @input="confirmPassword = sanitizeInput(confirmPassword)"
@@ -51,21 +54,21 @@
             </button>
           </div>
 
-          <!-- Ошибка совпадения -->
-          <p v-if="confirmPassword && password !== confirmPassword" class="error-text" style="margin-bottom: 0px;">
-            Пароли не совпадают
-          </p>
+          <!-- Ошибка "Пароли не совпадают" -->
+          <transition name="fade-slide">
+            <p v-if="passwordsMismatch" class="error-text" style="margin-bottom: 0;">
+              {{ $t('auth.recoveryPassword.errors.passwordMismatch') }}
+            </p>
+          </transition>
         </div>
 
-        <!-- Общая ошибка -->
-        <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
+        <p class="password-rules" v-html="$t('auth.recoveryPassword.rules')"></p>
 
-        <p class="password-rules">
-          Пароль должен содержать не менее 8 символов, включая<br>
-          латинские буквы (a-z, A-Z), как минимум одну заглавную<br>
-          букву и одну цифру
-        </p>
-        
+        <!-- Общая ошибка -->
+        <transition name="fade-slide">
+          <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
+        </transition>
+
         <!-- Сохранить -->
         <button
           type="submit"
@@ -74,50 +77,60 @@
           :disabled="!isFormValid || isSaved"
           style="margin-top: 12px;"
         >
-          {{ isSaved ? 'Пароль изменён!' : 'Сохранить' }}
+          {{ isSaved ? $t('auth.recoveryPassword.saved') : $t('auth.recoveryPassword.save') }}
         </button>
 
-        <!-- Контактная информация -->
-        <p class="contact-text" style="margin-top: 12px; font-size: 14px;">
-          По всем вопросам можете обращаться:<br>
-          adminexample@gmail.com
-        </p>
-
       </form>
+
+      <!-- Контактная информация -->
+      <p class="contact-text">
+        {{ $t('auth.recoveryPassword.contact.line1') }}<br>
+        adminexample@gmail.com
+      </p>
+
+      <!-- Переключение языка -->
+      <div class="lang-switch">
+        <span :class="{ active: locale === 'ru' }" @click="changeLang('ru')">RU</span> |
+        <span :class="{ active: locale === 'en' }" @click="changeLang('en')">EN</span>
+      </div>
+
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import router from '@/router';
-import { changePassword } from '@/services/api';
+import { ref, computed, reactive, watch } from "vue";
+import { useI18n } from "vue-i18n";
+import router from "@/router";
+import { changePassword } from "@/services/api";
 
-const password = ref('');
-const confirmPassword = ref('');
-const showPassword = ref({ password: false, confirm: false });
-const errorMessage = ref('');
+const { locale, t } = useI18n();
+
+const password = ref("");
+const confirmPassword = ref("");
+
+const showPassword = reactive({ password: false, confirm: false });
+const showPasswordStrength = reactive({ password: false });
+
+const errorMessage = ref("");
 const isSaved = ref(false);
-const showPasswordStrength = ref({ password: false });
+
 const passwordStrength = ref(0);
 
-// Начальная фиксированная высота карточки
 const baseCardHeight = 524;
 const cardHeight = ref(baseCardHeight);
 
-/* --- САНИТАЙЗИНГ --- */
-const sanitizeInput = (value) => value.replace(/\s/g, '');
+const sanitizeInput = (value) => value.replace(/\s/g, "");
 
-/* --- VALIDATION --- */
 const isFormValid = computed(() => {
   return (
     password.value.length >= 8 &&
     password.value === confirmPassword.value &&
-    !/\s/.test(password.value) // запрещаем пробелы
+    password.value.trim().length > 0 &&
+    !password.value.includes(" ")
   );
 });
 
-/* --- Password Strength --- */
 const updatePasswordStrength = (pass) => {
   let score = 1;
   if (pass.length >= 8) score++;
@@ -144,21 +157,14 @@ const updatePasswordStrength = (pass) => {
 };
 
 const onPasswordInput = () => {
-  password.value = sanitizeInput(password.value); // удаляем пробелы
+  password.value = sanitizeInput(password.value);
   const s = updatePasswordStrength(password.value);
   passwordStrength.value = s;
-  showPasswordStrength.value.password = password.value.length > 0;
-
-  let extraHeight = 0;
-  if (showPasswordStrength.value.password) extraHeight += 40;
-  if (confirmPassword.value && password.value !== confirmPassword.value) extraHeight += 24;
-
-  cardHeight.value = baseCardHeight + extraHeight;
+  showPasswordStrength.password = password.value.length > 0;
 };
 
-/* --- Computed bars --- */
 const strengthWidth = computed(() => ({
-  password: password.value ? `${passwordStrength.value * 15 + 10}%` : '10%'
+  password: password.value ? `${passwordStrength.value * 15 + 10}%` : "10%",
 }));
 
 const strengthColor = computed(() => ({
@@ -167,37 +173,56 @@ const strengthColor = computed(() => ({
     if (s <= 2) return "#E63946";
     if (s <= 4) return "#FFA84C";
     return "#8ED76A";
-  })()
+  })(),
 }));
 
 const strengthLabel = computed(() => {
   const s = passwordStrength.value;
-  if (s <= 2) return "Слабый";
-  if (s <= 4) return "Средний";
-  return "Сильный";
+  if (s <= 2) return t("auth.recoveryPassword.strength.weak");
+  if (s <= 4) return t("auth.recoveryPassword.strength.medium");
+  return t("auth.recoveryPassword.strength.strong");
 });
 
-/* --- Submit --- */
+const passwordsMismatch = computed(() => confirmPassword.value && password.value !== confirmPassword.value);
+
+const updateCardHeight = () => {
+  let extraHeight = 0;
+  if (showPasswordStrength.password) extraHeight += 72;
+  if (passwordsMismatch.value) extraHeight += 24;
+  cardHeight.value = baseCardHeight + extraHeight;
+};
+
+watch([password, confirmPassword, () => showPasswordStrength.password], updateCardHeight, { immediate: true });
+
 const handleSubmit = async () => {
   if (!isFormValid.value) {
-    errorMessage.value = 'Пароли не совпадают';
+    if (password.value !== confirmPassword.value) {
+      errorMessage.value = t("auth.recoveryPassword.errors.passwordMismatch");
+    } else {
+      errorMessage.value = t("auth.recoveryPassword.errors.common");
+    }
     return;
   }
 
-  const token = sessionStorage.getItem('token');
+  const token = sessionStorage.getItem("token");
   try {
-    const response = await changePassword(password.value, token);
-    sessionStorage.removeItem('token');
-    router.push('/login');
+    await changePassword(password.value, token);
+    sessionStorage.removeItem("token");
+    isSaved.value = true;
+    router.push("/login");
   } catch (error) {
     errorMessage.value = error.message;
   }
+};
+
+const changeLang = (lang) => {
+  locale.value = lang;
+  localStorage.setItem("lang", lang);
 };
 </script>
 
 <style scoped>
 @import './auth.css';
-
 
 .password-field {
   position: relative;
@@ -244,6 +269,12 @@ const handleSubmit = async () => {
   color: #7A7A7A;
 }
 
+.submit-btn.inactive-btn {
+  background-color: #FFA84C;
+  color: white;
+  cursor: not-allowed;
+}
+
 .fade-slide-enter-active, .fade-slide-leave-active {
   transition: all 0.3s ease;
 }
@@ -254,11 +285,5 @@ const handleSubmit = async () => {
 .fade-slide-enter-to, .fade-slide-leave-from {
   opacity: 1;
   transform: translateY(0);
-}
-
-.submit-btn.inactive-btn {
-  background-color: #FFA84C;
-  color: white;
-  cursor: not-allowed;
 }
 </style>

@@ -9,6 +9,7 @@ using Application.UseCases.Auth.Login.Response;
 using Application.UseCases.Auth.RefreshToken;
 using Application.UseCases.Auth.RefreshToken.Request;
 using Application.UseCases.Auth.RefreshToken.Response;
+using Application.UseCases.Auth.Register;
 using Application.UseCases.Auth.Register.Request;
 using Application.UseCases.Auth.Register.Response;
 using Application.UseCases.Auth.ResendPinCode;

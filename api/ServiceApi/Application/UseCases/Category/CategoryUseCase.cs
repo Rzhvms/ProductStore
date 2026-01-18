@@ -1,4 +1,4 @@
-using Application.Exceptions;
+using Application.Exceptions.Category;
 using Application.Ports.Repositories;
 using Application.UseCases.Category.Dto.Request;
 using Application.UseCases.Category.Dto.Response;

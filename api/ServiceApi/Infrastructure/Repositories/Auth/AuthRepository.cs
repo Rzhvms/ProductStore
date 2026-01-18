@@ -1,6 +1,6 @@
 using System.Data;
 using Application.Ports.Repositories;
-using Application.UseCases.Auth.CreateUser.Request;
+using Application.UseCases.Auth.Register.Request;
 using Dapper;
 using Domain.User;
 using Microsoft.Extensions.Logging;

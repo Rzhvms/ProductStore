@@ -2,13 +2,10 @@ using Application.Enums;
 using Application.Ports.Repositories;
 using Application.Ports.Services;
 using Application.Ports.Services.Email;
-using Application.UseCases.Auth.CreateUser;
-using Application.UseCases.Auth.CreateUser.Request;
 using Application.UseCases.Auth.CreateUser.Response;
 using Application.UseCases.Auth.Register.Request;
 using Application.UseCases.Auth.Register.Response;
 using Domain.User;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.Auth.Register;

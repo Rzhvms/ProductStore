@@ -1,4 +1,4 @@
-using Application.UseCases.Auth.CreateUser.Request;
+using Application.UseCases.Auth.Register.Request;
 using Domain.User;
 
 namespace Application.Ports.Repositories;

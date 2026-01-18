@@ -1,5 +1,5 @@
 using System.Data;
-using Application.Exceptions;
+using Application.Exceptions.Order;
 using Application.Ports.Repositories;
 using Dapper;
 using Domain.ExtensionModels;

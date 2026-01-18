@@ -26,7 +26,7 @@
           </router-link>
 
           <router-link
-            to="/orders"
+            to="/profile/orders"
             class="menu-item"
             active-class="active"
           >
@@ -34,14 +34,14 @@
           </router-link>
 
           <router-link
-            to="/help"
+            to="/profile/help"
             class="menu-item"
             active-class="active"
           >
             Справочная информация
           </router-link>
         </nav>
-        <button class="logout-btn">Выйти из аккаунта</button>
+        <button class="logout-btn" @click="authStore.logoutRe">Выйти из аккаунта</button>
       </div>
 
       <!-- MAIN CONTENT -->
@@ -58,6 +58,14 @@
         <p>+7 999 999 99-99</p>
         <p>горячая линия, ежедневно с 9:00 до 21:00</p>
         <p>example@gmail.com</p>
+        <div class="f-socials">
+           <a href="#" class="soc-circle"><img src='../../assets/telegram.svg' alt="Telegram"></a>
+           <a href="#" class="soc-circle"><img src='../../assets/whatsapp.svg' alt="WhatsApp"></a>
+           <a href="#" class="soc-circle vk"><img src='../../assets/vk.svg' alt="VK"></a>
+           <a href="#" class="soc-circle ok"><img src='../../assets/ok.svg' alt="OK"></a>
+           <a href="#" class="soc-circle inst"><img src='../../assets/instagram.svg' alt="Instagram"></a>
+        </div>
+        <h4>Copyright</h4>
       </div>
       <div class="footer-col">
         <h4>Покупателям</h4>
@@ -92,8 +100,16 @@
 </template>
 
 <script>
+import { useAuthStore } from '@/stores/auth';
+
 export default {
   name: "ProfileLayout",
+  setup() {
+    const authStore = useAuthStore();
+    return { 
+      authStore 
+    };
+  }
 };
 </script>
 

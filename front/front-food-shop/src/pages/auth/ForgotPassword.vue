@@ -2,13 +2,9 @@
   <div class="page-bg">
     <!-- Карточка -->
     <div class="login-card" style="height: 564px;">
-      <h1 class="login-title">Восстановление пароля</h1>
+      <h1 class="login-title" v-html="$t('auth.forgotPassword.title')"></h1>
 
-      <p class="helper-text">
-        Введите вашу электронную почту, чтобы <br>
-        получить код подтверждения и восстановить <br>
-        доступ к аккаунту
-      </p>
+      <p class="helper-text" v-html="$t('auth.forgotPassword.helperText')"></p>
 
       <!-- Форма -->
       <form @submit.prevent="handleSubmit" class="form">
@@ -19,7 +15,7 @@
             <input
               v-model="email"
               type="email"
-              placeholder="Почта"
+              :placeholder="$t('auth.forgotPassword.emailPlaceholder')"
               class="input"
             />
           </div>
@@ -33,18 +29,35 @@
           :class="{ 'inactive-btn': !isFormValid }"
           :disabled="!isFormValid"
         >
-          Отправить код
+          {{ $t('auth.forgotPassword.submit') }}
         </button>
       </form>
 
       <button class="create-btn" @click="handleDecline">
-        Отмена
+        {{ $t('auth.forgotPassword.decline') }}
       </button>
 
       <p class="contact-text">
-        По всем вопросам можете обращаться:<br>
+        {{ $t('auth.forgotPassword.contact') }}<br>
         adminexample@gmail.com
       </p>
+
+      <!-- Language switch -->
+      <div class="lang-switch">
+        <span
+          :class="{ active: currentLocale === 'ru' }"
+          @click="setLanguage('ru')"
+        >
+          RU
+        </span>
+        |
+        <span
+          :class="{ active: currentLocale === 'en' }"
+          @click="setLanguage('en')"
+        >
+          EN
+        </span>
+      </div>
     </div>
   </div>
 </template>
@@ -52,17 +65,30 @@
 <script setup>
 import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 import { resendPinCode } from "@/services/api";
 
 const router = useRouter();
-const email = ref("");
+const { locale } = useI18n();
 
+const email = ref("");
 const errors = ref({ email: null });
 
 // Валидность формы: есть @ и не пустая строка
 const isFormValid = computed(() => {
   return email.value.length > 0 && email.value.includes("@");
 });
+
+// --- Language switch ---
+const currentLocale = computed(() => locale.value);
+const setLanguage = (lang) => {
+  try {
+    if (typeof window !== "undefined" && window.localStorage) {
+      localStorage.setItem("lang", lang);
+    }
+  } catch (e) {}
+  locale.value = lang;
+};
 
 const handleSubmit = async () => {
   errors.value.email = null;
@@ -76,7 +102,7 @@ const handleSubmit = async () => {
   }
 
   try {
-    const response = await resendPinCode(email.value);
+    await resendPinCode(email.value);
     localStorage.setItem("email", email.value);
     router.push("/recovery-code");
   } catch (error) {

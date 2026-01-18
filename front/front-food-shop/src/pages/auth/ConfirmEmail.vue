@@ -4,11 +4,8 @@
       class="login-card"
       :class="{ 'login-card-error': codeError }"
     >
-      <h1 class="login-title">Подтвердите<br>вашу почту</h1>
-      <p class="contact-text" style="margin-bottom: 16px; font-size: 16px;">
-        Мы отправили код подтверждения<br>
-        на вашу почту
-      </p>
+      <h1 class="login-title" v-html="$t('auth.confirmEmail.title')"></h1>
+      <p class="contact-text" style="margin-bottom: 16px; font-size: 16px;" v-html="$t('auth.confirmEmail.subtitle')"></p>
 
       <form @submit.prevent="handleSubmit" class="form">
         <div class="numbers-group">
@@ -39,9 +36,12 @@
           </div>
         </div>
 
-        <p v-if="codeError" class="error-text" style="text-align: center; font-size: 16px; white-space: pre-line; margin-top: 16px; margin-bottom: 28px;">
-          {{ codeErrorText }}
-        </p>
+        <p
+          v-if="codeError"
+          class="error-text"
+          style="text-align: center; font-size: 16px; white-space: pre-line; margin-top: 16px; margin-bottom: 28px;"
+          v-html="$t(codeErrorKey)"
+        ></p>
 
         <button
           type="button"
@@ -49,8 +49,8 @@
           :disabled="resendActive"
           @click="handleResend"
         >
-          <span v-if="!resendActive">Запросить код повторно</span>
-          <span v-else>Отправить еще раз через {{ timer }} сек.</span>
+          <span v-if="!resendActive">{{ $t('auth.confirmEmail.resend') }}</span>
+          <span v-else>{{ $t('auth.confirmEmail.resendTimer', { timer }) }}</span>
         </button>
 
         <button
@@ -59,26 +59,58 @@
           :class="{ 'inactive-btn': !isCodeComplete }"
           style="margin-top: 16px;"
         >
-          Далее
+          {{ $t('auth.confirmEmail.submit') }}
         </button>
       </form>
 
       <p class="contact-text" style="margin-top: 16px;">
-        По всем вопросам можете обращаться:<br>
+        {{ $t('auth.confirmEmail.contact.line1') }}<br>
         adminexample@gmail.com
       </p>
+
+      <!-- Language switch -->
+      <div class="lang-switch">
+        <span
+          :class="{ active: currentLocale === 'ru' }"
+          @click="setLanguage('ru')"
+        >
+          RU
+        </span>
+        |
+        <span
+          :class="{ active: currentLocale === 'en' }"
+          @click="setLanguage('en')"
+        >
+          EN
+        </span>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, nextTick, onMounted } from "vue";
+import { useI18n } from "vue-i18n";
 import router from "@/router";
 import { resendPinCode, sendVerificationEmail } from "@/services/api";
 
+const { locale, t } = useI18n();
+
+// --- Текущий язык для класса active ---
+const currentLocale = computed(() => locale.value);
+
+// --- Language switch ---
+const setLanguage = (lang) => {
+  locale.value = lang;
+  if (typeof localStorage !== "undefined") {
+    localStorage.setItem("lang", lang);
+  }
+};
+
+// --- Код подтверждения ---
 const code = ref(["", "", "", "", "", ""]);
 const codeError = ref(false);
-const codeErrorText = ref("");
+const codeErrorKey = ref("");
 const codeSuccess = ref(false);
 const shakeActive = ref(false);
 
@@ -94,21 +126,20 @@ const handleSubmit = async () => {
   const enteredCode = code.value.join("");
   const email = localStorage.getItem("email");
   try {
-    const response = await sendVerificationEmail(email, enteredCode);
+    await sendVerificationEmail(email, enteredCode);
     codeError.value = false;
     codeSuccess.value = true;
     shakeActive.value = false;
     router.push("/finish-registration");
   } catch (error) {
     codeError.value = true;
-    codeErrorText.value = "Неверный код подтверждения\nПопробуйте еще раз или запросите код\nповторно";
+    codeErrorKey.value = "auth.confirmEmail.errors.invalidCode";
     codeSuccess.value = false;
     shakeActive.value = false;
     setTimeout(() => (shakeActive.value = true), 50);
   }
 };
 
-// Функция для запуска таймера
 const startTimer = (seconds) => {
   timer.value = seconds;
   resendActive.value = true;
@@ -128,20 +159,23 @@ const handleResend = async () => {
   if (resendActive.value) return;
   try {
     const email = localStorage.getItem("email");
-    const response = await resendPinCode(email);
+    await resendPinCode(email);
     router.push("/finish-registration");
   } catch (error) {
     codeError.value = true;
-    codeErrorText.value = "Не удалось получить код подтверждения\nПопробуйте еще раз или запросите код\nповторно";
+    codeErrorKey.value = "auth.confirmEmail.errors.resendFailed";
     codeSuccess.value = false;
     shakeActive.value = false;
     setTimeout(() => (shakeActive.value = true), 50);
   }
-  localStorage.setItem("lastResendTime", Date.now().toString());
+
+  if (typeof localStorage !== "undefined") {
+    localStorage.setItem("lastResendTime", Date.now().toString());
+  }
+
   startTimer(60);
 };
 
-// Монтаж
 onMounted(() => {
   const last = localStorage.getItem("lastResendTime");
   if (last) {
@@ -157,9 +191,8 @@ onMounted(() => {
   }
 });
 
-// Ввод кода
 const onInput = (index, event) => {
-  const val = event.target.value.replace(/\D/g, ""); // только цифры
+  const val = event.target.value.replace(/\D/g, "");
   code.value[index] = val;
 
   if (val && index < code.value.length - 1) {
@@ -175,20 +208,11 @@ const onInput = (index, event) => {
 const onKeyDown = (index, event) => {
   if (event.key === "Enter") {
     event.preventDefault();
-
-    if (isCodeComplete.value) {
-      handleSubmit();
-    }
+    if (isCodeComplete.value) handleSubmit();
     return;
   }
 
-  if (
-    !/[0-9]/.test(event.key) &&
-    event.key !== "Backspace" &&
-    event.key !== "ArrowLeft" &&
-    event.key !== "ArrowRight" &&
-    event.key !== "Tab"
-  ) {
+  if (!/[0-9]/.test(event.key) && !["Backspace","ArrowLeft","ArrowRight","Tab"].includes(event.key)) {
     event.preventDefault();
   }
 };
@@ -214,12 +238,12 @@ const onBackspace = (index, event) => {
 
 .login-card {
   width: 410px;
-  height: 540px;
+  height: 550px;
   transition: height 0.3s ease;
 }
 
 .login-card-error {
-  height: 652px;
+  height: 632px;
 }
 
 .numbers-group {
@@ -299,5 +323,17 @@ const onBackspace = (index, event) => {
   background-color: #FFA84C;
   color: white;
   cursor: not-allowed;
+}
+
+/* Язык */
+.lang-switch span {
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.lang-switch span.active {
+  font-weight: 600;
+  opacity: 1;
+  color: #ff7a00;
 }
 </style>

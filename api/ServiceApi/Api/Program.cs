@@ -8,6 +8,7 @@ using Infrastructure.Services.Auth.Jwt;
 using Infrastructure.Services.Email.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Minio;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -52,6 +53,18 @@ builder.Services.AddCors(options =>
 
 // Подключаем настройки Email
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+
+builder.Services.AddSingleton<IMinioClient>(_ =>
+{
+    var cfg = builder.Configuration.GetSection("Minio");
+
+    return new MinioClient()
+        .WithEndpoint(cfg["Endpoint"]!.Replace("http://", ""))
+        .WithCredentials(cfg["AccessKey"], cfg["SecretKey"])
+        .WithSSL(false)
+        .Build();
+});
+
 
 builder.Services.AddInfrastructureModule(jwtSettings, connectionString);
 # endregion 
