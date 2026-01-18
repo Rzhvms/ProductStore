@@ -171,7 +171,7 @@ const handleSubmit = async () => {
   try {
     isLoading.value = true;
     const claims = await authStore.login(email.value, password.value, remember.value);
-    if (claims.value === 'user') {
+    if (claims === 'user') {
       router.push("/");
     } else {
       router.push("/admin");

@@ -7,7 +7,7 @@ export const useAuthStore = defineStore('auth', {
     accessToken: sessionStorage.getItem('accessToken') || null,
     refreshTimer: null,
     remember: false,
-    userRole: sessionStorage.getItem('userRole') || null, // роль подтягиваем сразу
+    userRole: sessionStorage.getItem('userRole') || null,
   }),
   getters: {
     isAuthenticated: (state) => !!state.accessToken,
@@ -16,11 +16,7 @@ export const useAuthStore = defineStore('auth', {
     async login(email, password, remember) {
       try {
         const data = await loginApi(email, password);
-
-        // Устанавливаем accessToken
         this.setToken(data.accessToken);
-
-        // Сохраняем refreshToken
         const refToken = data.refreshToken;
         if (remember) {
           localStorage.setItem('refreshToken', refToken);
@@ -30,16 +26,11 @@ export const useAuthStore = defineStore('auth', {
           localStorage.removeItem('refreshToken');
         }
         this.remember = remember;
-
-        // Получаем роль пользователя из claims и сохраняем в sessionStorage
         const roleClaim = data.claims?.find(c => c.type === 'role');
         this.userRole = roleClaim?.value || null;
         sessionStorage.setItem('userRole', this.userRole);
-
-        // Запускаем таймер обновления токена
         this.startRefreshTimer();
-
-        return data.claims;
+        return this.userRole;
       } catch (error) {
         console.error(error);
         throw error;

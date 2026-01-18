@@ -3,6 +3,7 @@
     <Header />
 
     <main class="home">
+      <!-- ПОИСК -->
       <section class="search-section">
         <div class="search-bar">
           <span class="search-icon">🔍</span>
@@ -11,21 +12,67 @@
         </div>
       </section>
 
-      <section class="promo">
-        <div class="promo-banner">
-          Рекламный баннер / акции
+      <!-- ПРОМО БАННЕРЫ -->
+      <section class="promo" v-if="promotions.length > 0">
+        <div class="promo-container">
+          <!-- Кнопка назад (для баннера) -->
+          <button class="promo-nav prev" @click="prevPromo" v-if="promotions.length > 1">‹</button>
+          
+          <div class="promo-wrapper">
+            <div 
+              class="promo-banner" 
+              v-for="(promo, index) in promotions" 
+              :key="promo.id"
+              :class="{ active: currentPromoIndex === index }"
+              :style="{ backgroundColor: promo.color || '#e5e5e5' }"
+            >
+              <div class="promo-content">
+                <h3>{{ promo.title }}</h3>
+                <p>{{ promo.description }}</p>
+                <div class="promo-tag" v-if="promo.benefitType === 'discount'">
+                  Скидка {{ promo.value }}{{ promo.valueType === 'percent' ? '%' : '₽' }}
+                </div>
+                <div class="promo-tag" v-else>
+                  Бонус {{ promo.value }}₽
+                </div>
+              </div>
+              <div class="promo-img-placeholder">
+                🎁
+              </div>
+            </div>
+          </div>
+
+          <!-- Кнопка вперед (для баннера) -->
+          <button class="promo-nav next" @click="nextPromo" v-if="promotions.length > 1">›</button>
+
+          <!-- Точки пагинации -->
+          <div class="promo-dots" v-if="promotions.length > 1">
+            <span 
+              v-for="(promo, index) in promotions" 
+              :key="'dot-'+promo.id"
+              class="dot"
+              :class="{ active: currentPromoIndex === index }"
+              @click="setPromo(index)"
+            ></span>
+          </div>
         </div>
       </section>
 
+      <!-- ПОПУЛЯРНЫЕ ТОВАРЫ (СЛАЙДЕР) -->
       <section class="popular">
         <h2>Популярные товары</h2>
 
         <div class="slider-container">
-          <button v-if="canScrollLeft" class="nav-btn left" @click="scrollLeft">‹</button>
+          <button 
+            class="nav-btn left" 
+            @click="scrollLeft" 
+            :disabled="!canScrollLeft"
+            :class="{ disabled: !canScrollLeft }"
+          >‹</button>
 
-          <div class="slider-wrapper" ref="wrapperRef">
+          <div class="slider-window" ref="wrapperRef">
             <div
-              class="slider"
+              class="slider-track"
               ref="sliderRef"
               :style="{ transform: `translateX(-${offset}px)` }"
             >
@@ -34,48 +81,49 @@
                 v-for="product in products" 
                 :key="product.id"
                 @click="goToProduct(product.id)" 
-                style="cursor: pointer;"
               >
                 <div class="product-image">
                   <img
                     v-if="product.image"
                     :src="product.image"
                     :alt="product.name"
-                    class="img-fluid"
                   />
                   <span v-else>🖼️</span>
                 </div>
 
-                <div class="product-name">{{ product.name }}</div>
+                <div class="product-info">
+                  <div class="product-name">{{ product.name }}</div>
+                  <div class="product-bottom">
+                    <div class="product-price">₽{{ product.price }}</div>
 
-                <div class="product-bottom">
-                  <div class="product-price">₽{{ product.price }}</div>
+                    <!-- Логика добавления в корзину -->
+                    <div class="cart-actions" @click.stop>
+                      <button
+                        v-if="product.count === 0"
+                        class="add-cart-btn"
+                        @click="increment(product)"
+                      >
+                        Добавить
+                      </button>
 
-                  <div v-if="product.count === 0">
-                    <button
-                      class="add-cart-btn"
-                      @click.stop="increment(product)"
-                      @mouseenter="hoverBtn = product.id"
-                      @mouseleave="hoverBtn = null"
-                      @mousedown="activeBtn = product.id"
-                      @mouseup="activeBtn = null"
-                      :class="{ hover: hoverBtn === product.id, active: activeBtn === product.id }"
-                    >
-                      Добавить
-                    </button>
-                  </div>
-
-                  <div v-else class="counter-pill">
-                    <button class="counter-btn" @click.stop="decrement(product)"></button>
-                    <span class="counter-value">{{ product.count }}</span>
-                    <button class="counter-btn" @click.stop="increment(product)"></button>
+                      <div v-else class="counter-pill">
+                        <button class="counter-btn minus" @click="decrement(product)"></button>
+                        <span class="counter-value">{{ product.count }}</span>
+                        <button class="counter-btn plus" @click="increment(product)"></button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <button v-if="canScrollRight" class="nav-btn right" @click="scrollRight">›</button>
+          <button 
+            class="nav-btn right" 
+            @click="scrollRight" 
+            :disabled="!canScrollRight"
+            :class="{ disabled: !canScrollRight }"
+          >›</button>
         </div>
       </section>
     </main>
@@ -85,77 +133,141 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import Header from './Header.vue'
 import Footer from './Footer.vue'
 import { productApi, cartApi } from '@/services/api'
+import { getActivePromotions } from '@/services/promotionsService' // Импортируем наш сервис
 
 const router = useRouter()
 const products = ref([])
-const pageNumber = ref(1)
-const pageSize = ref(10)
+const promotions = ref([])
+const currentPromoIndex = ref(0)
+let promoInterval = null
 
+// --- Параметры слайдера товаров ---
 const wrapperRef = ref(null)
 const sliderRef = ref(null)
-const CARD_WIDTH = 220
 const offset = ref(0)
+const maxOffset = ref(0)
 
-const hoverBtn = ref(null)
-const activeBtn = ref(null)
+// Настройки ширины: карточка 220px + отступ 20px
+const CARD_WIDTH = 220 
+const GAP = 20
+const STEP = CARD_WIDTH + GAP
 
+// --- ЗАГРУЗКА ДАННЫХ ---
 const loadData = async () => {
+  // 1. Загружаем акции
+  promotions.value = getActivePromotions()
+  startPromoRotation()
+
+  // 2. Загружаем товары
   try {
-    const data = await productApi.getList(pageNumber.value, pageSize.value)
+    const data = await productApi.getList(1, 10) // page 1, size 10
     products.value = data.productList?.map(p => ({
       ...p,
-      count: 0
+      count: 0 // В реальном проекте здесь нужно сверяться с текущей корзиной
     })) || []
+    
+    // Ждем отрисовки DOM, чтобы посчитать ширину слайдера
+    await nextTick()
+    calculateSliderMetrics()
   } catch (error) {
     console.error('Ошибка загрузки товаров:', error)
     products.value = []
   }
 }
 
+// --- ЛОГИКА БАННЕРОВ ---
+const startPromoRotation = () => {
+  if (promotions.value.length > 1) {
+    promoInterval = setInterval(() => {
+      nextPromo()
+    }, 5000)
+  }
+}
+
+const nextPromo = () => {
+  currentPromoIndex.value = (currentPromoIndex.value + 1) % promotions.value.length
+}
+
+const prevPromo = () => {
+  currentPromoIndex.value = currentPromoIndex.value === 0 
+    ? promotions.value.length - 1 
+    : currentPromoIndex.value - 1
+}
+
+const setPromo = (index) => {
+  currentPromoIndex.value = index
+  // Сбрасываем таймер при ручном переключении
+  clearInterval(promoInterval)
+  startPromoRotation()
+}
+
+// --- ЛОГИКА СЛАЙДЕРА ТОВАРОВ ---
+const calculateSliderMetrics = () => {
+  if (!wrapperRef.value || !sliderRef.value) return
+  
+  const trackWidth = sliderRef.value.scrollWidth
+  const containerWidth = wrapperRef.value.clientWidth
+  
+  // Максимальный сдвиг = полная длина ленты - видимая область
+  maxOffset.value = Math.max(0, trackWidth - containerWidth)
+  
+  // Если после ресайза мы улетели слишком далеко, возвращаем назад
+  if (offset.value > maxOffset.value) {
+    offset.value = maxOffset.value
+  }
+}
+
+const canScrollLeft = computed(() => offset.value > 0)
+const canScrollRight = computed(() => offset.value < maxOffset.value) // Исправлено для точности
+
+const scrollLeft = () => {
+  const newOffset = offset.value - STEP
+  offset.value = Math.max(0, newOffset)
+}
+
+const scrollRight = () => {
+  const newOffset = offset.value + STEP
+  // Округляем до maxOffset, если шаг превышает остаток
+  offset.value = Math.min(newOffset, maxOffset.value)
+}
+
+// --- КОРЗИНА И НАВИГАЦИЯ ---
 const goToProduct = (id) => router.push(`/catalog/product/${id}`)
 
 const increment = async (product) => {
   product.count++
-  await cartApi.add(product.id, product.count)
+  try {
+    await cartApi.add(product.id, product.count)
+  } catch (e) {
+    console.error(e)
+    product.count-- // Откат при ошибке
+  }
 }
 
 const decrement = async (product) => {
   if (product.count > 0) {
     product.count--
-    await cartApi.add(product.id, product.count)
-  } else {
-    await cartApi.remove(product.id)
+    try {
+      if (product.count === 0) {
+        await cartApi.remove(product.id)
+      } else {
+        await cartApi.add(product.id, product.count)
+      }
+    } catch (e) {
+      console.error(e)
+      product.count++ // Откат при ошибке
+    }
   }
 }
 
-const maxOffset = computed(() => {
-  if (!wrapperRef.value || !sliderRef.value || products.value.length === 0) return 0
-  return Math.max(
-    sliderRef.value.scrollWidth - wrapperRef.value.clientWidth,
-    0
-  )
-})
-
-const canScrollLeft = computed(() => offset.value > 0)
-const canScrollRight = computed(() => offset.value < maxOffset.value)
-
-const scrollLeft = () => {
-  offset.value = Math.max(offset.value - CARD_WIDTH, 0)
-}
-
-const scrollRight = () => {
-  offset.value = Math.min(offset.value + CARD_WIDTH, maxOffset.value)
-}
-
+// --- Lifecycle ---
 const handleResize = () => {
-  if (offset.value > maxOffset.value) {
-    offset.value = maxOffset.value
-  }
+  calculateSliderMetrics()
 }
 
 onMounted(() => {
@@ -165,6 +277,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize)
+  if (promoInterval) clearInterval(promoInterval)
 })
 </script>
 
@@ -191,6 +304,8 @@ onBeforeUnmount(() => {
   border-radius: 30px;
   padding: 8px 20px;
   gap: 12px;
+  max-width: 800px;
+  margin: 0 auto;
 }
 .search-icon { color: #999; }
 .search-bar input {
@@ -204,143 +319,299 @@ onBeforeUnmount(() => {
   color: #fff;
   border: none;
   border-radius: 20px;
-  padding: 8px 20px;
+  padding: 8px 24px;
   cursor: pointer;
+  transition: background 0.2s;
+}
+.search-btn:hover { background: #e07700; }
+
+/* PROMO BANNER STYLES */
+.promo { margin-bottom: 50px; }
+.promo-container {
+  position: relative;
+  height: 240px;
+  border-radius: 20px;
+  overflow: hidden;
+  max-width: 1200px;
+  margin: 0 auto;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
 }
 
-/* PROMO */
-.promo { margin-bottom: 60px; }
+.promo-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
 .promo-banner {
-  height: 220px;
-  background: #e5e5e5;
-  border-radius: 20px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 40px 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+  pointer-events: none; /* Чтобы некликовые баннеры не мешали */
+}
+
+.promo-banner.active {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 1;
+}
+
+.promo-content {
+  max-width: 60%;
+  color: #333;
+}
+
+.promo-content h3 {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+
+.promo-content p {
+  font-size: 18px;
+  margin-bottom: 20px;
+  opacity: 0.8;
+}
+
+.promo-tag {
+  display: inline-block;
+  background: #fff;
+  color: #333;
+  padding: 8px 16px;
+  border-radius: 30px;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.promo-img-placeholder {
+  font-size: 100px;
+  opacity: 0.8;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+  100% { transform: translateY(0px); }
+}
+
+/* Nav Arrows for Banner */
+.promo-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.7);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
-  color: #555;
+  transition: background 0.2s;
+}
+.promo-nav:hover { background: #fff; }
+.promo-nav.prev { left: 20px; }
+.promo-nav.next { right: 20px; }
+
+/* Dots */
+.promo-dots {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 2;
+}
+.dot {
+  width: 10px;
+  height: 10px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.dot.active {
+  background: #fff;
+  transform: scale(1.2);
 }
 
-/* POPULAR */
-.popular h2 { margin-bottom: 20px; }
-.slider-container { display: flex; align-items: center; }
+/* POPULAR SLIDER */
+.popular h2 { margin-bottom: 24px; font-size: 28px; }
+
+.slider-container { 
+  display: flex; 
+  align-items: center; 
+  position: relative;
+}
+
 .nav-btn {
   font-size: 32px;
-  background: none;
-  border: none;
+  background: #fff;
+  border: 1px solid #eee;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
   cursor: pointer;
-  color: #888;
-}
-.nav-btn:hover { color: #ff8800; }
-
-.slider-wrapper { overflow: hidden; flex: 1; margin: 0 10px; }
-.slider {
+  color: #333;
   display: flex;
-  gap: 20px;
-  transition: transform 0.3s ease;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.nav-btn:hover:not(.disabled) { color: #ff8800; border-color: #ff8800; }
+.nav-btn.disabled { opacity: 0.3; cursor: default; }
+
+.slider-window { 
+  overflow: hidden; 
+  flex: 1; 
+  margin: 0 20px; 
+}
+
+.slider-track {
+  display: flex;
+  gap: 20px; /* Соответствует переменной GAP в JS */
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  padding: 10px 5px; /* Немного padding чтобы тени не обрезались */
 }
 
 .product-card {
+  /* Фиксируем ширину, чтобы расчеты JS совпадали с CSS */
+  min-width: 220px;
+  width: 220px;
+  
   border-radius: 16px;
   background: #fff;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-  padding: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+  padding: 16px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
 }
 
 .product-image {
-  width: 200px;
-  height: 200px;
-  background: #eee;
-  border-radius: 16px;
+  width: 100%;
+  height: 160px;
+  background: #f5f5f5;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .product-name {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
-  text-align: center;
-  margin-bottom: 8px;
+  line-height: 1.4;
+  margin-bottom: 12px;
+  flex: 1; /* Чтобы прибить цену к низу */
 }
 
 .product-bottom {
   display: flex;
   justify-content: space-between;
-  width: 100%;
+  align-items: center;
+  height: 36px;
 }
 
 .product-price {
-  font-weight: 600;
-  color: #ff8800;
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
 }
 
-/* Кнопка Добавить */
+/* Кнопки */
 .add-cart-btn {
-  background: #ff8800;
-  color: #fff;
+  background: #ffefe0;
+  color: #ff8800;
   border: none;
-  border-radius: 16px;
-  padding: 6px 10px;
-  font-size: 12px;
+  border-radius: 12px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 13px;
   cursor: pointer;
+  transition: all 0.2s;
 }
-.add-cart-btn.hover { background: #ffa533; }
-.add-cart-btn.active { background: #cc6600; }
+.add-cart-btn:hover { background: #ff8800; color: #fff; }
 
 /* Капсула счётчика */
 .counter-pill {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  border: 1px solid #ff8800;
-  border-radius: 16px;
-  height: 30px;
-  padding: 0 4px;
-  min-width: 78px;
+  background: #ff8800;
+  border-radius: 12px;
+  height: 32px;
+  padding: 0 2px;
+}
+
+.counter-value {
+  color: #fff;
+  font-weight: 600;
+  min-width: 24px;
+  text-align: center;
+  font-size: 14px;
 }
 
 .counter-btn {
-  position: relative;
-  width: 20px;
-  height: 20px;
-  background: #ff8800;
+  width: 28px;
+  height: 28px;
+  background: transparent;
   border: none;
-  border-radius: 50%;
   cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* - */
-.counter-btn:first-child::before {
+.counter-btn::before, .counter-btn::after {
   content: "";
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 10px;
-  height: 2px;
   background: #fff;
-  transform: translate(-50%, -50%);
+  border-radius: 2px;
 }
 
-/* + */
-.counter-btn:last-child::before,
-.counter-btn:last-child::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 10px;
-  height: 2px;
-  background: #fff;
-  transform: translate(-50%, -50%);
-}
+/* Minus */
+.counter-btn.minus::before { width: 10px; height: 2px; }
 
-.counter-btn:last-child::after {
-  transform: translate(-50%, -50%) rotate(90deg);
-}
+/* Plus */
+.counter-btn.plus::before { width: 10px; height: 2px; }
+.counter-btn.plus::after { width: 2px; height: 10px; }
+
 </style>
