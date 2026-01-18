@@ -54,8 +54,14 @@
 </template>
 
 <script>
+
+import { useAuthStore } from '@/stores/auth'
 export default {
   name: "AdminLayout",
+  setup() {
+    const authStore = useAuthStore()
+    return { authStore }
+  },
   data() {
     return {
       menuOpen: false,
@@ -75,7 +81,7 @@ export default {
       this.menuOpen = false;
     },
     goToCatalog() {
-      this.$router.push("/catalog");
+      this.$router.push("/");
       this.menuOpen = false;
     },
     goToProfile() {
@@ -83,7 +89,7 @@ export default {
       this.menuOpen = false;
     },
     logout() {
-      this.$router.push("/catalog");
+      this.authStore.logoutRe();
       this.menuOpen = false;
     },
     goToHome() {

@@ -297,6 +297,7 @@ import { ref, computed, reactive, watch, onMounted, onUnmounted } from 'vue';
 import AdminLayout from './AdminLayout.vue';
 import { usePromotions } from '@/services/usePromotions';
 import { resetToDefaults, exportPromotions } from '@/services/promotionsService';
+import { adminProductApi, categoryApi } from '@/services/api';
 import './admin.css';
 
 const { promotions, 
@@ -408,6 +409,28 @@ const database = {
   ]
 };
 
+const loadData = async () => {
+  const cats = await categoryApi.get();
+  const parentCats = cats.filter(c => c.parentCategoryId === null);
+  database.categories = parentCats.map(c => ({
+    id: c.categoryId,
+    name: c.categoryName,
+  }));
+  const subCats = cats.filter(c => c.parentCategoryId !== null);
+  database.subcategories = subCats.map(c => ({
+    id: c.categoryId,
+    name: c.categoryName,
+    categoryId: c.parentCategoryId
+  }))
+  const products = await adminProductApi.get();
+  database.products = products.productList.map(p => ({
+    id: p.id,
+    name: p.name,
+    subcategoryId: p.categoryId,
+    categoryId: parentCats.find(c => c.categoryId === subCats.find(s => s.categoryId === p.categoryId).parentCategoryId)?.categoryId
+  }));
+}
+
 const showModal = ref(false);
 const modalMode = ref('create');
 const editingId = ref(null);
@@ -463,7 +486,10 @@ function handleClickOutside(event) {
   }
 }
 
-onMounted(() => document.addEventListener('click', handleClickOutside));
+onMounted(async () => {
+  document.addEventListener('click', handleClickOutside)
+  await loadData();
+});
 onUnmounted(() => {document.removeEventListener('click', handleClickOutside); if (searchTimeout) clearTimeout(searchTimeout)});
 
 const filteredTargets = computed(() => {

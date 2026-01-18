@@ -86,13 +86,13 @@ const routes = [
   { path: '/profile/orders', component: ProfileOrders, meta: { requiresAuth: true } },
 
   // Admin
-  { path: '/admin', component: AdminDashboard, meta: { requiresAuth: true } },
-  { path: '/admin/products', component: AdminProducts, meta: { requiresAuth: true } },
-  { path: '/admin/products/:id', component: AdminProduct, meta: { requiresAuth: true }, props: true },
-  { path: '/admin/products/add', component: AdminProductAdd, meta: { requiresAuth: true } },
-  { path: '/admin/categories', component: AdminCategories, meta: { requiresAuth: true } },
-  { path: '/admin/statistics', component: AdminStatistic, meta: { requiresAuth: true } },
-  { path: '/admin/users', component: AdminUsers, meta: { requiresAuth: true } },
+  { path: '/admin', component: AdminDashboard, meta: { requiresAuth: true, requiresAdmin: true } },
+  { path: '/admin/products', component: AdminProducts, meta: { requiresAuth: true, requiresAdmin: true } },
+  { path: '/admin/products/:id', component: AdminProduct, meta: { requiresAuth: true, requiresAdmin: true }, props: true },
+  { path: '/admin/products/add', component: AdminProductAdd, meta: { requiresAuth: true, requiresAdmin: true } },
+  { path: '/admin/categories', component: AdminCategories, meta: { requiresAuth: true, requiresAdmin: true } },
+  { path: '/admin/statistics', component: AdminStatistic, meta: { requiresAuth: true, requiresAdmin: true } },
+  { path: '/admin/users', component: AdminUsers, meta: { requiresAuth: true, requiresAdmin: true } },
 ]
 
 const router = createRouter({
@@ -103,9 +103,14 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
   const isAuthenticated = authStore.isAuthenticated;
+  const isAdmin = authStore.userRole !== 'user';
   if (to.meta.requiresAuth && !isAuthenticated) {
     return next('/login');
-  } else if (to.meta.guestOnly && isAuthenticated) {
+  }
+  if (to.meta.requiresAdmin && !isAdmin) {
+    return next('/');
+  }
+  if (to.meta.guestOnly && isAuthenticated) {
     return next('/');
   }
   next();
