@@ -2,20 +2,12 @@
   <header class="header">
     <div class="header-left">
       <div class="logo" @click="$router.push('/')">LUKOSCHKO</div>
-
-      <button class="catalog-btn" @click="$router.push('/catalog')">
-        Каталог
-      </button>
+      <button class="catalog-btn" @click="$router.push('/catalog')">Каталог</button>
     </div>
 
     <div class="header-right">
       <!-- Корзина -->
-      <button
-        class="icon-btn"
-        :class="{ active: route.path === '/cart' }"
-        @click="goCart"
-        aria-label="Корзина"
-      >
+      <button class="icon-btn" :class="{ active: route.path === '/cart' }" @click="goCart" aria-label="Корзина">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
           <path d="M5.19001 6.37945C5.00001 6.37945 4.8 6.29945 4.66 6.15945C4.37 5.86945 4.37 5.38945 4.66 5.09945L8.29 1.46945C8.58001 1.17945 9.06001 1.17945 9.35001 1.46945C9.64001 1.75945 9.64001 2.23945 9.35001 2.52945L5.72 6.15945C5.57 6.29945 5.38001 6.37945 5.19001 6.37945Z" fill="currentColor"/>
           <path d="M18.81 6.37945C18.62 6.37945 18.43 6.30945 18.28 6.15945L14.65 2.52945C14.36 2.23945 14.36 1.75945 14.65 1.46945C14.94 1.17945 15.42 1.17945 15.71 1.46945L19.34 5.09945C19.63 5.38945 19.63 5.86945 19.34 6.15945C19.2 6.29945 19 6.37945 18.81 6.37945Z" fill="currentColor"/>
@@ -35,12 +27,7 @@
 
       <!-- Профиль -->
       <div class="profile-wrapper" ref="profileRef">
-        <button
-          class="icon-btn icon-profile"
-          :class="{ active: isMenuOpen || route.path === '/profile' }"
-          @click.stop="toggleMenu"
-          aria-label="Профиль"
-        >
+        <button class="icon-btn icon-profile" :class="{ active: isMenuOpen || route.path === '/profile' }" @click.stop="toggleMenu" aria-label="Профиль">
           <svg width="36" height="36" viewBox="0 0 36 36">
             <rect class="icon-bg" width="36" height="36" rx="18"/>
             <path d="M18 18.75C14.83 18.75 12.25 16.17 12.25 13C12.25 9.83 14.83 7.25 18 7.25C21.17 7.25 23.75 9.83 23.75 13C23.75 16.17 21.17 18.75 18 18.75Z" fill="currentColor"/>
@@ -49,17 +36,17 @@
         </button>
 
         <div v-if="isMenuOpen" class="profile-menu">
-          <button v-if="!authStore.isAuth" class="menu-item" @click="goLogin">
-            Войти
-          </button>
+          <!-- Не авторизован -->
+          <button v-if="!authStore.isAuthenticated" class="menu-item" @click="goLogin">Войти</button>
 
+          <!-- Авторизован -->
           <template v-else>
-            <button class="menu-item" @click="goProfile">
-              Личный кабинет
-            </button>
-            <button class="menu-item danger" @click="logout">
-              Выйти
-            </button>
+            <button class="menu-item" @click="goProfile">Личный кабинет</button>
+
+            <!-- Админ -->
+            <button v-if="authStore.userRole === 'admin'" class="menu-item" @click="goAdmin">Админ-панель</button>
+
+            <button class="menu-item danger" @click="logout">Выйти</button>
           </template>
         </div>
       </div>
@@ -79,44 +66,27 @@ const authStore = useAuthStore()
 const isMenuOpen = ref(false)
 const profileRef = ref(null)
 
-const toggleMenu = () => {
-  isMenuOpen.value = !isMenuOpen.value
-}
+const toggleMenu = () => isMenuOpen.value = !isMenuOpen.value
 
 const handleClickOutside = (e) => {
-  if (
-    isMenuOpen.value &&
-    profileRef.value &&
-    !profileRef.value.contains(e.target)
-  ) {
+  if (isMenuOpen.value && profileRef.value && !profileRef.value.contains(e.target)) {
     isMenuOpen.value = false
   }
 }
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+
+  // Инициализируем роль пользователя из sessionStorage
+  authStore.initUserRole()
 })
 
-onBeforeUnmount(() => {
-  document.removeEventListener('click', handleClickOutside)
-})
+onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
-const goLogin = () => {
-  isMenuOpen.value = false
-  router.push('/login')
-}
-
-const goProfile = () => {
-  isMenuOpen.value = false
-  router.push('/profile')
-}
-
-const logout = () => {
-  authStore.logoutRe()
-  isMenuOpen.value = false
-  router.push('/')
-}
-
+const goLogin = () => { isMenuOpen.value = false; router.push('/login') }
+const goProfile = () => { isMenuOpen.value = false; router.push('/profile') }
+const goAdmin = () => { isMenuOpen.value = false; router.push('/admin') }
+const logout = () => { authStore.logoutRe(); isMenuOpen.value = false }
 const goCart = () => router.push('/cart')
 </script>
 
@@ -138,7 +108,6 @@ const goCart = () => router.push('/cart')
 .logo {
   display: flex;
   align-items: center;
-
   font-size: 24px;
   font-weight: bold;
   color: #ff8800;
@@ -241,19 +210,18 @@ const goCart = () => router.push('/cart')
 
 .profile-wrapper {
   position: relative;
-  z-index: 50; /* любое большое значение, чтобы меню всегда поверх */
+  z-index: 50;
 }
 
 .profile-menu {
   position: absolute;
   right: 0;
   top: 44px;
-  z-index: 100; /* меню поверх всего */
+  z-index: 100;
   min-width: 180px;
   background: #fff;
   border-radius: 10px;
   border: 1px solid #eee;
   box-shadow: 0 10px 30px rgba(0,0,0,.08);
 }
-
 </style>
