@@ -35,6 +35,13 @@ import ProfileSettings from '../pages/profile/Settings.vue'
 
 // Admin
 import AdminIndex from '../pages/admin/Index.vue'
+import AdminProducts from '../pages/admin/AdminProducts.vue'
+import AdminCategories from '../pages/admin/AdminCategories.vue'
+import AdminUsers from '../pages/admin/AdminUsers.vue'
+import AdminDashboard from '../pages/admin/AdminDashboard.vue'
+import AdminStatistic from '../pages/admin/AdminStatistic.vue'
+import AdminProduct from '../pages/admin/AdminProduct.vue'
+import AdminProductAdd from '../pages/admin/AdminProductAdd.vue'
 
 
 
@@ -71,7 +78,13 @@ const routes = [
   { path: '/profile/settings', component: ProfileSettings, meta: { requiresAuth: true } },
 
   // Admin
-  { path: '/admin', component: AdminIndex, meta: { requiresAuth: true } },
+  { path: '/admin', component: AdminDashboard, meta: { requiresAuth: true } },
+  { path: '/admin/products', component: AdminProducts, meta: { requiresAuth: true } },
+  { path: '/admin/products/:id', component: AdminProduct, meta: { requiresAuth: true }, props: true },
+  { path: '/admin/products/add', component: AdminProductAdd, meta: { requiresAuth: true } },
+  { path: '/admin/categories', component: AdminCategories, meta: { requiresAuth: true } },
+  { path: '/admin/statistics', component: AdminStatistic, meta: { requiresAuth: true } },
+  { path: '/admin/users', component: AdminUsers, meta: { requiresAuth: true } },
 ]
 
 const router = createRouter({

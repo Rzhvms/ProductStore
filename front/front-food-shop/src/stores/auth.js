@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import axios from 'axios'
 import { login as loginApi, refreshToken, logout } from '@/services/api'
 import router from '@/router';
 
@@ -7,6 +6,7 @@ export const useAuthStore = defineStore('auth', {
     state: () => ({
         accessToken: sessionStorage.getItem('accessToken') || null,
         refreshTimer: null,
+        remember: false,
     }),
     getters: {
         isAuthenticated: (state) => !!state.accessToken,
@@ -24,8 +24,9 @@ export const useAuthStore = defineStore('auth', {
                     sessionStorage.setItem('refreshToken', refToken);
                     localStorage.removeItem('refreshToken');
                 }
+                this.remember = remember;
                 this.startRefreshTimer();
-                return true;
+                return data.claims;
             } catch (error) {
                 console.error(error);
                 throw error;
@@ -33,8 +34,16 @@ export const useAuthStore = defineStore('auth', {
         },
         async refreshTokenRe() {
             try {
-                const response = await refreshToken();
+                const response = await refreshToken(this.accessToken);
                 const newToken = response.data.accessToken;
+                const refToken = response.data.refreshToken;
+                if (this.remember) {
+                    localStorage.setItem('refreshToken', refToken);
+                    sessionStorage.removeItem('refreshToken');
+                } else {
+                    sessionStorage.setItem('refreshToken', refToken);
+                    localStorage.removeItem('refreshToken');
+                }
                 this.setToken(newToken);
             } catch (error) {
                 console.error(error);
@@ -45,7 +54,6 @@ export const useAuthStore = defineStore('auth', {
         setToken(accessToken) {
             this.accessToken = accessToken;
             sessionStorage.setItem('accessToken', accessToken);
-            axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
         },
         async logoutRe() {
             try {
