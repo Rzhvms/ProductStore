@@ -154,7 +154,6 @@ const goCart = () => router.push('/cart')
   color: #fff;
   border: none;
   font-weight: 600;
-  border: none;
   cursor: pointer;
 }
 .catalog-btn:hover {
@@ -178,10 +177,17 @@ const goCart = () => router.push('/cart')
   color: #ff7a00;
 }
 
-.icon-btn.active {
+/* Активные кнопки кроме профиля */
+.icon-btn:not(.icon-profile).active {
   color: #ff7a00;
 }
 
+/* Активная кнопка профиля */
+.icon-btn.icon-profile.active {
+  color: #fff;
+}
+
+/* Фон иконок */
 .icon-bg {
   fill: #f9f9f9;
 }
@@ -190,7 +196,7 @@ const goCart = () => router.push('/cart')
   fill: #fff1e6;
 }
 
-.icon-btn.active .icon-bg {
+.icon-btn.icon-profile.active .icon-bg {
   fill: #ff7a00;
 }
 
@@ -232,4 +238,22 @@ const goCart = () => router.push('/cart')
   display: inline !important;
   vertical-align: middle;
 }
+
+.profile-wrapper {
+  position: relative;
+  z-index: 50; /* любое большое значение, чтобы меню всегда поверх */
+}
+
+.profile-menu {
+  position: absolute;
+  right: 0;
+  top: 44px;
+  z-index: 100; /* меню поверх всего */
+  min-width: 180px;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #eee;
+  box-shadow: 0 10px 30px rgba(0,0,0,.08);
+}
+
 </style>
