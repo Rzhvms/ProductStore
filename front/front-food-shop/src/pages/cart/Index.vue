@@ -232,14 +232,14 @@
               <span class="text-gray-500">Сумма заказа</span>
               <span class="font-medium">{{ totalOrderSum }} ₽</span>
             </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-500">Доставка</span>
-              <span class="font-medium">{{ deliveryFee === 0 ? '0 ₽' : deliveryFee + ' ₽' }}</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-500">Сборка и упаковка</span>
-              <span class="font-medium">{{ assemblyFee }} ₽</span>
-            </div>
+<!--            <div class="flex justify-between text-sm">-->
+<!--              <span class="text-gray-500">Доставка</span>-->
+<!--              <span class="font-medium">{{ deliveryFee === 0 ? '0 ₽' : deliveryFee + ' ₽' }}</span>-->
+<!--            </div>-->
+<!--            <div class="flex justify-between text-sm">-->
+<!--              <span class="text-gray-500">Сборка и упаковка</span>-->
+<!--              <span class="font-medium">{{ assemblyFee }} ₽</span>-->
+<!--            </div>-->
             <div v-if="totalDiscount > 0" class="flex justify-between text-sm">
               <span class="text-green-500">Ваша экономия</span>
               <span class="text-green-500">-{{ totalDiscount }} ₽</span>
@@ -340,8 +340,8 @@ import { cartApi, getAddressSuggestions, createOrder } from '@/services/api'
 
 const router = useRouter()
 const cartItems = ref([])
-const deliveryFee = ref(99)
-const assemblyFee = ref(29)
+// const deliveryFee = ref(99)
+// const assemblyFee = ref(29)
 
 // --- Address & Details ---
 const address = ref('')
@@ -444,7 +444,7 @@ const totalDiscount = computed(() => {
 })
 
 const grandTotal = computed(() => {
-  return totalOrderSum.value + deliveryFee.value + assemblyFee.value
+  return totalOrderSum.value
 })
 
 // --- METHODS ---
@@ -525,7 +525,7 @@ const checkout = async () => {
     paymentMethod: selectedPayment.value,
     totals: {
       items: totalOrderSum.value,
-      delivery: deliveryFee.value,
+      // delivery: deliveryFee.value,
       grandTotal: grandTotal.value
     }
   }
