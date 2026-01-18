@@ -101,6 +101,25 @@ html, body {
   font-family: Libre Franklin, sans-serif;
 }
 
+.menu-item.active {
+  background: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  color: #ff7a00 !important;
+  font-weight: 400;
+}
+
+.admin-menu .menu-item {
+  padding: 0 !important;
+  margin: 0;
+  line-height: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  background: none;
+  border-radius: 0;
+}
+
 .page {
   display: flex;
   flex-direction: column;
@@ -133,7 +152,6 @@ html, body {
   text-decoration: none;
   font-weight: 400;
   font-size: 14px;
-  padding-bottom: 2px;
   transition: color 0.2s;
 }
 
@@ -179,6 +197,11 @@ html, body {
 .icon-btn.active .icon-bg {
   fill: #ff7a00;
 }
+
+.icon-btn.icon-profile {
+  transform: translateY(2px);
+}
+
 
 /* MENU */
 .profile-menu {
