@@ -29,12 +29,13 @@ import CheckoutConfirm from '../pages/checkout/Confirm.vue'
 import CheckoutPayment from '../pages/checkout/Payment.vue'
 
 // Profile
-import ProfileIndex from '../pages/profile/Index.vue'
-import ProfileMain from '../pages/profile/Main.vue'
-import ProfileSettings from '../pages/profile/Settings.vue'
+import ProfileMain from '../pages/profile/ProfilePage.vue'
+import ProfileOrders from '../pages/profile/ProfileOrders.vue'
+import ProfileHelp from '../pages/profile/ProfileHelp.vue'
 
 // Admin
 import AdminIndex from '../pages/admin/Index.vue'
+import ProfilePage from '../pages/profile/ProfilePage.vue'
 import AdminProducts from '../pages/admin/AdminProducts.vue'
 import AdminCategories from '../pages/admin/AdminCategories.vue'
 import AdminUsers from '../pages/admin/AdminUsers.vue'
@@ -73,9 +74,9 @@ const routes = [
   { path: '/checkout/payment', component: CheckoutPayment, meta: { requiresAuth: true } },
 
   // Profile
-  { path: '/profile', component: ProfileIndex, meta: { requiresAuth: true } },
-  { path: '/profile/main', component: ProfileMain, meta: { requiresAuth: true } },
-  { path: '/profile/settings', component: ProfileSettings, meta: { requiresAuth: true } },
+  { path: '/profile', component: ProfilePage, meta: { requiresAuth: true } },
+  { path: '/profile/help', component: ProfileHelp, meta: { requiresAuth: true } },
+  { path: '/profile/orders', component: ProfileOrders, meta: { requiresAuth: true } },
 
   // Admin
   { path: '/admin', component: AdminDashboard, meta: { requiresAuth: true } },
