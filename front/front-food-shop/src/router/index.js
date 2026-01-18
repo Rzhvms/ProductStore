@@ -23,6 +23,9 @@ import ProductCard from '../pages/catalog/ProductCard.vue'
 
 // Cart
 import Cart from '../pages/cart/Index.vue'
+import Payment from '../pages/cart/Payment.vue'
+import PaymentSuccess from '../pages/cart/PaymentSuccess.vue'
+import PaymentFailed from '../pages/cart/PaymentFailed.vue'
 
 // Checkout
 import CheckoutAddress from '../pages/checkout/Address.vue'
@@ -60,6 +63,9 @@ const routes = [
 
   // Cart
   { path: '/cart', component: Cart, meta: { requiresAuth: true } },
+  { path: '/payment/:id', component: Payment, meta: { requiresAuth: true } },
+  { path: '/payment/success', component: PaymentSuccess, meta: { requiresAuth: true } },
+  { path: '/payment/failed', component: PaymentFailed, meta: { requiresAuth: true } },
 
   // Checkout
   { path: '/checkout/address', component: CheckoutAddress, meta: { requiresAuth: true } },

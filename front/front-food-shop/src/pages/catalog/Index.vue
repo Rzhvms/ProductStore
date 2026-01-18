@@ -51,7 +51,6 @@
                 <div class="product-bottom">
                   <div class="product-price">₽{{ product.price }}</div>
 
-                  <!-- Счётчик -->
                   <div v-if="product.count === 0">
                     <button
                       class="add-cart-btn"
@@ -71,7 +70,6 @@
                     <span class="counter-value">{{ product.count }}</span>
                     <button class="counter-btn" @click.stop="increment(product)"></button>
                   </div>
-                  <!-- Конец счётчика -->
                 </div>
               </div>
             </div>
@@ -106,7 +104,6 @@ const offset = ref(0)
 const hoverBtn = ref(null)
 const activeBtn = ref(null)
 
-// ЗАГРУЗКА ДАННЫХ
 const loadData = async () => {
   try {
     const data = await productApi.getList(pageNumber.value, pageSize.value)
@@ -120,17 +117,20 @@ const loadData = async () => {
   }
 }
 
-// НАВИГАЦИЯ
 const goToProduct = (id) => router.push(`/catalog/product/${id}`)
 
-// ДОБАВЛЕНИЕ / УМЕНЬШЕНИЕ
 const increment = async (product) => {
   product.count++
-  await cartApi.add(product.id, 1)
+  await cartApi.add(product.id, product.count)
 }
 
-const decrement = (product) => {
-  if (product.count > 0) product.count--
+const decrement = async (product) => {
+  if (product.count > 0) {
+    product.count--
+    await cartApi.add(product.id, product.count)
+  } else {
+    await cartApi.remove(product.id)
+  }
 }
 
 const maxOffset = computed(() => {
