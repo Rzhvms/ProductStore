@@ -1,7 +1,7 @@
-<template> 
+<template>
   <div class="page-bg">
     <div class="login-card" :style="{ height: cardHeight + 'px' }">
-      <h1 class="login-title">Регистрация</h1>
+      <h1 class="login-title">{{ $t('auth.register.title') }}</h1>
 
       <form @submit.prevent="handleSubmit" class="form">
 
@@ -11,7 +11,7 @@
             <input
               v-model="email"
               type="email"
-              placeholder="Введите почту"
+              :placeholder="$t('auth.register.email')"
               class="input"
               @input="email = sanitizeInput(email)"
             />
@@ -27,7 +27,7 @@
             <input
               v-model="password"
               :type="showPassword.password ? 'text' : 'password'"
-              placeholder="Введите пароль"
+              :placeholder="$t('auth.register.password')"
               class="input"
               maxlength="30"
               @input="onPasswordInput"
@@ -41,10 +41,13 @@
           <transition name="fade-slide">
             <div v-if="showPasswordStrength.password" class="password-strength-wrapper">
               <p class="contact-text" style="font-size: 16px; text-align: left; margin-bottom: 4px;">
-                Сложность пароля:
+                {{ $t('auth.register.passwordStrengthTitle') }}
               </p>
               <div class="password-strength-bg">
-                <div class="strength-bar" :style="{ width: strengthWidth.password, background: strengthColor.password }"></div>
+                <div
+                  class="strength-bar"
+                  :style="{ width: strengthWidth.password, background: strengthColor.password }"
+                ></div>
               </div>
               <span class="strength-label">{{ strengthLabel }}</span>
             </div>
@@ -57,7 +60,7 @@
             <input
               v-model="confirmPassword"
               :type="showPassword.confirm ? 'text' : 'password'"
-              placeholder="Повторите пароль"
+              :placeholder="$t('auth.register.confirmPassword')"
               class="input"
               maxlength="30"
               @input="confirmPassword = sanitizeInput(confirmPassword)"
@@ -70,15 +73,15 @@
           <!-- Ошибка "Пароли не совпадают" -->
           <transition name="fade-slide">
             <p v-if="passwordsMismatch" class="error-text" style="margin-bottom: 0;">
-              Пароли не совпадают
+              {{ $t('auth.register.passwordsMismatch') }}
             </p>
           </transition>
         </div>
 
         <p class="password-rules">
-          Пароль должен содержать не менее 8 символов, включая<br>
-          латинские буквы (a-z, A-Z), как минимум одну заглавную<br>
-          букву и одну цифру
+          {{ $t('auth.register.passwordRules.line1') }}<br>
+          {{ $t('auth.register.passwordRules.line2') }}<br>
+          {{ $t('auth.register.passwordRules.line3') }}
         </p>
 
         <!-- Общая ошибка -->
@@ -92,7 +95,7 @@
           class="submit-btn"
           :class="{
             'inactive-btn': !isFormValid || isLoading,
-            'error-btn': !!submissionError  
+            'error-btn': !!submissionError
           }"
           :disabled="!isFormValid || isLoading"
           style="margin-top: 12px;"
@@ -104,14 +107,32 @@
 
       <!-- Кнопка "У меня уже есть аккаунт" -->
       <button class="create-btn" @click="handleLogin" style="margin-top: 12px;">
-        У меня уже есть аккаунт
+        {{ $t('auth.register.haveAccount') }}
       </button>
 
       <!-- Контактная информация -->
       <p class="contact-text">
-        По всем вопросам можете обращаться:<br>
+        {{ $t('auth.register.contact.line1') }}<br>
         adminexample@gmail.com
       </p>
+
+      <!-- Переключение языка -->
+      <div class="lang-switch">
+        <span
+          :class="{ active: locale === 'ru' }"
+          @click="changeLang('ru')"
+        >
+          RU
+        </span>
+        |
+        <span
+          :class="{ active: locale === 'en' }"
+          @click="changeLang('en')"
+        >
+          EN
+        </span>
+      </div>
+
     </div>
   </div>
 </template>
@@ -119,17 +140,23 @@
 <script setup>
 import { ref, computed, reactive, watch } from "vue";
 import { useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 import { createUser } from "@/services/api";
 
 const router = useRouter();
+const { locale, t } = useI18n(); // 🔥 вот это важно
+
 const email = ref("");
 const password = ref("");
 const confirmPassword = ref("");
+
 const showPassword = reactive({ password: false, confirm: false });
 const showPasswordStrength = reactive({ password: false });
+
 const errorMessage = ref("");
 const isLoading = ref(false);
 const submissionError = ref(null);
+
 const passwordStrength = ref(0);
 const errors = ref({ email: null, password: null });
 const regexEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -179,8 +206,8 @@ const updatePasswordStrength = (pass) => {
 
 const buttonText = computed(() => {
   if (submissionError.value) return submissionError.value;
-  if (isLoading.value) return "Создание аккаунта...";
-  return "Далее";
+  if (isLoading.value) return t('auth.register.loading');
+  return t('auth.register.submit');
 });
 
 watch([email, password, confirmPassword], () => {
@@ -210,9 +237,9 @@ const strengthColor = computed(() => ({
 
 const strengthLabel = computed(() => {
   const s = passwordStrength.value;
-  if (s <= 2) return "Слабый";
-  if (s <= 4) return "Средний";
-  return "Сильный";
+  if (s <= 2) return t('auth.register.passwordStrengthLabels.weak');
+  if (s <= 4) return t('auth.register.passwordStrengthLabels.medium');
+  return t('auth.register.passwordStrengthLabels.strong');
 });
 
 // --- PASSWORDS MISMATCH ---
@@ -237,13 +264,13 @@ watch(
 const handleSubmit = async () => {
   if (!isFormValid.value) {
     if (password.value !== confirmPassword.value) {
-      errorMessage.value = 'Пароли не совпадают';
+      errorMessage.value = t('auth.register.errors.passwordMismatch');
     } else if (password.value.length < 8) {
-      errorMessage.value = 'Пароль меньше 8 символов';
+      errorMessage.value = t('auth.register.errors.passwordTooShort');
     } else if (password.value.includes(' ')) {
-      errorMessage.value = 'Пароль содержит пробелы';
+      errorMessage.value = t('auth.register.errors.passwordWithSpaces');
     } else {
-      errorMessage.value = 'Адрес электронной почты не верен';
+      errorMessage.value = t('auth.register.errors.emailInvalid');
     }
     return;
   }
@@ -265,7 +292,7 @@ const handleSubmit = async () => {
     }
   } catch (err) {
     console.log(err);
-    let msg = "Не удалось создать аккаунт";
+    let msg = t('auth.register.errors.common');
     if (err.response && err.response.data && err.response.data.message) {
       msg = err.response.data.message;
     } else if (err.message) {
@@ -278,6 +305,11 @@ const handleSubmit = async () => {
 };
 
 const handleLogin = () => router.push("/login");
+
+const changeLang = (lang) => {
+  locale.value = lang;
+  localStorage.setItem("lang", lang);
+};
 </script>
 
 <style scoped>

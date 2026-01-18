@@ -119,6 +119,8 @@ export const updatePassword = async (oldPassword, newPassword) => {
     } catch (error) {
         throw new Error("Не удалось изменить пароль: " + error.message);
     }
+};
+
 export const createCategory = async (name, parentId = null) => {
     try {
         const response = await api.post('categories/create', { name, parentId });

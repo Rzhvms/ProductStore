@@ -1,67 +1,62 @@
 <template>
   <div class="page-bg">
     <div class="login-card" style="height: 920px;">
-      <h1 class="login-title">Завершение регистрации</h1>
+      <h1 class="login-title" v-html="$t('auth.finishRegistration.title')"></h1>
 
       <form class="form" @submit.prevent="handleSubmit">
 
         <!-- Имя -->
         <div class="field-wrap">
-          <p class="field-label">
-            Введите ваше имя: <span class="required">*</span>
-          </p>
+          <p class="field-label" v-html="$t('auth.finishRegistration.nameLabel')"></p>
           <div class="field">
-            <input v-model="name" type="text" placeholder="Олег" class="input" maxlength="40" />
+            <input v-model="name" type="text" :placeholder="$t('auth.finishRegistration.namePlaceholder')" class="input" maxlength="40" />
           </div>
         </div>
 
         <!-- Фамилия -->
         <div class="field-wrap">
-          <p class="field-label">
-            Введите вашу фамилию: <span class="required">*</span>
-          </p>
+          <p class="field-label" v-html="$t('auth.finishRegistration.lastNameLabel')"></p>
           <div class="field">
-            <input v-model="lastName" type="text" placeholder="Волков" class="input" maxlength="40" />
+            <input v-model="lastName" type="text" :placeholder="$t('auth.finishRegistration.lastNamePlaceholder')" class="input" maxlength="40" />
           </div>
         </div>
 
         <!-- Пол -->
         <div class="field-wrap">
-          <p class="field-label">
-            Ваш пол: <span class="required">*</span>
-          </p>
+          <p class="field-label" v-html="$t('auth.finishRegistration.genderLabel')"></p>
 
           <div class="gender-switch">
             <div v-if="gender" class="gender-slider" :class="gender"></div>
 
             <div class="gender-option"
               :class="{ active: gender === 'female' }"
-              @click="gender = 'female'">Женский</div>
+              @click="gender = 'female'">
+              {{ $t('auth.finishRegistration.genderFemale') }}
+            </div>
 
             <div class="gender-option"
               :class="{ active: gender === 'male' }"
-              @click="gender = 'male'">Мужской</div>
+              @click="gender = 'male'">
+              {{ $t('auth.finishRegistration.genderMale') }}
+            </div>
           </div>
         </div>
 
         <!-- Дата рождения -->
         <div class="field-wrap">
-          <p class="field-label">
-            Введите вашу дату рождения: <span class="required">*</span>
-          </p>
+          <p class="field-label" v-html="$t('auth.finishRegistration.birthLabel')"></p>
 
           <div class="field">
             <input
               class="input"
               type="text"
-              placeholder="ДД.ММ.ГГГГ"
+              :placeholder="$t('auth.finishRegistration.birthPlaceholder')"
               :value="birthDate"
               @keydown="onBirthKeyDown"
               maxlength="10"
             />
           </div>
 
-          <!-- Плавная анимация ошибок -->
           <transition name="fade" mode="out-in">
             <p v-if="birthError" key="birthError" class="error-text">{{ birthError }}</p>
           </transition>
@@ -69,15 +64,13 @@
 
         <!-- Телефон -->
         <div class="field-wrap">
-          <p class="field-label">
-            Введите ваш номер телефона: <span class="required">*</span>
-          </p>
+          <p class="field-label" v-html="$t('auth.finishRegistration.phoneLabel')"></p>
           <div class="field">
             <input
               type="tel"
               :value="formattedPhone"
               @keydown="onPhoneKeyDown"
-              placeholder="+7 (999) 999-99-99"
+              :placeholder="$t('auth.finishRegistration.phonePlaceholder')"
               class="input"
               maxlength="18"
             />
@@ -88,13 +81,12 @@
         <div class="field-wrap" style="margin-bottom: 0px;">
           <label class="remember" style="font-size: 12px;">
             <input type="checkbox" v-model="agreeTerms" class="custom-checkbox" />
-            Даю согласие на обработку персональных данных
-            <span class="required">*</span>
+            <span v-html="$t('auth.finishRegistration.termsLabel')"></span>
           </label>
 
           <label class="remember" style="margin-top: 12px; font-size: 12px;">
             <input type="checkbox" v-model="agreeNews" class="custom-checkbox" />
-            Я хочу получать уведомления о скидках и акциях
+            {{ $t('auth.finishRegistration.newsLabel') }}
           </label>
         </div>
 
@@ -104,23 +96,52 @@
           :disabled="!isFormValid"
           :class="{ inactive: !isFormValid }"
         >
-          Далее
+          {{ $t('auth.finishRegistration.submit') }}
         </button>
 
       </form>
 
-      <p class="contact-text">
-        По всем вопросам можете обращаться:<br />
+      <p class="contact-text" style="margin-top: 16px;">
+        {{ $t('auth.finishRegistration.contact.line1') }}<br>
         adminexample@gmail.com
       </p>
+
+      <!-- Language switch -->
+      <div class="lang-switch">
+        <span
+          :class="{ active: currentLocale === 'ru' }"
+          @click="setLanguage('ru')"
+        >
+          RU
+        </span>
+        |
+        <span
+          :class="{ active: currentLocale === 'en' }"
+          @click="setLanguage('en')"
+        >
+          EN
+        </span>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from "vue";
+import { useI18n } from "vue-i18n";
 import router from "@/router";
 import { finishRegister } from "@/services/api";
+
+const { locale } = useI18n();
+
+const currentLocale = computed(() => locale.value);
+
+const setLanguage = (lang) => {
+  locale.value = lang;
+  if (typeof localStorage !== "undefined") {
+    localStorage.setItem("lang", lang);
+  }
+};
 
 const name = ref("");
 const lastName = ref("");
@@ -135,7 +156,6 @@ const phoneDigits = ref("");
 const agreeTerms = ref(false);
 const agreeNews = ref(false);
 
-// Форматирование даты
 const formatBirth = () => {
   const v = birthDigits.value;
   if (v.length >= 5)
@@ -146,7 +166,6 @@ const formatBirth = () => {
     birthDate.value = v;
 };
 
-// Проверка возраста и будущей даты
 const validateBirthDate = () => {
   birthError.value = "";
 
@@ -162,7 +181,6 @@ const validateBirthDate = () => {
 
   const userDate = new Date(year, month, day);
 
-  // Проверка корректности даты
   if (
     userDate.getFullYear() !== year ||
     userDate.getMonth() !== month ||
@@ -185,7 +203,6 @@ const validateBirthDate = () => {
   }
 };
 
-// Ввод даты рождения
 const onBirthKeyDown = (e) => {
   if (!/^\d$/.test(e.key) && e.key !== "Backspace") {
     e.preventDefault();
@@ -209,7 +226,6 @@ const onBirthKeyDown = (e) => {
   e.preventDefault();
 };
 
-// Ввод телефона
 const onPhoneKeyDown = (e) => {
   if (!/^\d$/.test(e.key) && e.key !== "Backspace") {
     e.preventDefault();
@@ -238,7 +254,6 @@ const formattedPhone = computed(() => {
   return str;
 });
 
-// Валидация формы
 const isFormValid = computed(() => {
   return (
     name.value.trim() &&
@@ -251,7 +266,6 @@ const isFormValid = computed(() => {
   );
 });
 
-// Отправка формы
 const handleSubmit = async () => {
   if (!isFormValid.value) return;
   const d = birthDigits.value;
@@ -266,7 +280,7 @@ const handleSubmit = async () => {
   };
   try {
     const userId = localStorage.getItem("userId");
-    const response = await finishRegister(userId, name.value, lastName.value, phoneDigits.value, gender.value, userDate, JSON.stringify(notif));
+    await finishRegister(userId, name.value, lastName.value, phoneDigits.value, gender.value, userDate, JSON.stringify(notif));
     router.push("/admin");
   } catch (error) {
     console.log(error);
@@ -276,6 +290,14 @@ const handleSubmit = async () => {
 
 <style scoped>
 @import "./auth.css";
+
+.contact-text {
+    margin-top: 12px;
+    margin-bottom: 5px;
+    font-size: 12px;
+    color: #7a7a7a;
+    text-align: center;
+}
 
 .gender-switch {
   width: 362px;
@@ -345,5 +367,17 @@ const handleSubmit = async () => {
 .fade-enter-to, .fade-leave-from {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* Язык */
+.lang-switch span {
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.lang-switch span.active {
+  font-weight: 600;
+  opacity: 1;
+  color: #ff7a00;
 }
 </style>

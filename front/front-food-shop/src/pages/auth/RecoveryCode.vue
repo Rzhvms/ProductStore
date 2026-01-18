@@ -4,11 +4,9 @@
       class="login-card"
       :class="{ 'login-card-error': codeError }"
     >
-      <h1 class="login-title">Восстановление<br>пароля</h1>
-      <p class="contact-text" style="margin-bottom: 16px; font-size: 16px;">
-        Мы отправили код подтверждения<br>
-        на вашу почту
-      </p>
+      <h1 class="login-title" v-html="$t('auth.recoveryCode.title')"></h1>
+
+      <p class="contact-text" style="margin-bottom: 16px; font-size: 16px;" v-html="$t('auth.recoveryCode.subtitle')"></p>
 
       <form @submit.prevent="handleSubmit" class="form">
         <div class="numbers-group">
@@ -49,8 +47,8 @@
           :disabled="resendActive"
           @click="handleResend"
         >
-          <span v-if="!resendActive">Запросить код повторно</span>
-          <span v-else>Отправить еще раз через {{ timer }} сек.</span>
+          <span v-if="!resendActive">{{ $t('auth.recoveryCode.resend') }}</span>
+          <span v-else>{{ $t('auth.recoveryCode.resendTimer', { timer }) }}</span>
         </button>
 
         <button
@@ -59,22 +57,51 @@
           :class="{ 'inactive-btn': !isCodeComplete }"
           style="margin-top: 16px;"
         >
-          Далее
+          {{ $t('auth.recoveryCode.submit') }}
         </button>
       </form>
 
       <p class="contact-text" style="margin-top: 16px;">
-        По всем вопросам можете обращаться:<br>
+        {{ $t('auth.recoveryCode.contact.line1') }}<br>
         adminexample@gmail.com
       </p>
+
+      <!-- Language switch -->
+      <div class="lang-switch">
+        <span
+          :class="{ active: currentLocale === 'ru' }"
+          @click="setLanguage('ru')"
+        >
+          RU
+        </span>
+        |
+        <span
+          :class="{ active: currentLocale === 'en' }"
+          @click="setLanguage('en')"
+        >
+          EN
+        </span>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, nextTick, onMounted } from "vue";
+import { useI18n } from "vue-i18n";
 import router from "@/router";
 import { verifyEmail } from "@/services/api";
+
+const { locale, t } = useI18n();
+
+const currentLocale = computed(() => locale.value);
+
+const setLanguage = (lang) => {
+  locale.value = lang;
+  if (typeof localStorage !== "undefined") {
+    localStorage.setItem("lang", lang);
+  }
+};
 
 const code = ref(["", "", "", "", "", ""]);
 const codeError = ref(false);
@@ -103,14 +130,13 @@ const handleSubmit = async () => {
     router.push("/new-password");
   } catch (error) {
     codeError.value = true;
-    codeErrorText.value = "Неверный код подтверждения\nПопробуйте еще раз или запросите код\nповторно";
+    codeErrorText.value = t('auth.recoveryCode.errors.invalidCode');
     codeSuccess.value = false;
     shakeActive.value = false;
     setTimeout(() => (shakeActive.value = true), 50);
   }
 };
 
-// Функция для запуска таймера
 const startTimer = (seconds) => {
   timer.value = seconds;
   resendActive.value = true;
@@ -132,7 +158,6 @@ const handleResend = () => {
   startTimer(60);
 };
 
-// Монтаж
 onMounted(() => {
   const last = localStorage.getItem("lastResendTime");
   if (last) {
@@ -148,9 +173,8 @@ onMounted(() => {
   }
 });
 
-// Ввод кода
 const onInput = (index, event) => {
-  const val = event.target.value.replace(/\D/g, ""); // только цифры
+  const val = event.target.value.replace(/\D/g, "");
   code.value[index] = val;
 
   if (val && index < code.value.length - 1) {
@@ -166,20 +190,11 @@ const onInput = (index, event) => {
 const onKeyDown = (index, event) => {
   if (event.key === "Enter") {
     event.preventDefault();
-
-    if (isCodeComplete.value) {
-      handleSubmit();
-    }
+    if (isCodeComplete.value) handleSubmit();
     return;
   }
 
-  if (
-    !/[0-9]/.test(event.key) &&
-    event.key !== "Backspace" &&
-    event.key !== "ArrowLeft" &&
-    event.key !== "ArrowRight" &&
-    event.key !== "Tab"
-  ) {
+  if (!/[0-9]/.test(event.key) && !["Backspace","ArrowLeft","ArrowRight","Tab"].includes(event.key)) {
     event.preventDefault();
   }
 };
@@ -213,54 +228,15 @@ const onBackspace = (index, event) => {
   height: 652px;
 }
 
-.numbers-group {
-  display: flex;
-  justify-content: flex-start;
-  margin: 16px 0;
-}
-
-.code-input-wrapper {
-  display: inline-block;
-}
-
-.code-input {
-  width: 38px;
-  height: 50px;
-  text-align: center;
-  font-size: 22px;
-  border-radius: 18px;
-  border: 1px solid #FFA84C;
-  background-color: #F4F4F4;
-  outline: none;
-  transition: border-color 0.2s ease, color 0.2s ease;
-}
-
-.code-input:focus {
-  border-color: #FF7A00;
-}
-
-.code-error {
-  border-color: #E63946 !important;
-  color: #E63946;
-}
-
-.code-success {
-  border-color: #8ED76A !important;
-  color: #000;
-}
-
-.shake {
-  animation: shake 0.3s ease;
-}
-
-@keyframes shake {
-  0% { transform: translateX(0); }
-  20% { transform: translateX(-5px); }
-  40% { transform: translateX(5px); }
-  60% { transform: translateX(-5px); }
-  80% { transform: translateX(5px); }
-  100% { transform: translateX(0); }
-}
+/* остальные стили как у confirm-email */
+.numbers-group { display: flex; justify-content: flex-start; margin: 16px 0; }
+.code-input-wrapper { display: inline-block; }
+.code-input { width: 38px; height: 50px; text-align: center; font-size: 22px; border-radius: 18px; border: 1px solid #FFA84C; background-color: #F4F4F4; outline: none; transition: border-color 0.2s ease, color 0.2s ease; }
+.code-input:focus { border-color: #FF7A00; }
+.code-error { border-color: #E63946 !important; color: #E63946; }
+.code-success { border-color: #8ED76A !important; color: #000; }
+.shake { animation: shake 0.3s ease; }
+@keyframes shake { 0% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(5px); } 100% { transform: translateX(0); } }
 
 .resend-btn {
   width: 362px;
@@ -275,20 +251,24 @@ const onBackspace = (index, event) => {
   cursor: not-allowed;
   transition: color 0.2s ease;
 }
-
-.resend-btn:enabled {
-  cursor: pointer;
-  color: #555555;
-}
-
+.resend-btn:enabled { cursor: pointer; color: #555555; }
 .resend-btn:hover:enabled,
-.resend-btn:active:enabled {
-  color: #FF7A00;
-}
+.resend-btn:active:enabled { color: #FF7A00; }
 
 .submit-btn.inactive-btn {
   background-color: #FFA84C;
   color: white;
   cursor: not-allowed;
+}
+
+/* Language switch */
+.lang-switch span {
+  cursor: pointer;
+  opacity: 0.6;
+}
+.lang-switch span.active {
+  font-weight: 600;
+  opacity: 1;
+  color: #ff7a00;
 }
 </style>

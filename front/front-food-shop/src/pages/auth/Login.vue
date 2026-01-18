@@ -1,7 +1,7 @@
 <template>
   <div class="page-bg">
     <div class="login-card" :style="{ height: cardHeight + 'px' }">
-      <h1 class="login-title">Вход</h1>
+      <h1 class="login-title">{{ $t('auth.login.title') }}</h1>
 
       <!-- Глобальная ошибка -->
       <transition name="fade-slide">
@@ -16,7 +16,7 @@
             <input
               v-model="email"
               type="email"
-              placeholder="Почта"
+              :placeholder="$t('auth.login.email')"
               class="input"
             />
           </div>
@@ -28,7 +28,7 @@
             <input
               v-model="password"
               :type="showPassword ? 'text' : 'password'"
-              placeholder="Пароль"
+              :placeholder="$t('auth.login.password')"
               class="input"
             />
             <button
@@ -49,14 +49,14 @@
               v-model="remember"
               class="custom-checkbox"
             />
-            <span>Запомнить меня</span>
+            <span>{{ $t('auth.login.remember') }}</span>
           </label>
           <button
             type="button"
             class="forgot-btn"
             @click="handleForgot"
           >
-            Забыли пароль?
+            {{ $t('auth.login.forgot') }}
           </button>
         </div>
 
@@ -67,27 +67,47 @@
           :class="{ 'inactive-btn': !isFormValid }"
           :disabled="!isFormValid || isLoading"
         >
-          {{ isLoading ? "Входим..." : "Войти" }}
+          {{ isLoading ? $t('auth.login.loading') : $t('auth.login.submit') }}
         </button>
       </form>
 
       <!-- Create account -->
       <button class="create-btn" @click="handleRegister">
-        Создать аккаунт
+        {{ $t('auth.login.create') }}
       </button>
 
       <p class="contact-text">
-        По всем вопросам можете обращаться:<br>
+        {{ $t('auth.login.contact') }}<br>
         adminexample@gmail.com
       </p>
+
+      <!-- Language switch -->
+      <div class="lang-switch">
+        <span
+          :class="{ active: currentLocale === 'ru' }"
+          @click="setLanguage('ru')"
+        >
+          RU
+        </span>
+        |
+        <span
+          :class="{ active: currentLocale === 'en' }"
+          @click="setLanguage('en')"
+        >
+          EN
+        </span>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import router from "@/router";
 import { useAuthStore } from "@/stores/auth";
+
+const { locale } = useI18n(); // <-- важно
 
 const authStore = useAuthStore();
 
@@ -111,8 +131,22 @@ watch(errorMessage, () => {
 
 // --- Валидация формы ---
 const isFormValid = computed(() => 
-  email.value.includes("@") && password.value.length > 0
+  regexEmail.test(email.value) && password.value.length > 0
 );
+
+// --- Текущий язык (для класса active) ---
+const currentLocale = computed(() => locale.value);
+
+// --- Language switch ---
+const setLanguage = (lang) => {
+  try {
+    if (typeof window !== "undefined" && window.localStorage) {
+      localStorage.setItem("lang", lang);
+    }
+  } catch (e) {}
+
+  locale.value = lang;
+};
 
 // --- SUBMIT ---
 const handleSubmit = async () => {
