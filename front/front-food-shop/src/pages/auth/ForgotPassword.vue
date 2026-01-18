@@ -1,7 +1,7 @@
 <template>
   <div class="page-bg">
     <!-- Карточка -->
-    <div class="login-card" style="height: 564px;">
+    <div class="login-card" style="height: 585px;">
       <h1 class="login-title" v-html="$t('auth.forgotPassword.title')"></h1>
 
       <p class="helper-text" v-html="$t('auth.forgotPassword.helperText')"></p>
