@@ -121,7 +121,7 @@ export const updatePassword = async (oldPassword, newPassword) => {
     }
 };
 
-export const getProducts = async (pageNumber, pageSize) => {
+export const getUserProducts = async (pageNumber, pageSize) => {
     try {
         const response = await api.get('product/list', { params: { pageNumber, pageSize } });
         return response.data;
@@ -130,7 +130,7 @@ export const getProducts = async (pageNumber, pageSize) => {
     }
 };
 
-export const getProduct = async (id) => {
+export const getUserProduct = async (id) => {
     try {
         const response = await api.get(`product/${id}`);
         return response.data;
@@ -139,7 +139,7 @@ export const getProduct = async (id) => {
     }
 };
 
-export const getCategoryProducts = async (categoryId, pageNumber, pageSize) => {
+export const getUserCategoryProducts = async (categoryId, pageNumber, pageSize) => {
     try {
         const response = await api.get(`product/${categoryId}/list`, { params: { pageNumber, pageSize } });
         return response.data;
@@ -149,9 +149,9 @@ export const getCategoryProducts = async (categoryId, pageNumber, pageSize) => {
 };
 
 export const productApi = {
-    get: getProduct,
-    getList: getProducts,
-    getCategory: getCategoryProducts,
+    get: getUserProduct,
+    getList: getUserProducts,
+    getCategory: getUserCategoryProducts,
 }
 
 export const getCart = async () => {
@@ -203,15 +203,6 @@ export const getAddressSuggestions = async (queryParams) => {
         return response.data;
     } catch (error) {
         throw new Error("Не удалось получить адреса");
-    }
-};
-
-export const getCategory = async (id) => {
-    try {
-        const response = await api.get(`categories/${id}`);
-        return response.data;
-    } catch (error) {
-        throw new Error("Не удалось получить категорию");
     }
 };
 
@@ -318,6 +309,8 @@ export const createOrder = async (orderDetails) => {
     } catch (error) {
         throw new Error("Не удалось создать заказ");
     }
+};
+
 export const createCategory = async (name, parentId = null) => {
     try {
         const response = await api.post('categories/create', { name, parentId });
