@@ -132,6 +132,7 @@ const isLoading = ref(false);
 const submissionError = ref(null);
 const passwordStrength = ref(0);
 const errors = ref({ email: null, password: null });
+const regexEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 // Базовая высота карты
 const baseCardHeight = 570;
@@ -143,7 +144,7 @@ const sanitizeInput = (value) => value.replace(/\s/g, '');
 // --- ВАЛИДАЦИЯ ---
 const isFormValid = computed(() => {
   return (
-    email.value.includes("@") &&
+    regexEmail.test(email.value) &&
     password.value.length >= 8 &&
     password.value === confirmPassword.value &&
     password.value.trim().length > 0
@@ -235,7 +236,15 @@ watch(
 // --- SUBMIT ---
 const handleSubmit = async () => {
   if (!isFormValid.value) {
-    errorMessage.value = 'Пароли не совпадают, меньше 8 символов или содержат пробелы';
+    if (password.value !== confirmPassword.value) {
+      errorMessage.value = 'Пароли не совпадают';
+    } else if (password.value.length < 8) {
+      errorMessage.value = 'Пароль меньше 8 символов';
+    } else if (password.value.includes(' ')) {
+      errorMessage.value = 'Пароль содержит пробелы';
+    } else {
+      errorMessage.value = 'Адрес электронной почты не верен';
+    }
     return;
   }
 

@@ -19,14 +19,29 @@ public interface IProductUseCase
     Task<GetProductResponse> GetProductAsync(Guid id);
     
     /// <summary>
+    /// Получить продукт (админ)
+    /// </summary>
+    Task<GetAdminProductResponse> GetAdminProductAsync(Guid id);
+    
+    /// <summary>
     /// Получить список продуктов
     /// </summary>
     Task<GetProductListResponse> GetProductListAsync(int pageNumber, int pageSize);
     
     /// <summary>
-    /// Получить список продуктов
+    /// Получить список продуктов (admin)
+    /// </summary>
+    Task<GetAdminProductListResponse> GetAdminProductListAsync(int pageNumber, int pageSize);
+    
+    /// <summary>
+    /// Получить список продуктов по идентификатору категории
     /// </summary>
     Task<GetProductListResponse> GetProductListByCategoryIdAsync(Guid categoryId, int pageNumber, int pageSize);
+    
+    /// <summary>
+    /// Получить список продуктов по идентификатору категории (админ)
+    /// </summary>
+    Task<GetAdminProductListResponse> GetAdminProductListByCategoryIdAsync(Guid categoryId, int pageNumber, int pageSize);
     
     /// <summary>
     /// Изменить продукт

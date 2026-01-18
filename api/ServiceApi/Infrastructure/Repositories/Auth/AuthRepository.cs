@@ -1,5 +1,6 @@
 using System.Data;
 using Application.Ports.Repositories;
+using Application.UseCases.Auth.CreateUser.Request;
 using Dapper;
 using Domain.User;
 using Microsoft.Extensions.Logging;
@@ -207,5 +208,21 @@ public class AuthRepository : IAuthRepository
         
         await _dbConnection.ExecuteAsync(sqlUser, new { Id = id, Name = name, LastName = lastName, Phone = phone, Now = DateTime.UtcNow });
         await _dbConnection.ExecuteAsync(sqlUserProfile, new { UserId = id, Gender = gender, BirthDate = birthDate });
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<Claim>> GetUserClaimsAsync(Guid userId)
+    {
+        var sql = $@"SELECT ""{nameof(ClaimModel.Type)}"",
+                            ""{nameof(ClaimModel.Value)}""
+                    FROM ""{nameof(ClaimModel)}""
+                    WHERE ""{nameof(ClaimModel.UserId)}"" = @UserId";
+
+        var claims = await _dbConnection.QueryAsync<Claim>(sql, new
+        {
+            UserId = userId
+        });
+        
+        return claims;
     }
 }

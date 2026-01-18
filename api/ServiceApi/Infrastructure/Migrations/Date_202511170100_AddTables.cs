@@ -79,31 +79,56 @@ public class Date_202511170100_AddTables : Migration
                 .WithColumn(nameof(DeliveryModel.Address)).AsString().NotNullable()
                 .WithColumn(nameof(DeliveryModel.Price)).AsDecimal().NotNullable();
         }
+
+        if (Schema.Table(_orderProductTb).Exists() && Schema.Table(_productTb).Exists()
+                                                   && !Schema.Table(_orderProductTb)
+                                                       .Constraint("FK_OrderProduct_Product").Exists())
+        {
+            Create.ForeignKey("FK_OrderProduct_Product")
+                .FromTable(_orderProductTb).ForeignColumn(nameof(OrderProductModel.ProductId))
+                .ToTable(_productTb).PrimaryColumn(nameof(ProductModel.Id))
+                .OnDeleteOrUpdate(System.Data.Rule.Cascade);   
+        }
         
-        Create.ForeignKey("FK_OrderProduct_Product")
-            .FromTable(_orderProductTb).ForeignColumn(nameof(OrderProductModel.ProductId))
-            .ToTable(_productTb).PrimaryColumn(nameof(ProductModel.Id))
-            .OnDeleteOrUpdate(System.Data.Rule.Cascade);
-        
-        Create.ForeignKey("FK_Product_Provider")
-            .FromTable(_productTb).ForeignColumn(nameof(ProductModel.ProviderId))
-            .ToTable(_providerTb).PrimaryColumn(nameof(ProviderModel.Id))
-            .OnDeleteOrUpdate(System.Data.Rule.Cascade);
-        
-        Create.ForeignKey("FK_OrderProduct_Order")
-            .FromTable(_orderProductTb).ForeignColumn(nameof(OrderProductModel.OrderId))
-            .ToTable(_orderTb).PrimaryColumn(nameof(OrderModel.Id))
-            .OnDeleteOrUpdate(System.Data.Rule.Cascade);
-        
-        Create.ForeignKey("FK_Order_Delivery")
-            .FromTable(_orderTb).ForeignColumn(nameof(OrderModel.DeliveryId))
-            .ToTable(_deliveryTb).PrimaryColumn(nameof(DeliveryModel.Id))
-            .OnDeleteOrUpdate(System.Data.Rule.Cascade);
-        
-        Create.ForeignKey("FK_Order_User")
-            .FromTable(_orderTb).ForeignColumn(nameof(OrderModel.CustomerId))
-            .ToTable(_userTb).PrimaryColumn(nameof(UserModel.Id))
-            .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+        if (Schema.Table(_orderTb).Exists() && Schema.Table(_providerTb).Exists()
+                                            && !Schema.Table(_productTb)
+                                                .Constraint("FK_Product_Provider").Exists())
+        {
+            Create.ForeignKey("FK_Product_Provider")
+                .FromTable(_productTb).ForeignColumn(nameof(ProductModel.ProviderId))
+                .ToTable(_providerTb).PrimaryColumn(nameof(ProviderModel.Id))
+                .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+        }
+
+        if (Schema.Table(_orderProductTb).Exists() && Schema.Table(_orderTb).Exists()
+                                                   && !Schema.Table(_orderProductTb)
+                                                       .Constraint("FK_OrderProduct_Order").Exists())
+        {
+            Create.ForeignKey("FK_OrderProduct_Order")
+                .FromTable(_orderProductTb).ForeignColumn(nameof(OrderProductModel.OrderId))
+                .ToTable(_orderTb).PrimaryColumn(nameof(OrderModel.Id))
+                .OnDeleteOrUpdate(System.Data.Rule.Cascade);   
+        }
+
+        if (Schema.Table(_deliveryTb).Exists() && Schema.Table(_orderTb).Exists()
+                                               && !Schema.Table(_orderTb)
+                                                   .Constraint("FK_Order_Delivery").Exists())
+        {
+            Create.ForeignKey("FK_Order_Delivery")
+                .FromTable(_orderTb).ForeignColumn(nameof(OrderModel.DeliveryId))
+                .ToTable(_deliveryTb).PrimaryColumn(nameof(DeliveryModel.Id))
+                .OnDeleteOrUpdate(System.Data.Rule.Cascade);   
+        }
+
+        if (Schema.Table(_userTb).Exists() && Schema.Table(_orderTb).Exists()
+                                           && !Schema.Table(_orderTb)
+                                               .Constraint("FK_Order_User").Exists())
+        {
+            Create.ForeignKey("FK_Order_User")
+                .FromTable(_orderTb).ForeignColumn(nameof(OrderModel.CustomerId))
+                .ToTable(_userTb).PrimaryColumn(nameof(UserModel.Id))
+                .OnDeleteOrUpdate(System.Data.Rule.Cascade);
+        }
     }
 
     /// <inheritdoc />

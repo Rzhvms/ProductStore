@@ -38,4 +38,9 @@ public record ProductReviewModel
     /// Дата добавления
     /// </summary>
     public DateTime CreatedAt { get; init; }
+    
+    /// <summary>
+    /// Скрыт ли отзыв
+    /// </summary>
+    public bool IsVisible { get; init; }
 }

@@ -36,30 +36,30 @@ public class AdminProductController : ControllerBase
     /// </summary>
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<GetProductResponse> GetProductAsync([FromRoute] Guid id)
+    public async Task<GetAdminProductResponse> GetProductAsync([FromRoute] Guid id)
     {
-        return await _productUseCase.GetProductAsync(id);
+        return await _productUseCase.GetAdminProductAsync(id);
     }
 
     /// <summary>
     /// Получить список продуктов
     /// </summary>
     [HttpGet("list")]
-    public async Task<GetProductListResponse> GetProductListAsync([FromQuery] int pageNumber, [FromQuery] int pageSize)
+    public async Task<GetAdminProductListResponse> GetProductListAsync([FromQuery] int pageNumber, [FromQuery] int pageSize)
     {
-        return await _productUseCase.GetProductListAsync(pageNumber, pageSize);
+        return await _productUseCase.GetAdminProductListAsync(pageNumber, pageSize);
     }
     
     /// <summary>
     /// Получить список продуктов по айди категории
     /// </summary>
     [HttpGet("{categoryId}/list")]
-    public async Task<GetProductListResponse> GetProductListByCategoryIdAsync(
+    public async Task<GetAdminProductListResponse> GetProductListByCategoryIdAsync(
         [FromQuery] int pageNumber, 
         [FromQuery] int pageSize,
         [FromRoute] Guid categoryId)
     {
-        return await _productUseCase.GetProductListByCategoryIdAsync(categoryId, pageNumber, pageSize);
+        return await _productUseCase.GetAdminProductListByCategoryIdAsync(categoryId, pageNumber, pageSize);
     }
 
     /// <summary>

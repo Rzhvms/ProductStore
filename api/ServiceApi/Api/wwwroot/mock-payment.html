@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оплата</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            color: #1d1d1f;
+        }
+
+        .payment-card {
+            width: 100%;
+            max-width: 380px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow:
+                    0 10px 40px rgba(0, 0, 0, 0.08),
+                    0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Глянцевый верхний бар */
+        .payment-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(255,255,255,0));
+            z-index: 1;
+        }
+
+        .header {
+            padding: 40px 32px 24px;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .apple-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #FF6B35 0%, #FF9F1C 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 8px 24px rgba(255, 107, 53, 0.25);
+        }
+
+        .apple-icon i {
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #1d1d1f 0%, #424245 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #86868b;
+            font-size: 15px;
+            font-weight: 500;
+            letter-spacing: -0.2px;
+        }
+
+        .content {
+            padding: 0 32px 32px;
+        }
+
+        .amount-display {
+            text-align: center;
+            margin-bottom: 32px;
+            padding: 24px;
+            background: #f8f9fa;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .amount-display::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #FF6B35, transparent);
+        }
+
+        .amount-label {
+            color: #86868b;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .amount-value {
+            font-size: 48px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: #1d1d1f;
+            line-height: 1;
+        }
+
+        .amount-currency {
+            font-size: 28px;
+            font-weight: 600;
+            color: #86868b;
+            margin-left: 4px;
+        }
+
+        .payment-info {
+            margin-bottom: 32px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 14px 0;
+            border-bottom: 1px solid #f2f2f7;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #86868b;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .info-value {
+            color: #1d1d1f;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .button {
+            padding: 18px;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+
+        .button:active::after {
+            animation: ripple 0.6s ease-out;
+        }
+
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(40, 40);
+                opacity: 0;
+            }
+        }
+
+        .pay-button {
+            background: linear-gradient(135deg, #FF6B35 0%, #FF9F1C 100%);
+            color: white;
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.25);
+        }
+
+        .pay-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 107, 53, 0.35);
+        }
+
+        .cancel-button {
+            background: transparent;
+            color: #86868b;
+            border: 2px solid #e5e5ea;
+        }
+
+        .cancel-button:hover {
+            background: #f8f9fa;
+            border-color: #d2d2d7;
+        }
+
+        .footer {
+            padding: 24px 32px;
+            text-align: center;
+            color: #86868b;
+            font-size: 12px;
+            border-top: 1px solid #f2f2f7;
+            background: #f8f9fa;
+        }
+
+        .secure-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .secure-badge i {
+            color: #34c759;
+        }
+
+        /* Анимация загрузки */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid #f2f2f7;
+            border-top-color: #FF6B35;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Минималистичная тень */
+        .payment-card:hover {
+            box-shadow:
+                    0 15px 50px rgba(0, 0, 0, 0.1),
+                    0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+            transform: translateY(-2px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Адаптивность */
+        @media (max-width: 400px) {
+            .payment-card {
+                border-radius: 20px;
+            }
+
+            .header {
+                padding: 32px 24px 20px;
+            }
+
+            .content {
+                padding: 0 24px 24px;
+            }
+
+            .amount-value {
+                font-size: 40px;
+            }
+
+            .button {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="payment-card">
+    <div class="header">
+        <div class="apple-icon">
+            <i>􀣺</i>
+        </div>
+        <h1 class="title">Оплата заказа</h1>
+        <div class="subtitle">Тестовый платежный шлюз</div>
+    </div>
+
+    <div class="content">
+        <div class="amount-display">
+            <div class="amount-label">Сумма к оплате</div>
+            <div>
+                <span class="amount-value" id="amount">0</span>
+                <span class="amount-currency">₽</span>
+            </div>
+        </div>
+
+        <div class="payment-info">
+            <div class="info-row">
+                <div class="info-label">Заказ</div>
+                <div class="info-value" id="orderId">—</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Платеж</div>
+                <div class="info-value" id="paymentId">—</div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="button pay-button" onclick="processPayment('success')">
+                Оплатить
+            </button>
+            <button class="button cancel-button" onclick="processPayment('cancel')">
+                Отмена
+            </button>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="secure-badge">
+            <i>􀎡</i> Безопасный тестовый платеж
+        </div>
+    </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+</div>
+
+<script>
+    // Получаем paymentId из URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentId = urlParams.get('paymentId');
+
+    if (!paymentId) {
+        alert("Ошибка: не найден идентификатор платежа");
+        throw new Error("PaymentId is required");
+    }
+
+    // Функция показа загрузки
+    function showLoading(show) {
+        const overlay = document.getElementById('loadingOverlay');
+        if (show) {
+            overlay.classList.add('active');
+        } else {
+            overlay.classList.remove('active');
+        }
+    }
+
+    // Загружаем данные платежа
+    async function loadPaymentData() {
+        try {
+            const response = await fetch(`/api/mock-payments/${paymentId}`);
+
+            if (!response.ok) {
+                throw new Error(`Ошибка: ${response.status}`);
+            }
+
+            const payment = await response.json();
+
+            // Форматируем сумму
+            if (payment.amount !== undefined && payment.amount !== null) {
+                document.getElementById('amount').textContent =
+                    Number(payment.amount).toLocaleString('ru-RU', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+            }
+
+            // Отображаем ID заказа и платежа
+            if (payment.orderId) {
+                document.getElementById('orderId').textContent =
+                    payment.orderId.substring(0, 8).toUpperCase();
+            }
+
+            document.getElementById('paymentId').textContent =
+                paymentId.substring(0, 8).toUpperCase();
+
+        } catch (error) {
+            console.error('Ошибка загрузки:', error);
+            // Устанавливаем демо-данные
+            document.getElementById('amount').textContent = '1 499';
+            document.getElementById('orderId').textContent = 'ORD' + Math.floor(Math.random() * 10000);
+            document.getElementById('paymentId').textContent = paymentId.substring(0, 8).toUpperCase();
+        }
+    }
+
+    // Обработка платежа
+    async function processPayment(action) {
+        showLoading(true);
+
+        try {
+            // Имитируем задержку сети
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            let endpoint = '';
+            let redirectUrl = '';
+
+            if (action === 'success') {
+                endpoint = `/api/mock-payments/${paymentId}/pay`;
+                redirectUrl = `/payment-success.html?paymentId=${paymentId}`;
+            } else {
+                endpoint = `/api/mock-payments/${paymentId}/cancel`;
+                redirectUrl = `/payment-failed.html?paymentId=${paymentId}`;
+            }
+
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            // Дополнительная задержка для реалистичности
+            await new Promise(resolve => setTimeout(resolve, 400));
+
+            if (response.ok) {
+                // Плавный переход
+                showLoading(false);
+                await new Promise(resolve => setTimeout(resolve, 200));
+                window.location.href = redirectUrl;
+            } else {
+                throw new Error('Ошибка сервера');
+            }
+
+        } catch (error) {
+            console.error('Ошибка:', error);
+            showLoading(false);
+            alert('Произошла ошибка. Пожалуйста, попробуйте еще раз.');
+        }
+    }
+
+    // Инициализация при загрузке страницы
+    document.addEventListener('DOMContentLoaded', () => {
+        // Плавное появление карточки
+        setTimeout(() => {
+            document.querySelector('.payment-card').style.opacity = '1';
+            document.querySelector('.payment-card').style.transform = 'translateY(0)';
+        }, 100);
+
+        loadPaymentData();
+    });
+
+    // Начальные стили для анимации
+    document.querySelector('.payment-card').style.opacity = '0';
+    document.querySelector('.payment-card').style.transform = 'translateY(20px)';
+    document.querySelector('.payment-card').style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+</script>
+
+</body>
+</html>

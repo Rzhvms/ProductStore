@@ -3,17 +3,21 @@ using System.Security.Cryptography;
 using Application.Ports.Repositories;
 using Application.Ports.Services;
 using Application.Ports.Services.Email;
+using Application.Ports.Services.Payment;
 using FluentMigrator.Runner;
 using Infrastructure.Migrations;
 using Infrastructure.Repositories.Product;
 using Infrastructure.Repositories.Auth;
 using Infrastructure.Repositories.Cart;
 using Infrastructure.Repositories.Category;
+using Infrastructure.Repositories.Order;
+using Infrastructure.Repositories.Payment;
 using Infrastructure.Repositories.User;
 using Infrastructure.Services.Auth.Cryptography;
 using Infrastructure.Services.Auth.Jwt;
 using Infrastructure.Services.Email;
 using Infrastructure.Services.Email.Interfaces;
+using Infrastructure.Services.Payment;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -23,7 +27,8 @@ namespace Infrastructure;
 
 public static class InfraForStartup
 {
-    public static IServiceCollection AddInfrastructureModule(this IServiceCollection services, JwtSettings jwtSettings, string connectionString)
+    public static IServiceCollection AddInfrastructureModule(this IServiceCollection services, JwtSettings jwtSettings,
+        string connectionString)
     {
         // Сервисы криптографии
         services.AddSingleton<ICryptographyService, CryptographyService>();
@@ -58,6 +63,10 @@ public static class InfraForStartup
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<ICartRepository, RedisCartRepository>();
+        services.AddScoped<IOrderRepository, OrderRepository>();
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
+        services.AddScoped<IFavoriteProductsRepository, FavoriteProductsRepository>();
+        services.AddScoped<IProductReviewRepository, ProductReviewRepository>();
 
         // FluentMigrator
         services.AddFluentMigratorCore()
@@ -67,11 +76,11 @@ public static class InfraForStartup
                 .ScanIn(typeof(Date_202511011900_AddTables_UserDal_ClaimDal_RefreshTokenDal).Assembly).For.Migrations())
             .AddLogging(lb => lb.AddFluentMigratorConsole());
 
-        
         // Email
         services.AddScoped<IMailHelper, MailHelper>();
         services.AddScoped<IEmailClient, EmailClient>();
         services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IPaymentService, MockPaymentService>();
         return services;
     }
 }

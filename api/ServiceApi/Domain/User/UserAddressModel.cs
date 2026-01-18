@@ -54,4 +54,14 @@ public class UserAddressModel
     /// Используется ли адрес по умолчанию при оформлении заказа
     /// </summary>
     public bool? IsDefault { get; set; } = false;
+    
+    /// <summary>
+    /// Этаж
+    /// </summary>
+    public int? Floor { get; set; }
+    
+    /// <summary>
+    /// Подъезд
+    /// </summary>
+    public string? Entrance { get; set; }
 }
