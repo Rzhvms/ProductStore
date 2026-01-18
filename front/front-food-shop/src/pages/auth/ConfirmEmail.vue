@@ -238,7 +238,7 @@ const onBackspace = (index, event) => {
 
 .login-card {
   width: 410px;
-  height: 550px;
+  height: 580px;
   transition: height 0.3s ease;
 }
 
