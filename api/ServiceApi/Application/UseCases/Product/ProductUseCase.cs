@@ -48,7 +48,8 @@ internal class ProductUseCase : IProductUseCase
             Description = response.Description,
             Price = response.Price,
             CategoryId = response.CategoryId,
-            Characteristics = response.Characteristics
+            Characteristics = response.Characteristics,
+            Quantity = response.Quantity
         };
     }
     
@@ -80,7 +81,8 @@ internal class ProductUseCase : IProductUseCase
             Description = p.Description,
             Price = p.Price,
             CategoryId = p.CategoryId,
-            Characteristics = p.Characteristics
+            Characteristics = p.Characteristics,
+            Quantity = p.Quantity
         }).ToList();
         
         return new GetProductListResponse()
@@ -122,7 +124,8 @@ internal class ProductUseCase : IProductUseCase
             Description = p.Description,
             Price = p.Price,
             CategoryId = p.CategoryId,
-            Characteristics = p.Characteristics
+            Characteristics = p.Characteristics,
+            Quantity = p.Quantity
         }).ToList();
         
         return new GetProductListResponse()
@@ -144,7 +147,7 @@ internal class ProductUseCase : IProductUseCase
             Price = p.Price,
             Quantity = p.Quantity,
             CategoryId = p.CategoryId,
-            Characteristics = p.Characteristics
+            Characteristics = p.Characteristics,
         }).ToList();
         
         return new GetAdminProductListResponse()

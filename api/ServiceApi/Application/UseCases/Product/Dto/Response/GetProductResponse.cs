@@ -36,4 +36,9 @@ public record GetProductResponse
     /// Характеристики
     /// </summary>
     public JsonObject Characteristics { get; init; }
+    
+    /// <summary>
+    /// Получение списка продуктов
+    /// </summary>
+    public int Quantity { get; init; }
 }
