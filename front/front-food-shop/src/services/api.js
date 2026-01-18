@@ -121,6 +121,203 @@ export const updatePassword = async (oldPassword, newPassword) => {
     }
 };
 
+export const getProducts = async (pageNumber, pageSize) => {
+    try {
+        const response = await api.get('product/list', { params: { pageNumber, pageSize } });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить список товаров");
+    }
+};
+
+export const getProduct = async (id) => {
+    try {
+        const response = await api.get(`product/${id}`);
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить товар");
+    }
+};
+
+export const getCategoryProducts = async (categoryId, pageNumber, pageSize) => {
+    try {
+        const response = await api.get(`product/${categoryId}/list`, { params: { pageNumber, pageSize } });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить список товаров по категории");
+    }
+};
+
+export const productApi = {
+    get: getProduct,
+    getList: getProducts,
+    getCategory: getCategoryProducts,
+}
+
+export const getCart = async () => {
+    try {
+        const response = await api.get('cart');
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить список товаров");
+    }
+};
+
+export const clearCart = async () => {
+    try {
+        const response = await api.delete('cart');
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось очистить корзину");
+    }
+};
+
+export const addToCart = async (productId, quantity) => {
+    try {
+        const response = await api.post('cart/items', { productId, quantity });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось добавить товар в корзину");
+    }
+};
+
+export const removeFromCart = async (productId) => {
+    try {
+        const response = await api.delete(`cart/items/${productId}`);
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось удалить товар из корзины");
+    }
+};
+
+export const cartApi = {
+    get: getCart,
+    clear: clearCart,
+    add: addToCart,
+    remove: removeFromCart,
+}
+
+export const getAddressSuggestions = async (queryParams) => {
+    try {
+        const response = await api.get('suggest-address', { params: { queryParams } });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить адреса");
+    }
+};
+
+export const getCategory = async (id) => {
+    try {
+        const response = await api.get(`categories/${id}`);
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить категорию");
+    }
+};
+
+export const postReview = async (productId, rating, message) => {
+    try {
+        const response = await api.post('review', { productId, rating, message });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось оставить отзыв");
+    }
+};
+
+export const getReview = async (id) => {
+    try {
+        const response = await api.get(`review/${id}`);
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить отзыв");
+    }
+};
+
+export const deleteReview = async (id) => {
+    try {
+        const response = await api.delete(`review/${id}`);
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось удалить отзыв");
+    }
+};
+
+export const getReviews = async (productId) => {
+    try {
+        const response = await api.get(`review/${productId}/list`);
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить список отзывов");
+    }
+};
+
+export const updateReview = async (id, rating, message) => {
+    try {
+        const response = await api.patch(`review/patch-review/${id}`, { rating, message });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось обновить отзыв");
+    }
+};
+
+export const reviewApi = {
+    get: getReview,
+    delete: deleteReview,
+    update: updateReview,
+    getList: getReviews,
+    post: postReview,
+}
+
+export const getFavoriteProducts = async (pageNumber = 1, pageSize = 10) => {
+    try {
+        const response = await api.get('favorite-products/list', { params: { pageNumber, pageSize } });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить список избранных товаров");
+    }
+};
+
+export const addToFavorites = async (productId) => {
+    try {
+        const response = await api.post(`favorite-products/${productId}`);
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось добавить товар в избранное");
+    }
+};
+
+export const removeFromFavorites = async (productId) => {
+    try {
+        const response = await api.delete(`favorite-products/${productId}`);
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось удалить товар из избранного");
+    }
+};
+
+export const clearFavorites = async (productIdList) => {
+    try {
+        const response = await api.delete('favorite-products/delete-list', { productIdList });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось очистить избранное");
+    }
+};
+
+export const favoriteApi = {
+    get: getFavoriteProducts,
+    add: addToFavorites,
+    remove: removeFromFavorites,
+    clear: clearFavorites,
+}
+
+export const createOrder = async (orderDetails) => {
+    try {
+        const response = await api.post('orders', orderDetails);
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось создать заказ");
+    }
 export const createCategory = async (name, parentId = null) => {
     try {
         const response = await api.post('categories/create', { name, parentId });

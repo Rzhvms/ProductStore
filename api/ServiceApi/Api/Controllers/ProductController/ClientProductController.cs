@@ -36,6 +36,7 @@ public class ClientProductController : ControllerBase
     /// Получить список продуктов
     /// </summary>
     [HttpGet("list")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<GetProductListResponse> GetProductListAsync([FromQuery] int pageNumber, [FromQuery] int pageSize)
     {
         return await _productUseCase.GetProductListAsync(pageNumber, pageSize);
@@ -45,6 +46,7 @@ public class ClientProductController : ControllerBase
     /// Получить список продуктов по айди категории
     /// </summary>
     [HttpGet("{categoryId}/list")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<GetProductListResponse> GetProductListByCategoryIdAsync(
         [FromQuery] int pageNumber, 
         [FromQuery] int pageSize,

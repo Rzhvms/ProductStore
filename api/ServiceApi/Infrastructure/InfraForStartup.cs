@@ -19,6 +19,7 @@ using Infrastructure.Services.Auth.Jwt;
 using Infrastructure.Services.Email;
 using Infrastructure.Services.Email.Interfaces;
 using Infrastructure.Services.Payment;
+using Infrastructure.Services.Yandex;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -78,11 +79,12 @@ public static class InfraForStartup
                 .ScanIn(typeof(Date_202511011900_AddTables_UserDal_ClaimDal_RefreshTokenDal).Assembly).For.Migrations())
             .AddLogging(lb => lb.AddFluentMigratorConsole());
 
-        // Email
+        // Services
         services.AddScoped<IMailHelper, MailHelper>();
         services.AddScoped<IEmailClient, EmailClient>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IPaymentService, MockPaymentService>();
+        services.AddHttpClient<IYandexMapsAddressService, YandexMapsAddressService>();
         return services;
     }
 }

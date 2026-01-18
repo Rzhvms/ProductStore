@@ -3,10 +3,10 @@ import { createPinia } from 'pinia'
 
 import App from './App.vue'
 import router from './router'
+import './index.css'
 import './pages/auth/auth.css'
 import { i18n } from './i18n'
 
-import './index.css'
 
 const app = createApp(App)
 app.use(createPinia())

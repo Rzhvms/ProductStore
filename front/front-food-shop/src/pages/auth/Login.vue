@@ -119,6 +119,7 @@ const isLoading = ref(false);
 const regexEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 const errors = ref({ email: false, password: false });
+
 const errorMessage = ref("");
 
 // --- Динамическая высота ---
@@ -151,8 +152,7 @@ const setLanguage = (lang) => {
 // --- SUBMIT ---
 const handleSubmit = async () => {
   errors.value = { email: false, password: false };
-  errorMessage.value = "";
-
+  errorMessage.value = "";  
   if (!email.value) {
     errors.value.email = true;
     errorMessage.value = "Почта не указана";
@@ -177,11 +177,21 @@ const handleSubmit = async () => {
       router.push("/admin");
     }
   } catch (error) {
-    if (error.message === "Аккаунт не найден") {
+    const status = error.response?.status;
+    const message =
+      error.response?.data?.message || error.message;
+
+    if (
+      status === 404 ||
+      message === "User not found" ||
+      message === "Аккаунт не найден"
+    ) {
       router.push("/account-not-found");
       return;
     }
-    errorMessage.value = error.message;
+
+    errorMessage.value = message || "Ошибка входа";
+  } finally {
     isLoading.value = false;
   }
 };

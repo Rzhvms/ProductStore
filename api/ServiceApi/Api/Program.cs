@@ -135,7 +135,10 @@ builder.Services.AddAuthentication(options =>
         };
     });
 
+// Конфигурация из appsettings.json
 builder.Services.Configure<AppOptions>(builder.Configuration.GetSection("App"));
+builder.Services.Configure<YandexAddressSuggestServiceOptions>(builder.Configuration.GetSection("Yandex"));
+
 
 var app = builder.Build();
 

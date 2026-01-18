@@ -16,12 +16,16 @@ import Home from '../pages/home/Index.vue'
 
 // Catalog
 import CatalogIndex from '../pages/catalog/Index.vue'
+import Catalog from '@/pages/catalog/Catalog.vue'
 import Category from '../pages/catalog/Category.vue'
 import Subcategory from '../pages/catalog/Subcategory.vue'
 import ProductCard from '../pages/catalog/ProductCard.vue'
 
 // Cart
 import Cart from '../pages/cart/Index.vue'
+import Payment from '../pages/cart/Payment.vue'
+import PaymentSuccess from '../pages/cart/PaymentSuccess.vue'
+import PaymentFailed from '../pages/cart/PaymentFailed.vue'
 
 // Checkout
 import CheckoutAddress from '../pages/checkout/Address.vue'
@@ -44,10 +48,10 @@ import AdminStatistic from '../pages/admin/AdminStatistic.vue'
 import AdminProduct from '../pages/admin/AdminProduct.vue'
 import AdminProductAdd from '../pages/admin/AdminProductAdd.vue'
 
-
+import App from '../App.vue'
 
 const routes = [
-  { path: '/', component: Home },
+  { path: '/', component: CatalogIndex },
 
   // Auth
   { path: '/login', component: Login, meta: { guestOnly: true } },
@@ -60,13 +64,16 @@ const routes = [
   { path: '/forgot-password', component: ForgotPassword, meta: { guestOnly: true } },
 
   // Catalog
-  { path: '/catalog', component: CatalogIndex },
+  { path: '/catalog', component: Catalog },
   { path: '/catalog/category', component: Category },
   { path: '/catalog/subcategory', component: Subcategory },
-  { path: '/catalog/product', component: ProductCard },
+  { path: '/catalog/product/:id', component: ProductCard },
 
   // Cart
   { path: '/cart', component: Cart, meta: { requiresAuth: true } },
+  { path: '/payment/:id', component: Payment, meta: { requiresAuth: true } },
+  { path: '/payment/success', component: PaymentSuccess, meta: { requiresAuth: true } },
+  { path: '/payment/failed', component: PaymentFailed, meta: { requiresAuth: true } },
 
   // Checkout
   { path: '/checkout/address', component: CheckoutAddress, meta: { requiresAuth: true } },
