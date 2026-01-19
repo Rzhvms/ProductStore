@@ -24,7 +24,7 @@ namespace Api.Controllers.UserController;
 /// <summary>
 /// Контроллер по изменению данных пользователя со стороны админа
 /// </summary>
-// [Authorize]
+[Authorize]
 [Route("api/admin/user-info")]
 [ApiController]
 public class UserAdminController : ControllerBase
