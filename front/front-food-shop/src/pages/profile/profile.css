@@ -423,6 +423,7 @@ body, html {
 }
 
 /* твой кастомный чекбокс */
+/* Кастомный чекбокс */
 .custom-checkbox {
   appearance: none;
   -webkit-appearance: none;
@@ -455,7 +456,7 @@ body, html {
   border: solid white;
   border-width: 0 0.2em 0.2em 0;
   transform: rotate(45deg);
-  left: 22%;
+  left: 30%;
   bottom: 20%;
 }
 

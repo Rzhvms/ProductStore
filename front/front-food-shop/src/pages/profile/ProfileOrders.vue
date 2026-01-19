@@ -214,7 +214,8 @@ export default {
 
 /* Стили статусов */
 .status-btn {
-  /* Базовый стиль из твоего кода */
+  padding: 4px 12px;
+  border-radius: 16px;
   cursor: default;
   background: #eee;
   color: #333;

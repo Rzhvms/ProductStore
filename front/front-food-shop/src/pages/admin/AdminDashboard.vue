@@ -93,7 +93,7 @@
         <div class="promotions-section">
           <div class="section-header">
             <h2>Акции и баннеры</h2>
-            <div classs="header-actions">
+            <div class="header-actions">
               <button class="secondary-btn small" @click="handleExportData" title="Экспорт">Экспорт</button>
               <button class="secondary-btn small" @click="handleResetData" title="Сброс">Сброс</button>
               <button class="add-btn small" @click="openModal('create')">+ Добавить акцию</button>
@@ -700,7 +700,6 @@ function getTargetLabelGenitive(type) {
 .header-actions {
   display: flex;
   gap: 12px;
-  align-items: center;
 }
 
 .secondary-btn.small {
@@ -976,7 +975,7 @@ function getTargetLabelGenitive(type) {
 .modal-actions { display: flex; gap: 10px; margin-top: auto; padding-top: 20px; }
 .primary-btn { flex: 1; background: #FF7A00; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: 600; }
 .primary-btn:hover { background: #e06600; }
-.secondary-btn { flex: 1; background: #f0f0f0; color: #333; border: none; padding: 12px; border-radius: 6px; cursor: pointer; }
+.secondary-btn { flex: 1; min-width: 100px; background: #f0f0f0; color: #333; border: none; padding: 12px; border-radius: 16px; cursor: pointer; }
 .secondary-btn:hover { background: #e0e0e0; }
 .input-error {
   border-color: #ff4d4f !important;

@@ -536,6 +536,7 @@ onBeforeUnmount(() => {
 }
 
 .product-name {
+  text-align: center;
   font-size: 15px;
   font-weight: 500;
   line-height: 1.4;
@@ -544,6 +545,7 @@ onBeforeUnmount(() => {
 }
 
 .product-bottom {
+  gap: 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;

@@ -409,6 +409,7 @@ onMounted(loadProducts)
 
 /* Название */
 .product-name {
+  text-align: center;
   font-size: 14px;
   font-weight: 500;
   text-align: center;
