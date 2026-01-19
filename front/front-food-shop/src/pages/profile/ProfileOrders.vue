@@ -1,149 +1,7 @@
-<template>
-  <ProfileLayout>
-    <!-- ЗАГОЛОВОК -->
-    <div class="pd-header" style="margin-bottom: 20px;">
-      <h2>Личные заказы</h2>
-    </div>
-
-    <!-- БЛОК ФИЛЬТРОВ (Стилизован под personal-data) -->
-    <div class="personal-data filter-section">
-      
-      <!-- Поиск и Даты -->
-      <div class="form-grid-3x2 filters-grid">
-        
-        <!-- Поиск (на всю ширину в мобилке, или широко в десктопе) -->
-        <div class="form-item search-item">
-          <label>Поиск заказа</label>
-          <div class="input-with-icon">
-            <input 
-              type="text" 
-              placeholder="Номер заказа или товар" 
-              v-model="filters.search" 
-            />
-            <span class="icon">🔍</span>
-          </div>
-        </div>
-
-        <!-- Даты (Используем стиль form-item) -->
-        <div class="form-item">
-          <label>От</label>
-          <input type="text" placeholder="дд.мм.гггг" class="date-input" />
-        </div>
-
-        <div class="form-item">
-          <label>До</label>
-          <input type="text" placeholder="дд.мм.гггг" class="date-input" />
-        </div>
-      </div>
-
-      <!-- Кнопка поиска по чеку (Стиль как pd-edit-btn или status-btn) -->
-      <div class="actions-row">
-        <button class="pd-edit-btn" style="width: auto; padding: 0 20px;">
-          + Поиск по чеку
-        </button>
-      </div>
-
-      <!-- ТАБЫ (Стилизованы как gender-switch из твоего кода) -->
-      <div class="form-item" style="margin-top: 20px;">
-        <label>Статус заказа</label>
-        <div class="gender-switch tabs-switch">
-          <!-- Скользящий фон (упрощенная логика для примера) -->
-          <div 
-            v-for="tab in tabs" 
-            :key="tab"
-            class="gender-option"
-            :class="{ active: currentTab === tab }"
-            @click="currentTab = tab"
-          >
-            {{ tab }}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- СПИСОК ЗАКАЗОВ -->
-    <div class="orders-container">
-      
-      <div 
-        v-for="order in orders" 
-        :key="order.id" 
-        class="loyalty-card order-card" 
-        :class="{ 'is-open': order.isOpen }"
-      >
-        <!-- Шапка заказа -->
-        <div class="order-header" @click="toggleOrder(order.id)">
-          <div class="card-left">
-            <div class="card-number">Заказ {{ order.id }}</div>
-            <div class="card-name" style="font-size: 14px; margin-top: 4px;">от {{ order.date }}</div>
-          </div>
-          
-          <div class="card-right order-status-block">
-            <button class="status-btn" :class="getStatusClass(order.status)">
-              {{ order.status }}
-            </button>
-            <span class="chevron" :class="{ rotated: order.isOpen }">▼</span>
-          </div>
-        </div>
-
-        <!-- СВЕРНУТЫЙ ВИД (Превью) -->
-        <div v-if="!order.isOpen" class="order-preview">
-          <div class="thumbnails-row">
-            <div v-for="n in 3" :key="n" class="thumb-square"></div>
-            <span v-if="order.products.length > 3" class="more-count">Ещё +{{ order.products.length - 3 }}</span>
-          </div>
-          <div class="preview-total">
-            <span class="price-label">Итого:</span>
-            <span class="price-value">{{ order.totalPrice }} ₽</span>
-          </div>
-        </div>
-
-        <!-- РАЗВЕРНУТЫЙ ВИД (Детали) -->
-        <div v-else class="order-details">
-          <hr class="divider" />
-          
-          <!-- Инфо о доставке (Сетка как в профиле) -->
-          <div class="form-grid-3x2" style="margin-bottom: 20px;">
-            <div class="form-item">
-              <label>Телефон</label>
-              <input type="text" :value="order.phone" disabled />
-            </div>
-            <div class="form-item search-item">
-              <label>Способ получения</label>
-              <input type="text" :value="order.delivery" disabled />
-            </div>
-          </div>
-
-          <!-- Список товаров -->
-          <div class="products-list">
-            <div v-for="(product, idx) in order.products" :key="idx" class="product-row">
-              <div class="product-img"></div>
-              <div class="product-info">
-                <div class="p-name">{{ product.name }}</div>
-                <div class="p-code">Код: {{ product.code }}</div>
-              </div>
-              <div class="product-price">
-                <div class="p-total">{{ product.price }} ₽</div>
-                <div class="p-calc">{{ product.qty }} шт. х {{ product.price }}</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="order-footer-actions">
-            <div class="total-big">
-              Итого: <span>{{ order.totalPrice }} ₽</span>
-            </div>
-            <button class="pd-save">Повторить заказ</button>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-  </ProfileLayout>
-</template>
-
 <script>
 import ProfileLayout from "./ProfileLayout.vue";
+// Импортируем методы API
+import { getUserOrders, getUser } from "@/services/api.js"; 
 
 export default {
   name: "OrdersPage",
@@ -151,6 +9,7 @@ export default {
 
   data() {
     return {
+      loading: false,
       currentTab: 'Все',
       tabs: ['Все', 'Открытые', 'Выкупленные', 'Отменённые'],
       filters: {
@@ -158,63 +17,153 @@ export default {
         dateFrom: '',
         dateTo: ''
       },
-      orders: [
-        {
-          id: '4B-124892',
-          date: '14.10.2023',
-          status: 'В доставке',
-          totalPrice: '179 990',
-          isOpen: false,
-          phone: '+7 999 000-00-00',
-          delivery: 'СДЭК, ул. Пушкина',
-          products: [
-            { name: 'Товар 1', code: '111', price: '100 000', qty: 1 },
-            { name: 'Товар 2', code: '222', price: '20 000', qty: 2 },
-            { name: 'Товар 3', code: '333', price: '10 000', qty: 1 },
-            { name: 'Товар 4', code: '444', price: '5 000', qty: 1 },
-          ]
-        },
-        {
-          id: '4B-888555',
-          date: '10.09.2023',
-          status: 'Завершен',
-          totalPrice: '108 996',
-          isOpen: true,
-          phone: '+7 999 999-99-99',
-          delivery: 'СДЭК по адресу ул. Пушкина д. Колотушкина',
-          products: [
-            { name: 'Блок питания Be Quiet Dark Power 12 Pro черный', code: '5437234', price: '25 999', qty: 1 },
-            { name: 'Процессор AMD Ryzen 9 9950x3d OEM', code: '4387483', price: '69 999', qty: 1 },
-            { name: 'Оперативная память Acer', code: '832473', price: '12 998', qty: 2 },
-          ]
-        }
-      ]
+      orders: [] // Изначально пустой массив
     };
   },
 
+  async created() {
+    await this.fetchOrders();
+  },
+
   methods: {
-    toggleOrder(id) {
-      const order = this.orders.find(o => o.id === id);
-      if (order) order.isOpen = !order.isOpen;
+    async fetchOrders() {
+      this.loading = true;
+      try {
+        // Вызываем без аргументов, так как фильтрация на бэкенде
+        const rawOrders = await getUserOrders(); 
+        
+        this.orders = rawOrders.map(order => ({
+          id: order.id,
+          date: new Date(order.orderDate).toLocaleDateString('ru-RU'),
+          status: this.mapStatus(order.state),
+          totalPrice: order.totalSum,
+          isOpen: false,
+          // В ответе нет товаров и телефона, ставим заглушки
+          products: [], 
+          phone: '-'
+        }));
+      } catch (error) {
+        console.error(error.message);
+      } finally {
+        this.loading = false;
+      }
     },
+
+    mapStatus(state) {
+      // Маппинг числового state в текстовый статус
+      const states = {
+        0: 'В обработке',
+        1: 'В доставке',
+        2: 'Завершен',
+        3: 'Отменен'
+      };
+      return states[state] || 'Новый';
+    },
+
     getStatusClass(status) {
       if (status === 'Завершен') return 'status-done';
       if (status === 'В доставке') return 'status-delivery';
+      if (status === 'Отменен') return 'status-cancelled';
       return '';
+    },
+
+    toggleOrder(id) {
+      const order = this.orders.find(o => o.id === id);
+      if (order) order.isOpen = !order.isOpen;
     }
   }
 };
 </script>
 
-<style scoped>
-/* 
-  Я предполагаю, что основные стили (form-item, pd-header и т.д.) 
-  тянутся из твоего profile.css.
-  Здесь я добавляю стили только для специфичных элементов Заказов,
-  но использую переменную цветов и подходы из твоего макета.
-*/
+<template>
+  <ProfileLayout>
+    <div class="pd-header" style="margin-bottom: 20px;">
+      <h2>Личные заказы</h2>
+    </div>
 
-/* Сетка фильтров */
+    <div v-if="loading" class="loading-state">
+      Загрузка заказов...
+    </div>
+
+    <div v-else>
+      <div class="personal-data filter-section">
+        </div>
+
+      <div class="orders-container">
+        <div v-if="orders.length === 0" class="no-orders">
+          У вас пока нет заказов
+        </div>
+        
+        <div 
+          v-for="order in orders" 
+          :key="order.fullId" 
+          class="loyalty-card order-card" 
+          :class="{ 'is-open': order.isOpen }"
+        >
+          <div class="order-header" @click="toggleOrder(order.id)">
+            <div class="card-left">
+              <div class="card-number">Заказ №{{ order.id }}</div>
+              <div class="card-name" style="font-size: 14px; margin-top: 4px;">от {{ order.date }}</div>
+            </div>
+            
+            <div class="card-right order-status-block">
+              <button class="status-btn" :class="getStatusClass(order.status)">
+                {{ order.status }}
+              </button>
+              <span class="chevron" :class="{ rotated: order.isOpen }">▼</span>
+            </div>
+          </div>
+
+          <div v-if="!order.isOpen" class="order-preview">
+            <div class="preview-total">
+              <span class="price-label">Итого:</span>
+              <span class="price-value">{{ order.totalPrice }} ₽</span>
+            </div>
+          </div>
+
+          <div v-else class="order-details">
+            <hr class="divider" />
+            <div class="form-grid-3x2" style="margin-bottom: 20px;">
+              <div class="form-item">
+                <label>Телефон</label>
+                <input type="text" :value="order.phone" disabled />
+              </div>
+              <div class="form-item">
+                <label>ID Доставки</label>
+                <input type="text" :value="order.delivery" disabled />
+              </div>
+            </div>
+
+            <div v-if="order.products.length" class="products-list">
+               </div>
+            <div v-else class="no-products-info">
+              Детализация товаров временно недоступна
+            </div>
+
+            <div class="order-footer-actions">
+              <div class="total-big">
+                Итого: <span>{{ order.totalPrice }} ₽</span>
+              </div>
+              <button class="pd-save">Повторить заказ</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ProfileLayout>
+</template>
+
+<style scoped>
+/* Добавьте к вашим стилям */
+.loading-state, .no-orders {
+  text-align: center;
+  padding: 40px;
+  color: #888;
+}
+.status-cancelled {
+  background: #fff5f5;
+  color: #e53e3e;
+}
 .filters-grid {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr; /* Поиск шире, даты уже */

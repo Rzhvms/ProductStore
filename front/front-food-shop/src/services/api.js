@@ -463,13 +463,10 @@ export const getUserAddress = async (userId) => {
     }
 };
 
-export const getUserOrders = async (userId, pageNumber = 1, pageSize = 10) => {
+export const getUserOrders = async (pageNumber = 1, pageSize = 10) => {
     try {
         const response = await api.get(`orders/list`, { params: { pageNumber, pageSize } });
-        const data = response.data;
-        const ordersList = data.orderList;
-        const userOrders = ordersList.filter(order => order.customerId === userId);
-        return userOrders;
+        return response.data.orderList || []; 
     } catch (error) {
         throw new Error("Не удалось получить список заказов");
     }
