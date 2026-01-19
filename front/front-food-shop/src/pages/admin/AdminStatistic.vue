@@ -242,7 +242,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import AdminLayout from './AdminLayout.vue';
-import { adminProductApi, categoryApi } from '@/services/api';
+import { adminProductApi, categoryApi, reviewApi } from '@/services/api';
 import './admin.css';
 
 // === СОСТОЯНИЕ (STATE) ===
@@ -259,6 +259,13 @@ const products = ref([]);
 const categoriesList = ref([]);
 const categoriesMap = ref({});
 
+const getRating = async (id) => {
+  const reviews = await reviewApi.getList(id)
+  const reviewsData = reviews.productReviewList
+  if (!reviewsData.length) return 0
+  return reviewsData.reduce((acc, review) => acc + review.rating, 0) / reviewsData.length
+}
+
 // === ЗАГРУЗКА ДАННЫХ ===
 const loadData = async () => {
   isLoading.value = true;
@@ -274,22 +281,22 @@ const loadData = async () => {
     // Запрашиваем первую страницу с большим размером, чтобы получить список для демо
     const prodResponse = await adminProductApi.get(1, 100);
     const rawProducts = prodResponse.productList || [];
-
     // 3. Объединяем реальные данные с моковыми статистическими данными
-    products.value = rawProducts.map(p => {
+    products.value = await Promise.all(rawProducts.map(async (p) => {
       // Генерируем случайный рейтинг для демо (от 3.0 до 5.0)
-      const mockRating = (Math.random() * 2 + 3).toFixed(1);
-      const mockReviews = Math.floor(Math.random() * 500) + 10;
+      const revData = await reviewApi.getList(p.id);
+      const reviews = revData.productReviewList;
+      const mockRating = await getRating(p.id);
+      const mockReviews = reviews.length;
       const mockSales = Math.floor(Math.random() * 5000) + 100;
       
       // Генерация распределения звезд
       const stars = {};
-      let remaining = mockReviews;
-      stars[5] = Math.floor(remaining * 0.6); remaining -= stars[5];
-      stars[4] = Math.floor(remaining * 0.2); remaining -= stars[4];
-      stars[3] = Math.floor(remaining * 0.1); remaining -= stars[3];
-      stars[2] = Math.floor(remaining * 0.05); remaining -= stars[2];
-      stars[1] = remaining; // Остаток
+      stars[5] = reviews.filter(r => r.rating === 5).length;
+      stars[4] = reviews.filter(r => r.rating === 4).length;
+      stars[3] = reviews.filter(r => r.rating === 3).length;
+      stars[2] = reviews.filter(r => r.rating === 2).length;
+      stars[1] = reviews.filter(r => r.rating === 1).length;
 
       return {
         id: p.id,
@@ -298,15 +305,21 @@ const loadData = async () => {
         categoryId: p.categoryId,
         categoryName: categoriesMap.value[p.categoryId] || 'Не указана',
         description: p.description,
-        image: '', // API пока не возвращает картинку
-        // Моковые данные статистики:
+        image: '', 
         rating: mockRating,
         reviewsCount: mockReviews,
         mockSales: mockSales,
         starCounts: stars
       };
-    });
-
+    }));
+    if (localStorage.getItem('productId')) {
+      const productId = localStorage.getItem('productId');
+      const product = products.value.find(p => p.id === productId);
+      if (product) {
+        selectedProduct.value = product;
+        localStorage.removeItem('productId');
+      }
+    }
   } catch (error) {
     console.error("Ошибка загрузки статистики:", error);
   } finally {
@@ -345,6 +358,7 @@ function openProductStats(prod) {
 }
 function closeProductStats() {
   selectedProduct.value = null;
+  localStorage.removeItem('productId');
 }
 
 function toggleFilters() {

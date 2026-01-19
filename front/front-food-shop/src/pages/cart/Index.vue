@@ -532,7 +532,7 @@ const checkout = async () => {
   const order = await createOrder(OrderDetails)
   const orderId = order.orderId
   const paymentUrl = order.paymentUrl
-  router.push(`/payment/${orderId}`)
+  window.location.href = paymentUrl
 }
 
 const closeSuggestions = () => {

@@ -219,7 +219,7 @@
 import { reactive, ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from './AdminLayout.vue'
-import { adminProductApi, categoryApi } from '@/services/api.js'
+import { adminProductApi, categoryApi, reviewApi } from '@/services/api.js'
 
 /* --- STATE --- */
 const products = ref([])
@@ -256,6 +256,13 @@ const showSortDropdown = ref(false);
 const showAddProductDialog = ref(false);
 const isFiltered = ref(false);
 
+const getRating = async (id) => {
+  const reviews = await reviewApi.getList(id)
+  const reviewsData = reviews.productReviewList
+  if (!reviewsData.length) return 0
+  return reviewsData.reduce((acc, review) => acc + review.rating, 0) / reviewsData.length
+}
+
 /* --- INITIAL DATA FETCHING --- */
 const loadData = async () => {
   isLoading.value = true
@@ -265,10 +272,14 @@ const loadData = async () => {
     categories.value = transformCategories(catsResponse)
 
     const productsResponse = await adminProductApi.get(1, 100)
-    products.value = productsResponse.productList
+    products.value = await Promise.all(
+      productsResponse.productList.map(async (p) => ({
+        ...p,
+        rating: await getRating(p.id)
+      }))
+    )
   } catch (error) {
     console.error("Ошибка при загрузке данных:", error.message)
-    alert(error.message)
   } finally {
     isLoading.value = false
   }

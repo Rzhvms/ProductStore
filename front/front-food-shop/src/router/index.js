@@ -71,9 +71,9 @@ const routes = [
 
   // Cart
   { path: '/cart', component: Cart, meta: { requiresAuth: true } },
-  { path: '/payment/:id', component: Payment, meta: { requiresAuth: true } },
-  { path: '/payment/success', component: PaymentSuccess, meta: { requiresAuth: true } },
-  { path: '/payment/failed', component: PaymentFailed, meta: { requiresAuth: true } },
+  // { path: '/payment/:id', component: Payment, meta: { requiresAuth: true } },
+  // { path: '/payment/success', component: PaymentSuccess, meta: { requiresAuth: true } },
+  // { path: '/payment/failed', component: PaymentFailed, meta: { requiresAuth: true } },
 
   // Checkout
   { path: '/checkout/address', component: CheckoutAddress, meta: { requiresAuth: true } },

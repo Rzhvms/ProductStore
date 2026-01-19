@@ -32,10 +32,10 @@
         </div>
         
         <div class="top-actions" v-if="!isEditMode">
-          <button class="btn-outline">
+          <button class="btn-outline" @click="openPromoModal">
             <img src="../../assets/percentage-circle.svg"> Добавить товар в акцию
           </button>
-          <button class="btn-outline">
+          <button class="btn-outline" @click="goToStatistics">
             <img src="../../assets/chart.svg"> Статистика
           </button>
           <button class="btn-text text-red" @click="handleDelete">
@@ -78,7 +78,7 @@
           <!-- === РЕЖИМ РЕДАКТИРОВАНИЯ (Сетка карточек) === -->
           <div v-else class="edit-gallery-grid">
             <div 
-              v-for="(img, index) in form.images" 
+              v-for="(img, index) in (form.images && form.images.length ? form.images : [4])"
               :key="index" 
               class="edit-card"
             >
@@ -591,6 +591,38 @@
       </div>
 
     </div>
+    <Teleport to="body">
+      <div v-if="showPromoModal" class="modal-overlay" @click.self="closePromoModal">
+        <div class="modal-content">
+           <button class="modal-close" @click="closePromoModal">✕</button>
+           <h2>Добавить товар в акцию</h2>
+           
+           <div class="form-group">
+              <label>Выберите активную акцию:</label>
+              <div v-if="activePromotions.length === 0" style="color: #999;">Нет активных акций</div>
+              <div v-else class="promo-list">
+                 <div 
+                   v-for="promo in activePromotions" 
+                   :key="promo.id" 
+                   class="promo-item"
+                   :class="{ selected: selectedPromoId === promo.id }"
+                   @click="selectedPromoId = promo.id"
+                 >
+                    <div class="promo-info">
+                       <span class="promo-title">{{ promo.title }}</span>
+                       <span class="promo-desc">{{ promo.description }}</span>
+                    </div>
+                    <div class="radio-indicator" :class="{ selected: selectedPromoId === promo.id }"></div>
+                 </div>
+              </div>
+           </div>
+           
+           <div class="modal-actions">
+              <button class="btn-primary full-width" @click="handleAddToPromo" :disabled="!selectedPromoId">Добавить</button>
+           </div>
+        </div>
+      </div>
+    </Teleport>
   </AdminLayout>
 </template>
 
@@ -598,7 +630,8 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AdminLayout from './AdminLayout.vue';
-import { adminProductApi, categoryApi } from '@/services/api';
+import { adminProductApi, categoryApi, reviewApi } from '@/services/api';
+import { getAllPromotions, updatePromotion } from '@/services/promotionsService.js';
 
 // ==================== ROUTER ====================
 const route = useRoute();
@@ -609,6 +642,9 @@ const isLoading = ref(false);
 const isSaving = ref(false);
 const error = ref(null);
 const isEditMode = ref(false);
+const showPromoModal = ref(false);
+const activePromotions = ref([]);
+const selectedPromoId = ref(null);
 
 // ID товара из роута
 const productId = computed(() => route.params.id);
@@ -692,30 +728,49 @@ const RESERVED_CHARACTERISTICS = [
   'grammage', 'priceUnit', 'stockUnit', 'brand', 'article', 'nutrition', 'images', 'rating'
 ];
 
+const getRating = async (id) => {
+  const reviews = await reviewApi.getList(id)
+  const reviewsData = reviews.productReviewList
+  if (!reviewsData.length) return 0
+  return reviewsData.reduce((acc, review) => acc + review.rating, 0) / reviewsData.length
+}
+
 // ==================== МАППИНГ API → ФОРМА ====================
-function mapApiToForm(apiData) {
-  const characteristics = apiData.characteristics || {};
-  const grammage = characteristics.grammage || {};
+async function mapApiToForm(apiData) {
+  let characteristics = apiData.characteristics;
   
-  // Парсим nutrition (может быть строкой JSON)
+  // Если characteristics пришел как строка (JSON string) - парсим
+  if (typeof characteristics === 'string') {
+     try {
+         characteristics = JSON.parse(characteristics);
+     } catch (e) {
+         console.warn('Could not parse characteristics JSON', e);
+         characteristics = {};
+     }
+  }
+  characteristics = characteristics || {};
+
+  const grammage = characteristics.grammage || {};
+
   let nutrition = { fats: 0, carbs: 0, protein: 0, energy: 0, joules: 0 };
   if (characteristics.nutrition) {
     try {
-      nutrition = typeof characteristics.nutrition === 'string' 
-        ? JSON.parse(characteristics.nutrition) 
+      nutrition = typeof characteristics.nutrition === 'string'
+        ? JSON.parse(characteristics.nutrition)
         : characteristics.nutrition;
     } catch (e) {
       console.warn('Failed to parse nutrition:', e);
     }
   }
 
-  // Извлекаем кастомные атрибуты
   const attributes = [];
   Object.entries(characteristics).forEach(([key, value]) => {
     if (!RESERVED_CHARACTERISTICS.includes(key) && typeof value === 'string') {
       attributes.push({ name: key, value });
     }
   });
+
+  const rating = await getRating(apiData.id);
 
   return {
     id: apiData.id,
@@ -725,15 +780,16 @@ function mapApiToForm(apiData) {
     stock: apiData.quantity || 0,
     categoryId: apiData.categoryId || '',
     weight: grammage.weight || 0,
-    unit: grammage.unit || 'г',
+    unit: grammage.unit || 'kg',
     priceUnit: characteristics.priceUnit || 'st',
-    stockUnit: characteristics.stockUnit || 'kg',
+    stockUnit: characteristics.stockUnit || 'st',
     brand: characteristics.brand || '',
     article: characteristics.article || '',
     nutrition,
     attributes,
-    images: characteristics.images || [],
-    rating: characteristics.rating || 0,
+    // ⚠️ Гарантируем, что images - массив
+    images: Array.isArray(characteristics.images) ? characteristics.images : [],
+    rating: Number(rating) || 0,
   };
 }
 
@@ -805,15 +861,13 @@ async function loadData() {
   error.value = null;
 
   try {
-    // Загружаем категории
     const categoriesData = await categoryApi.get();
     categoriesRaw.value = categoriesData;
     categoriesTree.value = buildCategoryTree(categoriesData);
 
-    // Загружаем товар (если не новый)
     if (!isNewProduct.value) {
       const productData = await adminProductApi.getById(productId.value);
-      form.value = mapApiToForm(productData);
+      form.value = await mapApiToForm(productData);
       originalForm.value = JSON.parse(JSON.stringify(form.value));
     } else {
       form.value = getEmptyForm();
@@ -821,8 +875,8 @@ async function loadData() {
       isEditMode.value = true; // Сразу в режим редактирования для нового товара
     }
 
-    // TODO: Загрузить отзывы когда появится API
-    // reviews.value = await reviewsApi.getByProductId(productId.value);
+      const revData = await reviewApi.getList(productId.value);
+      reviews.value = revData.productReviewList;
 
   } catch (e) {
     console.error('Load data error:', e);
@@ -915,6 +969,43 @@ async function handleDelete() {
   } catch (e) {
     error.value = e.message || 'Ошибка удаления';
   }
+}
+
+function goToStatistics() {
+  if (isNewProduct.value) return alert('Сначала сохраните товар');
+  localStorage.setItem('productId', form.value.id);
+  router.push('/admin/statistics');
+}
+
+function openPromoModal() {
+  const all = getAllPromotions();
+  activePromotions.value = all.filter(p => p.status === 'active');
+  selectedPromoId.value = null;
+  showPromoModal.value = true;
+}
+
+function closePromoModal() {
+  showPromoModal.value = false;
+}
+
+function handleAddToPromo() {
+  if (!selectedPromoId.value) return;
+  const promo = activePromotions.value.find(p => p.id === selectedPromoId.value);
+  if (promo) {
+     // Check if targetIds exists
+     const currentIds = promo.targetIds || [];
+     if (!currentIds.includes(form.value.id)) {
+        // Add logic based on promotionService structure
+        updatePromotion(promo.id, {
+           targetIds: [...currentIds, Number(form.value.id)],
+           selectedItems: [...(promo.selectedItems || []), { id: Number(form.value.id), name: form.value.title }]
+        });
+        alert(`Товар добавлен в акцию "${promo.title}"`);
+     } else {
+        alert('Товар уже участвует в этой акции');
+     }
+  }
+  closePromoModal();
 }
 
 // ==================== COMPUTED ====================
@@ -1027,17 +1118,17 @@ function selectSubcategory(cat, sub) {
 }
 
 // ==================== МЕТОДЫ: ИЗОБРАЖЕНИЯ ====================
-function addImage() {
-  // TODO: Интегрировать с загрузкой файлов
-  form.value.images.push(`placeholder-${Date.now()}`);
-}
+// function addImage() {
+//   // TODO: Интегрировать с загрузкой файлов
+//   form.value.images.push(`placeholder-${Date.now()}`);
+// }
 
-function removeImage(index) {
-  form.value.images.splice(index, 1);
-  if (activeImageIndex.value >= form.value.images.length) {
-    activeImageIndex.value = Math.max(0, form.value.images.length - 1);
-  }
-}
+// function removeImage(index) {
+//   form.value.images.splice(index, 1);
+//   if (activeImageIndex.value >= form.value.images.length) {
+//     activeImageIndex.value = Math.max(0, form.value.images.length - 1);
+//   }
+// }
 
 // ==================== МЕТОДЫ: АТРИБУТЫ ====================
 function addAttr() {

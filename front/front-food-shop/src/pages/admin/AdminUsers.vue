@@ -200,15 +200,18 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="n in 5" :key="n">
-          <td class="id-cell">d60e22d8-ab9e-40a7-bf54-be12feb7fc5a</td>
-          <td>19.09.2003</td>
-          <td>19.09.2003</td>
-          <td class="price-cell">4000₽</td>
-          <td class="address-cell">ул. Пушкина, д. Колотушкина</td>
+        <tr v-if="visibleOrders.count === 0" v-for="order in visibleOrders" :key="order.id">
+          <td class="id-cell">{{ order.id }}</td>
+          <td>{{ order.orderDate }}</td>
+          <td>{{ order.orderDate }}</td>
+          <td class="price-cell">{{ order.totalSum }}</td>
+          <td class="address-cell">{{ order.deliveryId }}</td>
           <td class="arrow-cell">
             <img src="../../assets/arrow-down.svg" alt=">" style="transform: rotate(270deg);" />
           </td>
+        </tr>
+        <tr v-else>
+          <td colspan="6" class="no-data" style="text-align: center;">Заказов нет</td>
         </tr>
       </tbody>
     </table>
@@ -264,7 +267,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import AdminLayout from './AdminLayout.vue';
 import { adminUserApi } from '@/services/api'; 
 
@@ -280,119 +283,86 @@ const itemsPerPage = 5;
 const visibleCount = ref(itemsPerPage);
 const isLoading = ref(false);
 
-const users = ref([]); // Основной список пользователей с бэкенда
-const userOrders = ref([]); // Список заказов выбранного пользователя
+const users = ref([]); // Теперь загружаем всё одним махом
+const userOrders = ref([]); 
 
-// Хелпер для форматирования даты из ISO в DD.MM.YYYY
+// Хелпер для форматирования даты
 const formatDate = (isoDate) => {
   if (!isoDate) return 'Не указано';
   const date = new Date(isoDate);
   return date.toLocaleDateString('ru-RU');
 };
 
-// --- ЗАГРУЗКА ДАННЫХ ---
+// --- ЗАГРУЗКА ДАННЫХ (ОПТИМИЗИРОВАНО) ---
 const loadData = async () => {
   isLoading.value = true;
   try {
-    const profilesRaw = await adminUserApi.getProfiles(1, 100); 
-    const uniqueIds = [...new Set(profilesRaw.map(u => u.id))];
-
-    const usersData = await Promise.all(uniqueIds.map(async (userId) => {
-      try {
-        const [profile, address, orders] = await Promise.allSettled([
-          adminUserApi.getProfile(userId),
-          adminUserApi.getAddress(userId),
-          adminUserApi.getOrders(userId)
-        ]);
-
-        if (profile.status === 'rejected') return null;
-
-        const profileData = profile.value;
-        const city = address.status === 'fulfilled' && address.value?.city ? address.value.city : 'Не указан';
-        const ordersCount = orders.status === 'fulfilled' ? orders.value.length : 0;
-
-        return {
-          id: userId,
-          name: profileData.name,
-          lastName: profileData.lastName,
-          fullname: `${profileData.lastName} ${profileData.name}`,
-          birthDate: formatDate(profileData.birthDate),
-          rawBirthDate: profileData.birthDate, // Для сортировки и API
-          email: profileData.email,
-          phone: profileData.phone,
-          city: city,
-          orders: ordersCount,
-          about: profileData.about,
-          gender: profileData.gender
-        };
-      } catch (err) {
-        console.error(`Ошибка загрузки данных для ${userId}`, err);
-        return null;
-      }
+    const data = await adminUserApi.getProfiles(); 
+    // Маппим данные напрямую из нового формата userList
+    users.value = data.userList.map(u => ({
+      id: u.id,
+      name: u.name,
+      lastName: u.lastName,
+      fullname: `${u.lastName} ${u.name}`,
+      birthDate: formatDate(u.birthDate),
+      rawBirthDate: u.birthDate,
+      email: u.email,
+      phone: u.phone,
+      city: u.city || 'Не указан',
+      orders: u.ordersCount || 0
     }));
 
-    users.value = usersData.filter(u => u !== null);
   } catch (error) {
     console.error("Не удалось загрузить пользователей", error);
-    alert("Ошибка загрузки списка пользователей");
   } finally {
     isLoading.value = false;
   }
 };
 
-onMounted(async () => {
-  await loadData();
-});
+onMounted(loadData);
 
 // --- ПРОСМОТР ПОЛЬЗОВАТЕЛЯ ---
 const openUser = async (user) => {
-  selectedUser.value = { ...user }; // Копия для отображения
+  selectedUser.value = { ...user };
   currentView.value = 'user';
-  userOrders.value = []; // Очистка старых заказов
+  userOrders.value = [];
   visibleCount.value = itemsPerPage;
 
   try {
+    // Здесь всё ещё нужен запрос, так как список заказов детальный
     const orders = await adminUserApi.getOrders(user.id);
-    // Маппинг заказов в формат таблицы
     userOrders.value = orders.map(order => ({
       id: order.id,
       created_at: formatDate(order.orderDate),
       raw_created_at: order.orderDate,
-      delivery_at: formatDate(order.orderDate), // В API пока нет даты доставки, берем дату заказа
       price: order.totalSum,
-      address: 'Загружается...' // Адрес заказа требует отдельного запроса или расширения API
+      address: 'Адрес уточняется...' 
     }));
   } catch (error) {
-    console.error("Не удалось загрузить заказы пользователя", error);
+    console.error("Ошибка загрузки заказов", error);
   }
 };
 
 const goHome = () => {
   currentView.value = 'users';
   selectedUser.value = null;
+  isEditing.value = false;
 };
 
-// --- РЕДАКТИРОВАНИЕ ПОЛЬЗОВАТЕЛЯ ---
+// --- РЕДАКТИРОВАНИЕ ---
 const isEditing = ref(false);
 const editForm = ref({});
 
 const startEdit = () => {
-  // Подготовка данных для формы. fullname разбиваем обратно, дату преобразуем если нужно
   editForm.value = { 
     ...selectedUser.value,
-    // Если в инпуте нужна дата в формате YYYY-MM-DD для type="date"
     birthday: selectedUser.value.rawBirthDate ? selectedUser.value.rawBirthDate.split('T')[0] : ''
   }; 
   isEditing.value = true;
 };
 
-const cancelEdit = () => {
-  isEditing.value = false;
-};
-
 const saveUser = async () => {
   try {
-    // Разбиваем ФИО, если оно было изменено одной строкой (простая логика)
     const nameParts = editForm.value.fullname.trim().split(' ');
     const lastName = nameParts[0] || editForm.value.lastName;
     const name = nameParts.slice(1).join(' ') || editForm.value.name;
@@ -402,14 +372,14 @@ const saveUser = async () => {
       name,
       lastName,
       editForm.value.phone,
-      editForm.value.gender,
-      new Date(editForm.value.birthday).toISOString(), // Отправляем ISO дату
-      editForm.value.about,
+      selectedUser.value.gender, // сохраняем старый или добавляем в форму
+      new Date(editForm.value.birthday).toISOString(),
+      selectedUser.value.about,
       editForm.value.email
     );
 
-    // Обновляем локальные данные
-    selectedUser.value = {
+    // Обновляем локально
+    const updatedUser = {
       ...selectedUser.value,
       name,
       lastName,
@@ -417,110 +387,54 @@ const saveUser = async () => {
       email: editForm.value.email,
       phone: editForm.value.phone,
       birthDate: formatDate(editForm.value.birthday),
-      rawBirthDate: editForm.value.birthday
+      rawBirthDate: new Date(editForm.value.birthday).toISOString()
     };
 
-    // Обновляем список пользователей без перезагрузки API
-    const index = users.value.findIndex(u => u.id === selectedUser.value.id);
-    if (index !== -1) {
-      users.value[index] = { ...selectedUser.value };
-    }
+    selectedUser.value = updatedUser;
+    const idx = users.value.findIndex(u => u.id === updatedUser.id);
+    if (idx !== -1) users.value[idx] = updatedUser;
 
     isEditing.value = false;
-    alert("Профиль обновлен");
+    alert("Сохранено");
   } catch (error) {
-    console.error(error);
-    alert("Не удалось сохранить изменения");
+    alert("Ошибка сохранения");
   }
 };
 
-const promptDelete = () => {
-  // В Swagger нет эндпоинта удаления пользователя админом (только deleteProduct или deleteCategory).
-  // Поэтому пока оставляем заглушку или удаляем только локально.
-  if (confirm(`Вы уверены, что хотите удалить аккаунт ${selectedUser.value.fullname}? (Функция в разработке)`)) {
-    // Логика удаления через API (если появится эндпоинт)
-    // await adminUserApi.deleteUser(selectedUser.value.id); 
-    alert("API для удаления пользователя отсутствует");
-  }
-};
-
-// --- ФИЛЬТРАЦИЯ И СОРТИРОВКА (Client Side) ---
-
-const buttonSortLabel = computed(() => {
-  const labels = {
-    'name-asc': 'ФИО: А-Я',
-    'name-desc': 'ФИО: Я-А',
-    'orders-desc': 'Заказы: много',
-    'orders-asc': 'Заказы: мало',
-    'date-desc': 'Сначала младшие',
-    'date-asc': 'Сначала старшие'
-  };
-  return labels[sortOption.value] || 'По алфавиту';
-});
-
-const setSortOption = (option) => {
-  sortOption.value = option;
-  showSortDropdown.value = false;
-};
-
-const toggleFilters = () => { showFilters.value = !showFilters.value; };
-const closeFilters = () => { showFilters.value = false; };
-
-const resetFilters = () => {
-  selectedCities.value = [];
-  orderRange.value = { from: null, to: null };
-};
-
-// Фильтры
+// --- ФИЛЬТРАЦИЯ И СОРТИРОВКА ---
 const cities = computed(() => [...new Set(users.value.map(u => u.city))].filter(c => c !== 'Не указан'));
 const selectedCities = ref([]);
 const orderRange = ref({ from: null, to: null });
 
-// Хелпер для парсинга даты из строки "DD.MM.YYYY" (для сортировки списка)
-function parseDate(dateStr) {
-  if (!dateStr || dateStr === 'Не указано') return 0;
-  const [d, m, y] = dateStr.split('.').map(Number);
-  return new Date(y, m - 1, d).getTime();
-}
-
 const filteredUsers = computed(() => {
   let result = [...users.value];
 
-  // 1. Поиск
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase();
     result = result.filter(u => u.fullname.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
   }
 
-  // 2. Фильтр по городам
   if (selectedCities.value.length > 0) {
     result = result.filter(u => selectedCities.value.includes(u.city));
   }
 
-  // 3. Фильтр по количеству заказов
-  if (orderRange.value.from !== null && orderRange.value.from !== "") {
-    result = result.filter(u => u.orders >= orderRange.value.from);
-  }
-  if (orderRange.value.to !== null && orderRange.value.to !== "") {
-    result = result.filter(u => u.orders <= orderRange.value.to);
-  }
+  if (orderRange.value.from !== null) result = result.filter(u => u.orders >= orderRange.value.from);
+  if (orderRange.value.to !== null) result = result.filter(u => u.orders <= orderRange.value.to);
 
-  // 4. Сортировка
   result.sort((a, b) => {
     switch (sortOption.value) {
       case 'name-asc': return a.fullname.localeCompare(b.fullname);
       case 'name-desc': return b.fullname.localeCompare(a.fullname);
       case 'orders-desc': return b.orders - a.orders;
       case 'orders-asc': return a.orders - b.orders;
-      // Для дат используем rawBirthDate (ISO string), так точнее
       case 'date-desc': return new Date(b.rawBirthDate || 0) - new Date(a.rawBirthDate || 0); 
       case 'date-asc': return new Date(a.rawBirthDate || 0) - new Date(b.rawBirthDate || 0);
       default: return 0;
     }
   });
-
   return result;
 });
+
 
 // Логика списка заказов пользователя
 const filteredUserOrders = computed(() => {
@@ -553,7 +467,6 @@ const visibleOrders = computed(() => {
 const showMoreOrders = () => {
   visibleCount.value += itemsPerPage;
 };
-
 </script>
 
 <style scoped>

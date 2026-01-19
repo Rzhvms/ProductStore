@@ -476,15 +476,10 @@ export const getUserOrders = async (userId, pageNumber = 1, pageSize = 10) => {
     }
 };
 
-export const getUserProfiles = async (pageNumber = 1, pageSize = 10) => {
+export const getUserProfiles = async () => {
     try {
-        const response = await api.get(`orders/list`, { params: { pageNumber, pageSize } });
-        const data = response.data;
-        const ordersList = data.orderList;
-        const userProfiles = ordersList.map(order => ({
-            id: order.customerId
-        }));
-        return userProfiles;
+        const response = await api.get(`admin/user-info/user-list`);
+        return response.data;
     } catch (error) {
         throw new Error("Не удалось получить список пользователей");
     }
