@@ -46,6 +46,8 @@
             <!-- Админ -->
             <button v-if="authStore.userRole === 'admin'" class="menu-item" @click="goAdmin">Админ-панель</button>
 
+            <div class="divider"></div>
+
             <button class="menu-item danger" @click="logout">Выйти</button>
           </template>
         </div>
@@ -100,6 +102,7 @@ const goCart = () => router.push('/cart')
   background: #fff;
 }
 
+/* LEFT */
 .header-left {
   display: flex;
   gap: 24px;
@@ -125,10 +128,12 @@ const goCart = () => router.push('/cart')
   font-weight: 600;
   cursor: pointer;
 }
+
 .catalog-btn:hover {
   opacity: 0.9;
 }
 
+/* RIGHT */
 .header-right {
   display: flex;
   gap: 16px;
@@ -146,17 +151,17 @@ const goCart = () => router.push('/cart')
   color: #ff7a00;
 }
 
-/* Активные кнопки кроме профиля */
+/* active — кроме профиля */
 .icon-btn:not(.icon-profile).active {
   color: #ff7a00;
 }
 
-/* Активная кнопка профиля */
+/* active — профиль */
 .icon-btn.icon-profile.active {
   color: #fff;
 }
 
-/* Фон иконок */
+/* ICON BG */
 .icon-bg {
   fill: #f9f9f9;
 }
@@ -169,59 +174,58 @@ const goCart = () => router.push('/cart')
   fill: #ff7a00;
 }
 
-/* MENU */
-.profile-wrapper {
-  position: relative;
-}
-
-.profile-menu {
-  position: absolute;
-  right: 0;
-  top: 44px;
-  min-width: 180px;
-  background: #fff;
-  border-radius: 10px;
-  border: 1px solid #eee;
-  box-shadow: 0 10px 30px rgba(0,0,0,.08);
-}
-
-.menu-item {
-  display: block;
-  width: 100%;
-  padding: 12px 16px;
-  border: none;
-  background: none;
-  text-align: left;
-  cursor: pointer;
-}
-
-.menu-item:hover {
-  background: #f5f5f5;
-}
-
-.menu-item.danger {
-  color: #d33;
-}
-
-.header svg {
-  display: inline !important;
-  vertical-align: middle;
-}
-
+/* PROFILE */
 .profile-wrapper {
   position: relative;
   z-index: 50;
 }
 
+/* MENU */
 .profile-menu {
   position: absolute;
-  right: 0;
   top: 44px;
-  z-index: 100;
-  min-width: 180px;
+  right: 0;
+  width: 190px;
   background: #fff;
   border-radius: 10px;
-  border: 1px solid #eee;
-  box-shadow: 0 10px 30px rgba(0,0,0,.08);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  padding: 8px;
+  z-index: 1000000;
+}
+
+/* MENU ITEMS */
+.profile-menu button,
+.menu-item {
+  width: 100%;
+  padding: 9px 12px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.profile-menu button:hover,
+.menu-item:hover {
+  background: #f5f5f5;
+}
+
+/* DIVIDER — как в ProfileLayout */
+.divider {
+  height: 1px;
+  background: #eee;
+  margin: 6px 0;
+}
+
+/* logout */
+.menu-item.danger {
+  color: #e53935;
+}
+
+/* SVG FIX */
+.header svg {
+  display: inline !important;
+  vertical-align: middle;
 }
 </style>

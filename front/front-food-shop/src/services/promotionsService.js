@@ -3,23 +3,6 @@ const STORAGE_KEY = 'app_promotions';
 const SEED_DATA = [
   {
     id: 1,
-    title: 'Распродажа телефонов',
-    description: 'Скидка на все флагманские смартфоны',
-    benefitType: 'discount',
-    value: 15,
-    valueType: 'percent',
-    dateStart: '2025-01-01',
-    dateEnd: '2025-12-31',
-    status: 'active',
-    color: '#FFE0B2',
-    targetType: 'category',
-    targetIds: [1], // ID категории "Электроника"
-    selectedItems: [{ id: 1, name: 'Электроника' }],
-    createdAt: Date.now(),
-    updatedAt: Date.now()
-  },
-  {
-    id: 2,
     title: 'Бонус новым покупателям',
     description: 'Дарим 500 рублей на первый заказ',
     benefitType: 'bonus',
