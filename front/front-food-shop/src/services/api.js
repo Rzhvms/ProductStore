@@ -81,8 +81,7 @@ export const login = async (email, password) => {
     }
 };
 
-export const refreshToken = async (accessToken) => {
-    const refreshToken = localStorage.getItem("refreshToken") || sessionStorage.getItem("refreshToken") || null;
+export const refreshToken = async (accessToken, refreshToken) => {
     return api.post('auth/refresh-token', { accessToken, refreshToken });
 };
 

@@ -76,9 +76,7 @@ const handleClickOutside = (e) => {
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
-
-  // Инициализируем роль пользователя из sessionStorage
-  authStore.initUserRole()
+  authStore.initAuth();
 })
 
 onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))

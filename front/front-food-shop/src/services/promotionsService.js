@@ -61,6 +61,7 @@ export function getPromotionById(id) {
 
 export function getActivePromotions() {
   const promotions = getAllPromotions();
+  console.log(promotions)
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -68,11 +69,11 @@ export function getActivePromotions() {
     if (promo.status !== 'active') return false;
 
     const startDate = new Date(promo.dateStart);
+    startDate.setHours(0, 0, 0, 0);
     const endDate = promo.dateEnd ? new Date(promo.dateEnd) : null;
-
+    endDate.setHours(0, 0, 0, 0);
     const started = startDate <= today;
     const notEnded = !endDate || endDate >= today;
-
     return started && notEnded;
   });
 }

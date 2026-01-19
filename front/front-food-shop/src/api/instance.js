@@ -1,55 +1,64 @@
 import axios from 'axios'
-import { useAuthStore } from '@/stores/auth'
 import router from '@/router'
+import { useAuthStore } from '@/stores/auth'
 
 const api = axios.create({
-    baseURL: 'http://localhost:8080/api/',
-    headers: {
-        'Content-Type': 'application/json',
-    },
+  baseURL: 'http://localhost:8080/api/',
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
-api.interceptors.request.use(config => {
-    const authStore = useAuthStore();
-    if (authStore.accessToken) {
-        config.headers.Authorization = `Bearer ${authStore.accessToken}`;
+api.interceptors.request.use(
+  (config) => {
+    const store = useAuthStore(); 
+    if (store.accessToken) {
+      config.headers.Authorization = `Bearer ${store.accessToken}`;
     }
     return config;
-});
+  },
+  (error) => Promise.reject(error)
+);
 
 api.interceptors.response.use(
-    (response) => { return response; },
-    async (error) => {
-        const originalRequest = error.config;
-        
-        if (!error.response) {
-            return Promise.reject(error);
-        }
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    const store = useAuthStore();
 
-        if (originalRequest.url && originalRequest.url.includes('/auth/refresh-token')) {
-            const authStore = useAuthStore();
-            authStore.logoutRe();
-            if (router.currentRoute.value.name !== 'Login') {
-                router.push('/login');
-            }
-            return Promise.reject(error);
-        }
-
-        if (error.response.status === 401 && !originalRequest._retry) {
-            originalRequest._retry = true;
-            const authStore = useAuthStore();
-            try {
-                await authStore.refreshTokenRe();
-                originalRequest.headers.Authorization = `Bearer ${authStore.accessToken}`;
-                return api(originalRequest);
-            } catch (refreshError) {
-                authStore.logoutRe();
-                router.push('/login');
-                return Promise.reject(refreshError);
-            }
-        }
-        return Promise.reject(error);
+    if (!error.response) {
+      return Promise.reject(error);
     }
+
+    if (originalRequest.url?.includes('/auth/refresh-token')) {
+      await store.logoutRe();
+      navigateToLogin();
+      return Promise.reject(error);
+    }
+
+    if (error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const newToken = await store.refreshTokenRe();
+        
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        await store.clearAuth();
+        navigateToLogin();
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
 );
+
+function navigateToLogin() {
+  if (router.currentRoute.value.name !== 'Login') {
+    router.push({ name: 'Login' });
+  }
+}
 
 export default api;

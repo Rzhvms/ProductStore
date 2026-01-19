@@ -15,37 +15,38 @@
       <!-- ПРОМО БАННЕРЫ -->
       <section class="promo" v-if="promotions.length > 0">
         <div class="promo-container">
-          <!-- Кнопка назад (для баннера) -->
           <button class="promo-nav prev" @click="prevPromo" v-if="promotions.length > 1">‹</button>
           
           <div class="promo-wrapper">
             <div 
-              class="promo-banner" 
-              v-for="(promo, index) in promotions" 
-              :key="promo.id"
-              :class="{ active: currentPromoIndex === index }"
-              :style="{ backgroundColor: promo.color || '#e5e5e5' }"
+              class="promo-track"
+              :style="{ transform: `translateX(-${currentPromoIndex * 100}%)` }"
             >
-              <div class="promo-content">
-                <h3>{{ promo.title }}</h3>
-                <p>{{ promo.description }}</p>
-                <div class="promo-tag" v-if="promo.benefitType === 'discount'">
-                  Скидка {{ promo.value }}{{ promo.valueType === 'percent' ? '%' : '₽' }}
+              <div 
+                class="promo-banner" 
+                v-for="(promo, index) in promotions" 
+                :key="promo.id"
+                :style="{ backgroundColor: promo.color || '#e5e5e5' }"
+              >
+                <div class="promo-content">
+                  <h3>{{ promo.title }}</h3>
+                  <p>{{ promo.description }}</p>
+                  <div class="promo-tag" v-if="promo.benefitType === 'discount'">
+                    Скидка {{ promo.value }}{{ promo.valueType === 'percent' ? '%' : '₽' }}
+                  </div>
+                  <div class="promo-tag" v-else>
+                    Бонус {{ promo.value }}₽
+                  </div>
                 </div>
-                <div class="promo-tag" v-else>
-                  Бонус {{ promo.value }}₽
+                <div class="promo-img-placeholder">
+                  🎁
                 </div>
-              </div>
-              <div class="promo-img-placeholder">
-                🎁
               </div>
             </div>
           </div>
 
-          <!-- Кнопка вперед (для баннера) -->
           <button class="promo-nav next" @click="nextPromo" v-if="promotions.length > 1">›</button>
 
-          <!-- Точки пагинации -->
           <div class="promo-dots" v-if="promotions.length > 1">
             <span 
               v-for="(promo, index) in promotions" 
@@ -171,7 +172,6 @@ const loadData = async () => {
       count: 0 // В реальном проекте здесь нужно сверяться с текущей корзиной
     })) || []
     
-    // Ждем отрисовки DOM, чтобы посчитать ширину слайдера
     await nextTick()
     calculateSliderMetrics()
   } catch (error) {
@@ -331,37 +331,38 @@ onBeforeUnmount(() => {
   position: relative;
   height: 240px;
   border-radius: 20px;
-  overflow: hidden;
+  /* overflow: hidden; <- Убираем отсюда, переносим в wrapper */
   max-width: 1200px;
   margin: 0 auto;
   box-shadow: 0 10px 25px rgba(0,0,0,0.08);
 }
 
+/* Окно просмотра */
 .promo-wrapper {
-  position: relative;
   width: 100%;
   height: 100%;
+  overflow: hidden; /* Скрываем то, что вылезает за границы */
+  border-radius: 20px; /* Скругление переносим сюда */
+  position: relative;
 }
 
+/* Длинная лента, которая двигается */
+.promo-track {
+  display: flex;
+  height: 100%;
+  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1); /* Плавная анимация */
+}
+
+/* Сам баннер */
 .promo-banner {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
+  min-width: 100%; /* Каждый баннер занимает 100% ширины окна */
   height: 100%;
   padding: 40px 60px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  opacity: 0;
-  transition: opacity 0.5s ease-in-out;
-  pointer-events: none; /* Чтобы некликовые баннеры не мешали */
-}
-
-.promo-banner.active {
-  opacity: 1;
-  pointer-events: auto;
-  z-index: 1;
+  position: relative; /* Возвращаем relative */
+  /* Убираем opacity и absolute, так как теперь это flex-элементы */
 }
 
 .promo-content {
@@ -404,7 +405,7 @@ onBeforeUnmount(() => {
   100% { transform: translateY(0px); }
 }
 
-/* Nav Arrows for Banner */
+/* Стрелки навигации */
 .promo-nav {
   position: absolute;
   top: 50%;
@@ -416,7 +417,7 @@ onBeforeUnmount(() => {
   border-radius: 50%;
   font-size: 24px;
   cursor: pointer;
-  z-index: 2;
+  z-index: 10; /* Поднимаем выше контента */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -426,7 +427,7 @@ onBeforeUnmount(() => {
 .promo-nav.prev { left: 20px; }
 .promo-nav.next { right: 20px; }
 
-/* Dots */
+/* Точки */
 .promo-dots {
   position: absolute;
   bottom: 20px;
@@ -434,7 +435,7 @@ onBeforeUnmount(() => {
   transform: translateX(-50%);
   display: flex;
   gap: 8px;
-  z-index: 2;
+  z-index: 10;
 }
 .dot {
   width: 10px;
@@ -448,7 +449,6 @@ onBeforeUnmount(() => {
   background: #fff;
   transform: scale(1.2);
 }
-
 /* POPULAR SLIDER */
 .popular h2 { margin-bottom: 24px; font-size: 28px; }
 
