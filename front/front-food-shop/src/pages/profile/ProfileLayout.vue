@@ -29,6 +29,14 @@
 
         <div v-if="menuOpen" class="profile-menu">
           <button @click="goToProfile">Вернуться в магазин</button>
+
+          <button
+            v-if="authStore.userRole === 'admin'"
+            @click="goToAdmin"
+          >
+            Админ-панель
+          </button>
+
           <div class="divider"></div>
           <button class="logout" @click="logout">Выйти</button>
         </div>
@@ -156,6 +164,10 @@ export default {
     },
     goToProfile() {
       this.$router.push("/");
+      this.menuOpen = false;
+    },
+    goToAdmin() {
+      this.$router.push("/admin");
       this.menuOpen = false;
     },
     logout() {
