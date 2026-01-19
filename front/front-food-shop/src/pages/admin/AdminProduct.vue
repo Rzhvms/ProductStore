@@ -1325,7 +1325,6 @@ span { font-weight: 600; font-size: 18px; }
 
 /* --- Layout --- */
 .product-page {
-  font-family: 'Libre Franklin', sans-serif;
   margin: 0 auto;
   padding: 20px;
   color: $text-dark;
@@ -1492,6 +1491,7 @@ input, select, textarea {
   padding: 12px 24px;
   border-radius: 16px;
   font-size: 18px;
+  background-color: #fff;
 }
 
 textarea {
@@ -1505,7 +1505,7 @@ textarea {
 }
 
 .input-main { flex: 1; }
-.input-short { width: 80px; }
+.input-short { width: 100px; text-align: center; }
 .select-short { width: auto; background-color: #fff; }
 
 /* --- Category Dropdown --- */
@@ -1552,6 +1552,7 @@ textarea {
 
 /* --- Attributes --- */
 .header-with-action {
+  padding-bottom: 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1644,11 +1645,12 @@ textarea {
   font-size: 24px;
 }
 .tag {
+  margin-top: 10px;
+  display: inline-block;
 	background: #555;
 	color: #fff;
 	padding: 4px 18px;
 	border-radius: 24px;
-  margin-left: 20px;
 }
 
 .price-view {
@@ -1818,6 +1820,7 @@ textarea {
 }
 
 .nut-input {
+    max-width: 100px;
     border-radius: 16px;
     font-size: 18px;
     text-align: center;
@@ -2017,6 +2020,7 @@ input:focus {
 }
 
 .counter {
+  max-height: 51px;
   background-color: #fff;
   display: flex;
   padding: 12px 18px;
@@ -2089,12 +2093,19 @@ input:focus {
     right: 0;
 }
 
+input.input-price {
+    max-width: 130px;
+    text-align: center;
+}
+
 /* Поправка инпута внутри счетчика */
 .input-short-counter {
-    width: 40px;
+    width: 50px;
     text-align: center;
     border: none;
     outline: none;
+    padding: 0;
+    margin: 0 5px 0 5px;
     font-size: 14px;
     font-weight: 600;
     background: transparent;
@@ -2300,5 +2311,140 @@ input:focus {
 .radio-custom { width: 18px; height: 18px; border-radius: 50%; background: #E5E7EB; position: relative; transition: all 0.2s; }
 .select-option input:checked + .radio-custom { background: #FF7A00; border: 4px solid #FFD8B3; }
 .show-more-link { color: #FF7A00; font-size: 13px; cursor: pointer; text-align: center; margin-top: 10px; }
+
+
+.modal-content {
+  width: 500px;                /* фиксированная ширина модалки */
+  max-width: 90vw;             /* адаптивно для маленьких экранов */
+  background: #fff;            /* белый фон */
+  border-radius: 12px;         /* скругления */
+  padding: 24px;               /* внутренние отступы */
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15); /* тень для модалки */
+  display: flex;
+  flex-direction: column;
+  gap: 20px;                   /* расстояние между блоками */
+  position: relative;
+  font-family: 'Inter', sans-serif;
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.modal-close:hover {
+  transform: rotate(90deg);
+  color: #ff7a00;
+}
+
+.modal-content h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
+  color: #222;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+}
+
+.promo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 4px; /* чтобы скролл не перекрывал */
+}
+
+.promo-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.promo-item:hover {
+  background: #f9f9f9;
+  border-color: #ddd;
+}
+
+.promo-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.promo-title {
+  font-weight: 600;
+  font-size: 15px;
+  color: #222;
+}
+
+.promo-desc {
+  font-size: 13px;
+  color: #777;
+}
+
+.radio-indicator {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #ccc;
+  border-radius: 50%;
+  background: #fff;
+  transition: all 0.2s;
+}
+
+/* пример активного состояния */
+.promo-item.active .radio-indicator {
+  border-color: #ff7a00;
+  background: #ff7a00;
+}
+
+.modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-primary {
+  background: #ff7a00;
+  color: #fff;
+  font-weight: 600;
+  padding: 12px 0;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-primary:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+.btn-primary:hover:not(:disabled) {
+  background: #e66b00;
+}
+
+.full-width {
+  width: 100%;
+}
+
 
 </style>
