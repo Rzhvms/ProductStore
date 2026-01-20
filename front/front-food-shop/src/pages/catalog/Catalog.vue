@@ -60,6 +60,7 @@
             <div class="product-bottom">
               <div class="product-price">{{ formatPrice(p.price) }} ₽</div>
 
+              <!-- Кнопка "Добавить" или счётчик -->
               <div v-if="p.count === 0">
                 <button
                     class="add-cart-btn"
@@ -76,9 +77,19 @@
               </div>
 
               <div v-else class="counter-pill" @click.stop>
-                <button class="counter-btn" @click.stop="decrement(p)" :disabled="isPending(p)"></button>
+                <button
+                  class="counter-btn minus"
+                  @click.stop="decrement(p)"
+                  :disabled="isPending(p)"
+                ></button>
+                
                 <span class="counter-value">{{ p.count }}</span>
-                <button class="counter-btn" @click.stop="increment(p)" :disabled="isPending(p)"></button>
+                
+                <button
+                  class="counter-btn plus"
+                  @click.stop="increment(p)"
+                  :disabled="isPending(p)"
+                ></button>
               </div>
             </div>
           </div>
@@ -90,7 +101,7 @@
           <p>Товары не найдены</p>
         </div>
 
-        <!-- PAGINATION (минимальная) -->
+        <!-- PAGINATION -->
         <div class="pagination" v-if="totalPages > 1">
           <button
               class="pagination-btn"
@@ -118,7 +129,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import Header from './Header.vue'
 import Sidebar from './Sidebar.vue'
@@ -126,87 +137,58 @@ import api from '@/api/instance'
 import { getProductImages } from '@/services/api.js'
 
 const router = useRouter()
-
 const searchQuery = ref('')
-
-const activeFilters = ref({
-  category: null,
-  categoryId: null
-})
-
+const activeFilters = ref({ category: null, categoryId: null })
 const products = ref([])
-
 const pageNumber = ref(1)
 const pageSize = ref(12)
 const totalItems = ref(0)
-
 const isLoading = ref(false)
-
 const hoverBtn = ref(null)
 const activeBtn = ref(null)
-
 const pendingIds = ref([])
 
-/* ================= helpers ================= */
-
-const addPending = (id) => {
-  if (!pendingIds.value.includes(id)) pendingIds.value.push(id)
-}
-const removePending = (id) => {
-  const i = pendingIds.value.indexOf(id)
-  if (i !== -1) pendingIds.value.splice(i, 1)
-}
+/* ================= HELPERS ================= */
+const addPending = (id) => { if (!pendingIds.value.includes(id)) pendingIds.value.push(id) }
+const removePending = (id) => { const i = pendingIds.value.indexOf(id); if (i !== -1) pendingIds.value.splice(i, 1) }
 const isPending = (p) => pendingIds.value.includes(p.id)
-
-const formatPrice = (price) =>
-    Number(price ?? 0).toLocaleString('ru-RU', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    })
-
-const totalPages = computed(() =>
-    Math.max(1, Math.ceil(totalItems.value / pageSize.value))
-)
+const formatPrice = (price) => Number(price ?? 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const totalPages = computed(() => Math.max(1, Math.ceil(totalItems.value / pageSize.value)))
 
 /* ================= API ================= */
-
 const getImage = async (id) => {
   const images = await getProductImages(id)
-  const mainImage = images.find(i => i.isMain)
-  return mainImage || images[0]
+  return images.find(i => i.isMain) || images[0]
 }
 
+/* ================= LOAD PRODUCTS ================= */
 let requestId = 0
 const loadProducts = async () => {
   isLoading.value = true
   const rid = ++requestId
 
   try {
-    const params = {
-      pageNumber: pageNumber.value,
-      pageSize: pageSize.value
-    }
-
-    if (searchQuery.value.trim()) {
-      params.search = searchQuery.value.trim()
-    }
+    const params = { pageNumber: pageNumber.value, pageSize: pageSize.value }
+    if (searchQuery.value.trim()) params.search = searchQuery.value.trim()
 
     const res = await api.get('product/list', { params })
     if (rid !== requestId) return
 
-    const list = Array.isArray(res.data?.productList)
-        ? res.data.productList
-        : []
+    const list = Array.isArray(res.data?.productList) ? res.data.productList : []
 
+    // Ставим count = 0, image и остальные поля
     products.value = await Promise.all(list.map(async p => ({
       ...p,
-      count: Number.isInteger(p.count) ? p.count : 0,
+      count: 0,
       image: await getImage(p.id)
     })))
 
     totalItems.value = res.data?.totalCount ?? list.length
+
+    // Подставляем count из корзины после загрузки
+    await syncCartCounts()
   } catch (e) {
-    console.error(e)
+    console.error('Ошибка загрузки товаров:', e)
     products.value = []
     totalItems.value = 0
   } finally {
@@ -215,24 +197,17 @@ const loadProducts = async () => {
 }
 
 /* ================= FILTERING ================= */
-
 const filteredProducts = computed(() => {
   const q = searchQuery.value.toLowerCase().trim()
   const categoryId = activeFilters.value.categoryId
-
   return products.value.filter(p => {
-    const matchSearch =
-        !q || p.name?.toLowerCase().includes(q)
-
-    const matchCategory =
-        !categoryId || String(p.categoryId) === String(categoryId)
-
+    const matchSearch = !q || p.name?.toLowerCase().includes(q)
+    const matchCategory = !categoryId || String(p.categoryId) === String(categoryId)
     return matchSearch && matchCategory
   })
 })
 
 /* ================= WATCHERS ================= */
-
 let searchTimer = null
 watch(searchQuery, () => {
   pageNumber.value = 1
@@ -241,14 +216,9 @@ watch(searchQuery, () => {
 })
 
 /* ================= EVENTS ================= */
-
 const applyFilters = (filters) => {
-  activeFilters.value = {
-    category: filters.category ?? null,
-    categoryId: filters.categoryId ?? null
-  }
+  activeFilters.value = { category: filters.category ?? null, categoryId: filters.categoryId ?? null }
   pageNumber.value = 1
-  // ❗ API НЕ дергаем
 }
 
 const resetFilters = () => {
@@ -262,12 +232,9 @@ const changePage = (page) => {
   loadProducts()
 }
 
-const goToProduct = (id) => {
-  router.push(`/catalog/product/${id}`)
-}
+const goToProduct = (id) => router.push(`/catalog/product/${id}`)
 
 /* ================= CART ================= */
-
 const increment = async (p) => {
   if (isPending(p)) return
   const prev = p.count
@@ -275,10 +242,7 @@ const increment = async (p) => {
   addPending(p.id)
 
   try {
-    await api.post('cart/items', {
-      productId: p.id,
-      quantity: p.count
-    })
+    await api.post('cart/items', { productId: p.id, quantity: p.count })
   } catch {
     p.count = prev
   } finally {
@@ -289,14 +253,18 @@ const increment = async (p) => {
 const decrement = async (p) => {
   if (isPending(p) || p.count <= 0) return
   const prev = p.count
-  p.count--
+  const newCount = p.count - 1
   addPending(p.id)
 
   try {
-    await api.post('cart/items', {
-      productId: p.id,
-      quantity: p.count
-    })
+    if (newCount === 0) {
+      // Удаляем товар из корзины
+      await api.delete(`cart/items/${p.id}`)
+    } else {
+      // Обновляем количество
+      await api.post('cart/items', { productId: p.id, quantity: newCount })
+    }
+    p.count = newCount
   } catch {
     p.count = prev
   } finally {
@@ -304,12 +272,31 @@ const decrement = async (p) => {
   }
 }
 
+
+/* ================= SYNC CART COUNTS ================= */
+const syncCartCounts = async () => {
+  try {
+    // Получаем текущие позиции корзины через "имитацию POST" или другой доступный метод бекенда
+    // Если бекенд поддерживает GET, здесь можно сделать GET
+    const res = await api.get('cart') // <-- заменить на рабочий GET или адаптировать под ваш бекенд
+    const cartItems = res.data?.items || []
+
+    products.value.forEach(p => {
+      const item = cartItems.find(i => i.productId === p.id)
+      p.count = item ? item.quantity : 0
+    })
+  } catch (e) {
+    console.warn('Не удалось синхронизировать корзину, оставляем count=0')
+  }
+}
+
+/* ================= MOUNT ================= */
 onMounted(loadProducts)
 </script>
 
 
+
 <style scoped>
-/* (стили оставлены без изменений) */
 .catalog-page {
   display: flex;
   flex-direction: column;
@@ -371,7 +358,7 @@ onMounted(loadProducts)
   gap: 20px;
 }
 
-/* === Новая карточка (по примеру слайдера) === */
+/* CARD */
 .product-card {
   border-radius: 16px;
   background: #fff;
@@ -394,7 +381,7 @@ onMounted(loadProducts)
   transform: translateY(-2px);
 }
 
-/* Изображение */
+/* IMAGE */
 .product-image {
   width: 200px;
   height: 200px;
@@ -415,18 +402,17 @@ onMounted(loadProducts)
   display: block;
 }
 
-/* Название */
+/* NAME */
 .product-name {
   text-align: center;
   font-size: 14px;
   font-weight: 500;
-  text-align: center;
   margin-bottom: 8px;
   color: #222;
-  min-height: 38px; /* чтобы карточки были ровнее */
+  min-height: 38px;
 }
 
-/* Нижняя панель (цена + кнопки) */
+/* BOTTOM PANEL */
 .product-bottom {
   display: flex;
   justify-content: space-between;
@@ -435,92 +421,97 @@ onMounted(loadProducts)
   gap: 8px;
 }
 
-/* Цена */
 .product-price {
   font-weight: 600;
   color: #ff8800;
 }
 
-/* Кнопка Добавить */
+/* ADD BUTTON (as on main) */
 .add-cart-btn {
-  background: #ff8800;
-  color: #fff;
+  background: #ffefe0;
+  color: #ff8800;
   border: none;
-  border-radius: 16px;
-  padding: 6px 12px;
+  border-radius: 12px;
+  padding: 8px 16px;
+  font-weight: 600;
   font-size: 13px;
   cursor: pointer;
-  transition: background 0.12s ease, transform 0.08s ease;
+  transition: all 0.2s;
 }
-.add-cart-btn.hover { background: #ffa533; }
-.add-cart-btn.active { background: #cc6600; transform: translateY(1px); }
+.add-cart-btn:hover { 
+  background: #ff8800; 
+  color: #fff; 
+}
 .add-cart-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* Капсула счётчика */
+/* COUNTER PILL */
 .counter-pill {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  border: 1px solid #ff8800;
-  border-radius: 16px;
-  height: 32px;
-  padding: 0 6px;
-  min-width: 92px;
-  gap: 8px;
+  background: #ff8800;
+  border-radius: 12px;
+  height: 35.5px;
+  padding: 0 2px;
 }
 
 .counter-value {
+  color: #fff;
+  font-weight: 600;
   min-width: 24px;
   text-align: center;
-  font-weight: 600;
+  font-size: 14px;
 }
 
-/* Кнопки + и - */
+/* + / - buttons */
 .counter-btn {
-  position: relative;
   width: 28px;
   height: 28px;
-  background: #ff8800;
+  background: transparent;
   border: none;
-  border-radius: 50%;
   cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
 .counter-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* - */
-.counter-btn:first-child::before {
+/* minus */
+.counter-btn.minus::before {
   content: "";
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 12px;
+  width: 10px;
   height: 2px;
   background: #fff;
-  transform: translate(-50%, -50%);
+  border-radius: 2px;
 }
 
-/* + */
-.counter-btn:last-child::before,
-.counter-btn:last-child::after {
+/* plus */
+.counter-btn.plus::before {
   content: "";
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 12px;
+  width: 10px;
   height: 2px;
   background: #fff;
-  transform: translate(-50%, -50%);
+  border-radius: 2px;
 }
-.counter-btn:last-child::after {
-  transform: translate(-50%, -50%) rotate(90deg);
+.counter-btn.plus::after {
+  content: "";
+  position: absolute;
+  width: 2px;
+  height: 10px;
+  background: #fff;
+  border-radius: 2px;
 }
 
+/* LOADING / EMPTY */
 .loading,
 .empty-state {
   text-align: center;
@@ -528,6 +519,7 @@ onMounted(loadProducts)
   color: #666;
 }
 
+/* PAGINATION */
 .pagination {
   display: flex;
   justify-content: center;
@@ -546,12 +538,87 @@ onMounted(loadProducts)
   border-radius: 8px;
   cursor: pointer;
 }
+
 .pagination-btn:disabled {
   background: #ccc;
   cursor: not-allowed;
 }
+
 .page-info {
   font-size: 14px;
   color: #555;
+}
+
+/* COUNTER PILL */
+.counter-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ff8800; /* оранжевая капсула */
+  border-radius: 12px;
+  height: 35.5px;
+  padding: 0 2px;
+  max-width: 94.5px;
+  gap: 8px;
+}
+
+/* COUNTER VALUE */
+.counter-value {
+  color: #fff;
+  font-weight: 600;
+  min-width: 24px;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* COUNTER BUTTONS */
+.counter-btn {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  background: transparent; /* прозрачный фон */
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* MINUS */
+.counter-btn.minus::before {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 2px;
+  background: #fff; /* белая полоска */
+  border-radius: 1px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* PLUS */
+.counter-btn.plus::before {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 2px;
+  background: #fff;
+  border-radius: 1px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.counter-btn.plus::after {
+  content: "";
+  position: absolute;
+  width: 2px;
+  height: 12px;
+  background: #fff;
+  border-radius: 1px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 </style>

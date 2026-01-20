@@ -1829,11 +1829,6 @@ textarea {
   display: block;
 }
 
-.thumb-item.active {
-  opacity: 1;
-  outline: 2px solid #4f46e5;
-}
-
 .thumb-nav {
   position: absolute;
   left: 50%;
