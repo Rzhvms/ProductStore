@@ -1,6 +1,7 @@
 using Application.UseCases.Image.Interfaces;
 using Application.UseCases.Product.Dto.Request;
 using Application.UseCases.Product.Dto.Response;
+using Application.UseCases.Image.Dto;
 using Application.UseCases.Product.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -102,6 +103,17 @@ public class AdminProductController : ControllerBase
         return Ok();
     }
     
+    /// <summary>
+    /// Получить список картинок продукта
+    /// </summary>
+    [HttpGet("{id}/images")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<IEnumerable<ProductImageResponse>>> GetProductImagesAsync([FromRoute] Guid id)
+    {
+        var images = await _imageUseCase.GetProductImagesAsync(id);
+        return Ok(images);
+    }
+
     /// <summary>
     /// Удалить картинку продукта
     /// </summary>

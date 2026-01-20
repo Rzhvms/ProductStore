@@ -11,7 +11,7 @@
         <div class="left-col">
            <div class="upload-zone">
               <span class="upload-text">Загрузите обложку товара</span>
-              <button class="btn-circle-orange">
+              <button class="btn-circle-orange" @click="openFileDialog">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M12 5V19M5 12H19" stroke="#FF7A00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
@@ -367,6 +367,7 @@
       </div>
 
     </div>
+    <input type="file" ref="fileInputRef" @change="handleFileChange" style="display: none;" />
   </AdminLayout>
 </template>
 
@@ -421,9 +422,11 @@ const form = ref({
   description: '',
   attributes: [
     { name: '', value: '' }
-  ]
+  ],
+  images: []
 });
 
+const fileInputRef = ref(null);
 // --- API FETCHING ---
 
 const loadCategories = async () => {
@@ -561,6 +564,29 @@ const vClickOutside = {
   unmounted(el) {
     document.body.removeEventListener('click', el.clickOutsideEvent);
   }
+};
+
+const openFileDialog = () => {
+  fileInputRef.value.click();
+};
+
+const handleFileChange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  try {
+    // const response = await adminProductApi.addImage(form.id, file);
+    form.value.images.push(response.imageId);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const removeImage = (index) => {
+  form.value.images.splice(index, 1);
 };
 </script>
 <style scoped lang="scss">

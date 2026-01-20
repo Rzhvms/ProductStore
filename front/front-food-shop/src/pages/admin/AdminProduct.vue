@@ -94,7 +94,8 @@
               </div>
             </div>
 
-            <div class="edit-card add-new" @click="addImage">
+            <div class="edit-card add-new" @click="openFileDialog">
+              <input type="file" ref="fileInputRef" @change="addImage" style="display: none;" accept="image/*"/>
               <span class="plus-icon">+</span>
             </div>
           </div>
@@ -630,7 +631,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AdminLayout from './AdminLayout.vue';
-import { adminProductApi, categoryApi, reviewApi } from '@/services/api';
+import { adminProductApi, categoryApi, reviewApi, getProductImages } from '@/services/api';
 import { getAllPromotions, updatePromotion } from '@/services/promotionsService.js';
 
 // ==================== ROUTER ====================
@@ -772,6 +773,8 @@ async function mapApiToForm(apiData) {
 
   const rating = await getRating(apiData.id);
 
+  const images = await getProductImages(apiData.id);
+  
   return {
     id: apiData.id,
     title: apiData.name || '',
@@ -787,8 +790,7 @@ async function mapApiToForm(apiData) {
     article: characteristics.article || '',
     nutrition,
     attributes,
-    // ⚠️ Гарантируем, что images - массив
-    images: Array.isArray(characteristics.images) ? characteristics.images : [],
+    images: images ? images.map(i => i.url) : [],
     rating: Number(rating) || 0,
   };
 }
@@ -864,7 +866,6 @@ async function loadData() {
     const categoriesData = await categoryApi.get();
     categoriesRaw.value = categoriesData;
     categoriesTree.value = buildCategoryTree(categoriesData);
-
     if (!isNewProduct.value) {
       const productData = await adminProductApi.getById(productId.value);
       form.value = await mapApiToForm(productData);
@@ -1118,17 +1119,48 @@ function selectSubcategory(cat, sub) {
 }
 
 // ==================== МЕТОДЫ: ИЗОБРАЖЕНИЯ ====================
-// function addImage() {
-//   // TODO: Интегрировать с загрузкой файлов
-//   form.value.images.push(`placeholder-${Date.now()}`);
-// }
+const fileInputRef = ref(null);
+const openFileDialog = () => {
+  fileInputRef.value.click();
+};
 
-// function removeImage(index) {
-//   form.value.images.splice(index, 1);
-//   if (activeImageIndex.value >= form.value.images.length) {
-//     activeImageIndex.value = Math.max(0, form.value.images.length - 1);
-//   }
-// }
+async function addImage(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const previewUrl = URL.createObjectURL(file);
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    
+    const response = await adminProductApi.addImage(form.value.id, formData, false);
+    
+    const newImageUrl = response.imageUrl || response.path || previewUrl;
+    
+    form.value.images.push(newImageUrl);
+    
+    e.target.value = ''; 
+    
+  } catch (err) {
+    console.error("Ошибка загрузки файла:", err);
+    error.value = "Не удалось загрузить изображение";
+    URL.revokeObjectURL(previewUrl);
+  }
+}
+
+function removeImage(index) {
+  const image = form.value.images[index];
+  if (image.url) {
+    adminProductApi.deleteImage(form.value.id, image.id);
+  }
+  
+  form.value.images.splice(index, 1);
+  
+  if (activeImageIndex.value >= form.value.images.length) {
+    activeImageIndex.value = Math.max(0, form.value.images.length - 1);
+  }
+}
 
 // ==================== МЕТОДЫ: АТРИБУТЫ ====================
 function addAttr() {

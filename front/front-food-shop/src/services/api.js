@@ -427,13 +427,42 @@ export const getCategoryProducts = async (categoryId, pageNumber = 1, pageSize =
     }
 }
 
+export const addImageToProduct = async (productId, file, isMain = true) => {
+    try {
+        const response = await api.post(`admin-product/${productId}/image`, file, { params: { isMain }, headers: { 'Content-Type': 'multipart/form-data' } });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось добавить изображение");
+    }
+};
+
+export const deleteImageFromProduct = async (productId, imageId) => {
+    try {
+        const response = await api.delete(`admin-product/${productId}/images/${imageId}`);
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось удалить изображение");
+    }
+};
+
+export const getProductImages = async (productId) => {
+    try {
+        const response = await api.get(`admin-product/${productId}/images`);
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось получить список изображений");
+    }
+};
+
 export const adminProductApi = {
     create: createProduct,
     get: getProducts,
     getById: getProduct,
     update: updateProduct,
     delete: deleteProduct,
-    getCategoryProducts: getCategoryProducts
+    getCategoryProducts: getCategoryProducts,
+    addImage: addImageToProduct,
+    deleteImage: deleteImageFromProduct
 };
 
 export const getUserProfile = async (userId) => {

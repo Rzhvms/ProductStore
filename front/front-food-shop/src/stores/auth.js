@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { login as loginApi, refreshToken, logout } from '@/services/api'
+import router from '@/router'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -123,6 +124,7 @@ export const useAuthStore = defineStore('auth', {
         console.error('Logout API error:', error);
       } finally {
         this.clearAuth();
+        router.push('/login');
       }
     },
 
