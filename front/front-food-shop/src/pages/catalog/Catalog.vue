@@ -47,7 +47,7 @@
             <div class="product-image">
               <img
                   v-if="p.image"
-                  :src="p.image"
+                  :src="p.image.url"
                   :alt="p.name"
                   class="img-fluid"
                   loading="lazy"
@@ -123,6 +123,7 @@ import { useRouter } from 'vue-router'
 import Header from './Header.vue'
 import Sidebar from './Sidebar.vue'
 import api from '@/api/instance'
+import { getProductImages } from '@/services/api.js'
 
 const router = useRouter()
 
@@ -169,6 +170,12 @@ const totalPages = computed(() =>
 
 /* ================= API ================= */
 
+const getImage = async (id) => {
+  const images = await getProductImages(id)
+  const mainImage = images.find(i => i.isMain)
+  return mainImage || images[0]
+}
+
 let requestId = 0
 const loadProducts = async () => {
   isLoading.value = true
@@ -191,10 +198,11 @@ const loadProducts = async () => {
         ? res.data.productList
         : []
 
-    products.value = list.map(p => ({
+    products.value = await Promise.all(list.map(async p => ({
       ...p,
-      count: Number.isInteger(p.count) ? p.count : 0
-    }))
+      count: Number.isInteger(p.count) ? p.count : 0,
+      image: await getImage(p.id)
+    })))
 
     totalItems.value = res.data?.totalCount ?? list.length
   } catch (e) {

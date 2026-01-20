@@ -86,7 +86,7 @@
                 <div class="product-image">
                   <img
                     v-if="product.image"
-                    :src="product.image"
+                    :src="product.image.url"
                     :alt="product.name"
                   />
                   <span v-else>🖼️</span>
@@ -138,7 +138,7 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import Header from './Header.vue'
 import Footer from './Footer.vue'
-import { productApi, cartApi } from '@/services/api'
+import { productApi, cartApi, getProductImages } from '@/services/api'
 import { getActivePromotions } from '@/services/promotionsService'
 
 const router = useRouter()
@@ -158,6 +158,12 @@ const CARD_WIDTH = 220
 const GAP = 20
 const STEP = CARD_WIDTH + GAP
 
+const getImage = async (id) => {
+  const images = await getProductImages(id)
+  const mainImage = images.find(i => i.isMain)
+  return mainImage || images[0];
+}
+
 // --- ЗАГРУЗКА ДАННЫХ ---
 const loadData = async () => {
   // 1. Загружаем акции
@@ -167,10 +173,11 @@ const loadData = async () => {
   // 2. Загружаем товары
   try {
     const data = await productApi.getList(1, 10)
-    products.value = data.productList?.map(p => ({
+    products.value = await Promise.all(data.productList?.map(async p => ({
       ...p,
-      count: 0
-    })) || []
+      count: 0,
+      image: await getImage(p.id),
+    }))) || []
 
     // 3. Подгружаем корзину и ставим count по продуктам
     await syncCartCounts()

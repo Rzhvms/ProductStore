@@ -44,16 +44,13 @@
         </div>
       <section class="product-hero">
         <div class="gallery-wrapper">
-          <div class="thumbnails">
-            <div 
-              v-for="(img, index) in 4" 
-              :key="index" 
-              class="thumb"
-              :class="{ active: activeImageIndex === index }"
-              @click="activeImageIndex = index"
-            ></div>
+          <div class="thumbnails" v-if="images.length > 0">
+            <div v-for="(img, index) in images" :key="index" class="thumb" :class="{ active: activeImageIndex === index }" @click="activeImageIndex = index"></div>
+            <div class="thumb" @click="activeImageIndex = 0"></div>
           </div>
-          <div class="main-image"></div>
+          <div class="main-image" v-if="images.length > 0">
+            <img :src="images[activeImageIndex].url" alt="main" />
+          </div>
         </div>
 
         <div class="product-info">
@@ -300,7 +297,7 @@ import { ref, computed, onMounted, reactive } from 'vue'
 import { useRoute } from 'vue-router'
 import Header from './Header.vue'
 import Footer from './Footer.vue'
-import { productApi, cartApi, getCategory, reviewApi, favoriteApi } from '@/services/api.js'
+import { productApi, cartApi, getCategory, reviewApi, favoriteApi, getProductImages } from '@/services/api.js'
 
 const route = useRoute()
 const loading = ref(true)
@@ -317,6 +314,7 @@ const isInCart = ref(false)
 const cartItemCount = ref(0)
 const reviews = ref([]);
 const reviewsCount = computed(() => reviews.value.length);
+const images = ref([]);
 
 const currentSort = ref({
   field: null,
@@ -540,6 +538,9 @@ const loadData = async () => {
 
     const reviewsData = await reviewApi.getList(id)
     reviews.value = reviewsData.productReviewList
+
+    const imagesData = await getProductImages(id)
+    images.value = imagesData.map(i => ({id: i.id, url: i.url}))
   } catch (err) {
     error.value = "Ошибка: " + err.message
   } finally {

@@ -332,7 +332,7 @@ const getRating = async (id) => {
 const getImage = async (id) => {
   const images = await getProductImages(id)
   const mainImage = images.find(i => i.isMain)
-  return mainImage;
+  return mainImage || images[0]
 }
 
 // === ЗАГРУЗКА ДАННЫХ ===
