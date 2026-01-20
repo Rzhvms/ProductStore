@@ -54,26 +54,86 @@
         <!-- ЛЕВАЯ КОЛОНКА: Изображения -->
         <div class="left-col">
     
-          <!-- === РЕЖИМ ПРОСМОТРА (Галерея) === -->
-          <div v-if="!isEditMode" class="view-gallery">
-            <div class="thumbnails-col">
-              <div 
-                v-for="(img, index) in form.images" 
-                :key="index"
-                class="thumb-item"
-                :class="{ active: activeImageIndex === index }"
-                @click="activeImageIndex = index"
+        <!-- === РЕЖИМ ПРОСМОТРА (Галерея) === -->
+        <div v-if="!isEditMode" class="view-gallery">
+          <div class="thumbnails-col">
+
+            <!-- ▲ вверх -->
+            <button
+              class="thumb-nav up"
+              @click="scrollUp"
+              :disabled="thumbIndex === 0"
+              aria-label="Scroll up"
+            >
+              <svg class="thumb-svg up" viewBox="0 0 64 64">
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M31.9997 0.557766C31.3342 5.11258 28.6898 7.19061 25.3513 9.05733C19.8436 12.1369 12 19.9825 12 32.554C12 45.1254 19.8436 52.971 25.3513 56.0506C28.6898 57.9173 31.3342 59.9953 31.9997 64.5501V64.554C32 64.552 32 64.552 32 64.552C32 64.552 32 64.552 32 64.552V64.5501C32.6658 59.9953 35.3102 57.9173 38.6487 56.0506C44.1564 52.971 52 45.1254 52 32.554C52 19.9825 44.1564 12.1369 38.6487 9.05733C35.3102 7.19061 32.6658 5.11258 32.0003 0.557766Z"
+                  fill="white"
+                />
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M23.428 24.214C23.818 23.824 24.452 23.824 24.842 24.214L31.842 31.214C32.233 31.605 32.233 32.238 31.842 32.628L24.842 39.628C24.452 40.019 23.818 40.019 23.428 39.628C23.037 39.238 23.037 38.605 23.428 38.214L29.721 31.921L23.428 25.628C23.037 25.238 23.037 24.605 23.428 24.214Z"
+                  fill="#302E33"
+                />
+              </svg>
+            </button>
+
+            <!-- viewport -->
+            <div class="thumbs-viewport">
+              <div
+                class="thumbs-list"
+                :style="{ transform: `translateY(-${thumbIndex * ITEM}px)` }"
               >
-                <img v-if="img" :src="img" alt="thumb" />
+                <div
+                  v-for="(img, index) in form.images"
+                  :key="index"
+                  class="thumb-item"
+                  :class="{ active: activeImageIndex === index }"
+                  @click="activeImageIndex = index"
+                >
+                  <img :src="img" alt="thumb" />
+                </div>
               </div>
             </div>
 
-            <div class="main-image-display">
-              <div class="main-placeholder">
-                <img v-if="form.images[activeImageIndex]" :src="form.images[activeImageIndex]" alt="main" />
-              </div>
+            <!-- ▼ вниз -->
+            <button
+              class="thumb-nav down"
+              @click="scrollDown"
+              :disabled="thumbIndex === maxIndex"
+              aria-label="Scroll down"
+            >
+              <svg class="thumb-svg down" viewBox="0 0 64 64">
+                <!-- тот же SVG -->
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M31.9997 0.557766C31.3342 5.11258 28.6898 7.19061 25.3513 9.05733C19.8436 12.1369 12 19.9825 12 32.554C12 45.1254 19.8436 52.971 25.3513 56.0506C28.6898 57.9173 31.3342 59.9953 31.9997 64.5501V64.554C32 64.552 32 64.552 32 64.552C32 64.552 32 64.552 32 64.552V64.5501C32.6658 59.9953 35.3102 57.9173 38.6487 56.0506C44.1564 52.971 52 45.1254 52 32.554C52 19.9825 44.1564 12.1369 38.6487 9.05733C35.3102 7.19061 32.6658 5.11258 32.0003 0.557766Z"
+                  fill="white"
+                />
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M23.428 24.214C23.818 23.824 24.452 23.824 24.842 24.214L31.842 31.214C32.233 31.605 32.233 32.238 31.842 32.628L24.842 39.628C24.452 40.019 23.818 40.019 23.428 39.628C23.037 39.238 23.037 38.605 23.428 38.214L29.721 31.921L23.428 25.628C23.037 25.238 23.037 24.605 23.428 24.214Z"
+                  fill="#302E33"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <div class="main-image-display">
+            <div class="main-placeholder">
+              <img
+                v-if="form.images[activeImageIndex]"
+                :src="form.images[activeImageIndex]"
+                alt="main"
+              />
             </div>
           </div>
+        </div>
 
           <!-- === РЕЖИМ РЕДАКТИРОВАНИЯ (Сетка карточек) === -->
           <div v-else class="edit-gallery-grid">
@@ -1162,6 +1222,31 @@ function removeImage(index) {
   }
 }
 
+const thumbIndex = ref(0)
+
+const VIEWPORT_HEIGHT = 600
+const ITEM = 88
+
+const visibleCount = computed(() =>
+  Math.floor(VIEWPORT_HEIGHT / ITEM)
+)
+
+const maxIndex = computed(() => {
+  const images = form.value.images ?? []
+  return Math.max(0, images.length - visibleCount.value)
+})
+
+function scrollUp() {
+  thumbIndex.value = Math.max(0, thumbIndex.value - 1)
+}
+
+function scrollDown() {
+  thumbIndex.value = Math.min(
+    maxIndex.value,
+    thumbIndex.value + 1
+  )
+}
+
 // ==================== МЕТОДЫ: АТРИБУТЫ ====================
 function addAttr() {
   form.value.attributes.push({ name: '', value: '' });
@@ -1708,6 +1793,103 @@ textarea {
     flex-direction: column;
     gap: 12px;
     width: 140px;
+    position: relative;
+    width: 96px;
+    height: 600px;
+    flex-shrink: 0;
+}
+.thumbs-viewport {
+  height: 100%;
+  overflow: hidden;
+}
+
+.thumbs-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.thumbs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: transform 0.3s ease;
+}
+
+.thumb-item {
+  width: 80px;
+  aspect-ratio: 1 / 1;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+.thumb-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.thumb-item.active {
+  opacity: 1;
+  outline: 2px solid #4f46e5;
+}
+
+.thumb-nav {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.thumb-nav.up {
+  top: -16px;
+}
+
+.thumb-nav.down {
+  bottom: -16px;
+}
+
+/* переопределяем фон */
+.thumb-nav {
+  background: transparent; /* убираем круг */
+  width: auto;
+  height: auto;
+  padding: 0;
+}
+
+/* SVG */
+.thumb-svg {
+  width: 32px;
+  height: 32px;
+  opacity: 0.9;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* вращение */
+.thumb-svg.up {
+  transform: rotate(-90deg);
+}
+
+.thumb-svg.down {
+  transform: rotate(90deg);
+}
+
+/* hover */
+.thumb-nav:hover .thumb-svg {
+  opacity: 1;
+}
+
+/* disabled */
+.thumb-nav:disabled .thumb-svg {
+  opacity: 0.35;
 }
 
 /* Миниатюра */
@@ -1738,6 +1920,10 @@ textarea {
 }
 
 .main-placeholder {
+    display: flex;
+    justify-content: center;
+    align-items: center; // можно убрать, тогда картинки будут растягиваться на всю область width и height
+
     width: 600px;
     height: 600px;
     background-color: #F9F9F9; /* Светло-серый фон */
