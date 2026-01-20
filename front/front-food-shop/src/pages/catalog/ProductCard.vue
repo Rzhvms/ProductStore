@@ -392,6 +392,8 @@ const sortedReviews = computed(() => {
     
     if (currentSort.value.field === 'date') {
       const getTimestamp = (dateStr) => {
+        if (!dateStr) return 0;
+        
         const [day, month, year] = dateStr.split('.');
         return new Date(2000 + Number(year), Number(month) - 1, Number(day)).getTime();
       };
@@ -826,6 +828,11 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
     font-weight: 700;
 }
 
+.useful-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
 
 .reviews-section {
   display: flex; flex-direction: column; gap: 40px;
