@@ -139,7 +139,7 @@ import { useRouter } from 'vue-router'
 import Header from './Header.vue'
 import Footer from './Footer.vue'
 import { productApi, cartApi } from '@/services/api'
-import { getActivePromotions } from '@/services/promotionsService' // Импортируем наш сервис
+import { getActivePromotions } from '@/services/promotionsService'
 
 const router = useRouter()
 const products = ref([])
@@ -154,7 +154,7 @@ const offset = ref(0)
 const maxOffset = ref(0)
 
 // Настройки ширины: карточка 220px + отступ 20px
-const CARD_WIDTH = 220 
+const CARD_WIDTH = 220
 const GAP = 20
 const STEP = CARD_WIDTH + GAP
 
@@ -166,17 +166,36 @@ const loadData = async () => {
 
   // 2. Загружаем товары
   try {
-    const data = await productApi.getList(1, 10) // page 1, size 10
+    const data = await productApi.getList(1, 10)
     products.value = data.productList?.map(p => ({
       ...p,
-      count: 0 // В реальном проекте здесь нужно сверяться с текущей корзиной
+      count: 0
     })) || []
-    
+
+    // 3. Подгружаем корзину и ставим count по продуктам
+    await syncCartCounts()
+
     await nextTick()
     calculateSliderMetrics()
   } catch (error) {
     console.error('Ошибка загрузки товаров:', error)
     products.value = []
+  }
+}
+
+// --- СИНХРОНИЗАЦИЯ КОРЗИНЫ ---
+const syncCartCounts = async () => {
+  try {
+    const cartData = await cartApi.get()
+    const cartItems = cartData.items || []
+
+    // Проставляем count для каждого продукта на главной
+    products.value.forEach(p => {
+      const item = cartItems.find(i => i.productId === p.id)
+      p.count = item ? item.quantity : 0
+    })
+  } catch (e) {
+    console.error('Ошибка загрузки корзины:', e)
   }
 }
 
@@ -194,14 +213,13 @@ const nextPromo = () => {
 }
 
 const prevPromo = () => {
-  currentPromoIndex.value = currentPromoIndex.value === 0 
-    ? promotions.value.length - 1 
+  currentPromoIndex.value = currentPromoIndex.value === 0
+    ? promotions.value.length - 1
     : currentPromoIndex.value - 1
 }
 
 const setPromo = (index) => {
   currentPromoIndex.value = index
-  // Сбрасываем таймер при ручном переключении
   clearInterval(promoInterval)
   startPromoRotation()
 }
@@ -209,66 +227,61 @@ const setPromo = (index) => {
 // --- ЛОГИКА СЛАЙДЕРА ТОВАРОВ ---
 const calculateSliderMetrics = () => {
   if (!wrapperRef.value || !sliderRef.value) return
-  
+
   const trackWidth = sliderRef.value.scrollWidth
   const containerWidth = wrapperRef.value.clientWidth
-  
-  // Максимальный сдвиг = полная длина ленты - видимая область
+
   maxOffset.value = Math.max(0, trackWidth - containerWidth)
-  
-  // Если после ресайза мы улетели слишком далеко, возвращаем назад
+
   if (offset.value > maxOffset.value) {
     offset.value = maxOffset.value
   }
 }
 
 const canScrollLeft = computed(() => offset.value > 0)
-const canScrollRight = computed(() => offset.value < maxOffset.value) // Исправлено для точности
+const canScrollRight = computed(() => offset.value < maxOffset.value)
 
 const scrollLeft = () => {
-  const newOffset = offset.value - STEP
-  offset.value = Math.max(0, newOffset)
+  offset.value = Math.max(0, offset.value - STEP)
 }
 
 const scrollRight = () => {
-  const newOffset = offset.value + STEP
-  // Округляем до maxOffset, если шаг превышает остаток
-  offset.value = Math.min(newOffset, maxOffset.value)
+  offset.value = Math.min(offset.value + STEP, maxOffset.value)
 }
 
 // --- КОРЗИНА И НАВИГАЦИЯ ---
 const goToProduct = (id) => router.push(`/catalog/product/${id}`)
 
 const increment = async (product) => {
-  product.count++
+  const newCount = product.count + 1
+
   try {
-    await cartApi.add(product.id, product.count)
+    await cartApi.add(product.id, newCount)
+    product.count = newCount
   } catch (e) {
     console.error(e)
-    product.count-- // Откат при ошибке
   }
 }
 
 const decrement = async (product) => {
-  if (product.count > 0) {
-    product.count--
-    try {
-      if (product.count === 0) {
-        await cartApi.remove(product.id)
-      } else {
-        await cartApi.add(product.id, product.count)
-      }
-    } catch (e) {
-      console.error(e)
-      product.count++ // Откат при ошибке
+  if (product.count <= 0) return
+
+  const newCount = product.count - 1
+
+  try {
+    if (newCount === 0) {
+      await cartApi.remove(product.id)
+    } else {
+      await cartApi.add(product.id, newCount)
     }
+    product.count = newCount
+  } catch (e) {
+    console.error(e)
   }
 }
 
 // --- Lifecycle ---
-const handleResize = () => {
-  calculateSliderMetrics()
-}
+const handleResize = () => calculateSliderMetrics()
 
 onMounted(() => {
   loadData()
@@ -536,6 +549,7 @@ onBeforeUnmount(() => {
 }
 
 .product-name {
+  text-align: center;
   font-size: 15px;
   font-weight: 500;
   line-height: 1.4;
@@ -544,6 +558,7 @@ onBeforeUnmount(() => {
 }
 
 .product-bottom {
+  gap: 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -576,7 +591,7 @@ onBeforeUnmount(() => {
   align-items: center;
   background: #ff8800;
   border-radius: 12px;
-  height: 32px;
+  height: 35.5px;
   padding: 0 2px;
 }
 

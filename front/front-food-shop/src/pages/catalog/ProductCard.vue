@@ -341,6 +341,7 @@ const stockUnitsDict = {
   'st': 'шт',
   'l': 'л'
 };
+
 // Логика отзывов
 const showReviewModal = ref(false)
 const newReview = reactive({
@@ -351,6 +352,16 @@ const reviewErrors = reactive({
   rating: '',
   text: ''
 })
+
+const loadCart = async () => {
+  try {
+    const cartData = await cartApi.get()
+    return cartData.items || []
+  } catch (e) {
+    console.error("Ошибка загрузки корзины", e)
+    return []
+  }
+}
 
 function calculateOffset(rating, starIndex) {
   if (!rating) return '0%';
@@ -450,6 +461,45 @@ const formatPrice = (value) => {
   return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(value)
 }
 
+// Синхронизация count из корзины
+const syncCartCount = async () => {
+  const cartItems = await loadCart()
+  const id = route.params.id
+  const item = cartItems.find(i => i.productId === id)
+  cartItemCount.value = item ? item.quantity : 0
+  isInCart.value = cartItemCount.value > 0
+}
+
+// Добавить 1
+const incrementStock = async () => {
+  if (!product.value) return
+  cartItemCount.value++
+  try {
+    await cartApi.add(product.value.id, cartItemCount.value)
+  } catch (e) {
+    console.error(e)
+    cartItemCount.value--
+  }
+  isInCart.value = cartItemCount.value > 0
+}
+
+// Убрать 1
+const decrementStock = async () => {
+  if (!product.value || cartItemCount.value <= 0) return
+  cartItemCount.value--
+  try {
+    if (cartItemCount.value === 0) {
+      await cartApi.remove(product.value.id)
+    } else {
+      await cartApi.add(product.value.id, cartItemCount.value)
+    }
+  } catch (e) {
+    console.error(e)
+    cartItemCount.value++
+  }
+  isInCart.value = cartItemCount.value > 0
+}
+
 const handleAddToCart = async () => {
   if (!product.value) return;
   addingToCart.value = true;
@@ -457,18 +507,13 @@ const handleAddToCart = async () => {
     await cartApi.add(product.value.id, 1);
   } catch (err) { alert(err.message || 'Ошибка'); }
   finally { addingToCart.value = false; }
-  loadData()
+
+  // После добавления обновляем count
+  await syncCartCount()
 }
 
-const toggleFavorite = async () => { 
-  if (isFavorite.value) {
-    await favoriteApi.remove(product.value.id)
-  } else {
-    await favoriteApi.add(product.value.id)
-  }
-  isFavorite.value = !isFavorite.value 
-}
 
+// ---------- DATA LOADING ----------
 const loadData = async () => {
   loading.value = true
   try {
@@ -483,17 +528,21 @@ const loadData = async () => {
         const parentCatData = await getCategory(catData.parentCategoryId)
         parentCategoryName.value = parentCatData.categoryName || parentCatData.name
     }
-    const cartData = await cartApi.get()
-    const cartItems = cartData.items
-    isInCart.value = cartItems.some(item => item.productId === id)
-    cartItemCount.value = cartItems.filter(item => item.productId === id)[0]?.quantity || 0
+
+    // Теперь синхронизируем корзину
+    await syncCartCount()
+
     const favoritesData = await favoriteApi.get()
     const favoriteProducts = favoritesData.productList
     isFavorite.value = favoriteProducts.some(item => item.productId === id)
+
     const reviewsData = await reviewApi.getList(id)
     reviews.value = reviewsData.productReviewList
-  } catch (err) { error.value = "Ошибка: " + err.message }
-  finally { loading.value = false }
+  } catch (err) {
+    error.value = "Ошибка: " + err.message
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(loadData)
@@ -725,7 +774,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   }
   .product-info {
     background-color: $bg-secondary; border-radius: $border-radius; display: flex; flex-direction: column; justify-content: center; gap: 40px; width: -webkit-fill-available; padding-left: 48px; padding-right: 48px;
-    .product-title { font-size: 28px; font-weight: bold; margin-bottom: 20px; line-height: 1.2; .weight { color: $text-grey; } }
+    .product-title { font-size: 28px; font-weight: bold; margin-bottom: 20px; line-height: 1.2; .weight { color: $text-grey; font-size: 28px; } }
     .rating-row { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; font-size: 14px; .stars { color: $primary-orange; } .rating-val { color: $primary-orange; font-weight: bold; } .article { margin-left: auto; color: $text-dark; } }
     .tags-row {
       display: flex; align-items: center; gap: 30px; margin-bottom: 40px; font-size: 14px; justify-content: space-between;

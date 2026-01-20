@@ -1,7 +1,14 @@
 <template>
   <div class="page">
     <header class="header">
-      <router-link to="/admin" class="logo">LUKOSCHKO</router-link>
+      <router-link
+        to="/admin"
+        class="logo"
+        exact
+      >
+        LUKOSCHKO
+      </router-link>
+
 
       <nav class="admin-menu">
         <router-link to="/admin/categories" class="menu-item" active-class="active">
@@ -104,7 +111,7 @@ html, body {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  font-family: Libre Franklin, sans-serif;
+  font-family: "Libre Franklin", ui-sans-serif, system-ui;
 }
 
 .menu-item.active {
@@ -138,13 +145,15 @@ html, body {
   align-items: center;
   padding: 15px 30px;
   border-bottom: 1px solid #eee;
+  font-family: "Libre Franklin", ui-sans-serif, system-ui;
 }
 
 .logo {
-  font-size: 22px;
-  font-weight: bold;
+  font-size: 22px !important;
+  font-weight: bold !important;
   color: #FF7A00;
   text-decoration: none;
+  line-height: 1 !important;
 }
 
 .admin-menu {

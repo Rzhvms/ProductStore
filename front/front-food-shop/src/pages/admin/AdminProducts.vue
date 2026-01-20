@@ -481,7 +481,7 @@ watch(showAddProductDialog, (val) => {
 @import './admin.css';
 
 /* RESET & BASE */
-* { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+* { box-sizing: border-box; font-family: "Libre Franklin", ui-sans-serif, system-ui; }
 body { margin: 0; background: #fff; }
 
 .page-container {
@@ -533,6 +533,7 @@ body { margin: 0; background: #fff; }
   padding: 20px 40px;
   margin: 0 auto;
   width: 100%;
+  font-family: "Libre Franklin", ui-sans-serif, system-ui;
 }
 
 /* Page Header & Toolbar */

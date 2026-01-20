@@ -20,7 +20,7 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Inter', sans-serif;
+  font-family: "Libre Franklin", ui-sans-serif, system-ui;
   box-sizing: border-box;
 }
 </style>

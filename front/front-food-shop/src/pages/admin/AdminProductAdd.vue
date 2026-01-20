@@ -852,7 +852,7 @@ input, select, textarea {
     border: none;
     border-radius: 12px;
     padding: 16px;
-    font-family: inherit;
+    font-family: "Libre Franklin", ui-sans-serif, system-ui;
     box-sizing: border-box;
 }
 

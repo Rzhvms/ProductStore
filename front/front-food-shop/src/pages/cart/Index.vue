@@ -185,15 +185,15 @@
           <div class="grid grid-cols-3 gap-3 mb-4">
             <div>
               <label class="block text-xs text-gray-500 mb-1.5 ml-1">Этаж</label>
-              <input v-model="details.floor" type="text" class="w-full bg-white rounded-xl p-3 text-sm outline-none shadow-sm text-center">
+              <input v-model="details.floor" type="text" placeholder="1" class="w-full bg-white rounded-xl p-3 text-sm outline-none shadow-sm text-center">
             </div>
             <div>
               <label class="block text-xs text-gray-500 mb-1.5 ml-1">Подъезд</label>
-              <input v-model="details.entrance" type="text" class="w-full bg-white rounded-xl p-3 text-sm outline-none shadow-sm text-center">
+              <input v-model="details.entrance" type="text" placeholder="2" class="w-full bg-white rounded-xl p-3 text-sm outline-none shadow-sm text-center">
             </div>
             <div>
               <label class="block text-xs text-gray-500 mb-1.5 ml-1">Кв./Офис</label>
-              <input v-model="details.apartment" type="text" class="w-full bg-white rounded-xl p-3 text-sm outline-none shadow-sm text-center">
+              <input v-model="details.apartment" type="text" placeholder="45" class="w-full bg-white rounded-xl p-3 text-sm outline-none shadow-sm text-center">
             </div>
           </div>
 
@@ -232,14 +232,6 @@
               <span class="text-gray-500">Сумма заказа</span>
               <span class="font-medium">{{ totalOrderSum }} ₽</span>
             </div>
-<!--            <div class="flex justify-between text-sm">-->
-<!--              <span class="text-gray-500">Доставка</span>-->
-<!--              <span class="font-medium">{{ deliveryFee === 0 ? '0 ₽' : deliveryFee + ' ₽' }}</span>-->
-<!--            </div>-->
-<!--            <div class="flex justify-between text-sm">-->
-<!--              <span class="text-gray-500">Сборка и упаковка</span>-->
-<!--              <span class="font-medium">{{ assemblyFee }} ₽</span>-->
-<!--            </div>-->
             <div v-if="totalDiscount > 0" class="flex justify-between text-sm">
               <span class="text-green-500">Ваша экономия</span>
               <span class="text-green-500">-{{ totalDiscount }} ₽</span>
@@ -340,12 +332,10 @@ import { cartApi, getAddressSuggestions, createOrder } from '@/services/api'
 
 const router = useRouter()
 const cartItems = ref([])
-// const deliveryFee = ref(99)
-// const assemblyFee = ref(29)
 
 // --- Address & Details ---
 const address = ref('')
-const addressQuery = ref('улица Крестинского, 11')
+const addressQuery = ref('')
 const addressSuggestions = ref([])
 const details = reactive({
   floor: '',
@@ -504,7 +494,7 @@ const checkout = async () => {
     hasError = true
   }
 
-  // 2. Проверка товаров
+    // 2. Проверка товаров
   if (cartItems.value.length === 0) {
     alert('Корзина пуста')
     return
@@ -525,7 +515,6 @@ const checkout = async () => {
     paymentMethod: selectedPayment.value,
     totals: {
       items: totalOrderSum.value,
-      // delivery: deliveryFee.value,
       grandTotal: grandTotal.value
     }
   }
@@ -545,7 +534,6 @@ const closeSortDropdown = () => {
 
 const selectAddress = (item) => {
   addressQuery.value = item.title.text || item.title
-  address.value = item.title.text || item.title
   addressSuggestions.value = []
   errors.address = false
 }
@@ -563,7 +551,7 @@ onUnmounted(() => {
 })
 
 watch(addressQuery, async (value) => {
-  if (!value || value === address.value) return 
+  if (!value) return 
   
   if (value.length < 3) {
     addressSuggestions.value = []

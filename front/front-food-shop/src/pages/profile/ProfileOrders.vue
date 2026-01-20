@@ -214,7 +214,8 @@ export default {
 
 /* Стили статусов */
 .status-btn {
-  /* Базовый стиль из твоего кода */
+  padding: 4px 12px;
+  border-radius: 16px;
   cursor: default;
   background: #eee;
   color: #333;
@@ -261,6 +262,7 @@ export default {
   color: #888;
 }
 .price-value {
+  margin-left: 5px;
   font-weight: bold;
   font-size: 18px;
 }
