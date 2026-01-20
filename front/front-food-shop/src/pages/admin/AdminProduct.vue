@@ -1225,7 +1225,7 @@ function removeImage(index) {
 const thumbIndex = ref(0)
 
 const VIEWPORT_HEIGHT = 600
-const ITEM = 104
+const ITEM = 152
 
 const visibleCount = computed(() =>
   Math.floor(VIEWPORT_HEIGHT / ITEM)
@@ -1793,9 +1793,8 @@ textarea {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    width: 140px;
+    width: 144px;
     position: relative;
-    width: 96px;
     height: 600px;
     flex-shrink: 0;
 }
