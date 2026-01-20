@@ -68,7 +68,7 @@
         <table class="users-table">
           <thead>
             <tr>
-              <th>Фамилия Имя Отчество</th>
+              <th>Фамилия Имя</th>
               <th>День рождения</th>
               <th>Почта</th>
               <th>Номер телефона</th>
@@ -117,7 +117,7 @@
 
     <div class="user-data-grid">
       <div class="data-field">
-        <label>Фамилия Имя Отчество</label>
+        <label>Фамилия Имя</label>
         <input v-if="isEditing" v-model="editForm.fullname" class="field-value editing"/>
         <div v-else class="field-value">{{ selectedUser.fullname }}</div>
       </div>
