@@ -262,6 +262,7 @@ export default {
   color: #888;
 }
 .price-value {
+  margin-left: 5px;
   font-weight: bold;
   font-size: 18px;
 }
