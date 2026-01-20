@@ -44,10 +44,58 @@
         </div>
       <section class="product-hero">
         <div class="gallery-wrapper">
-          <div class="thumbnails" v-if="images.length > 0">
-            <div v-for="(img, index) in images" :key="index" class="thumb" :class="{ active: activeImageIndex === index }" @click="activeImageIndex = index"></div>
-            <div class="thumb" @click="activeImageIndex = 0"></div>
-          </div>
+          <div class="thumbnails-col">
+  <button
+    class="thumb-nav up"
+    @click="scrollUp"
+    :disabled="thumbIndex === 0"
+    aria-label="Scroll up"
+  >
+    <svg class="thumb-svg up" viewBox="0 0 64 64">
+      <path
+        fill-rule="evenodd"
+        clip-rule="evenodd"
+        d="M31.9997 0.557766C31.3342 5.11258 28.6898 7.19061 25.3513 9.05733C19.8436 12.1369 12 19.9825 12 32.554C12 45.1254 19.8436 52.971 25.3513 56.0506C28.6898 57.9173 31.3342 59.9953 31.9997 64.5501V64.554C32 64.552 32 64.552 32 64.552C32 64.552 32 64.552 32 64.552V64.5501C32.6658 59.9953 35.3102 57.9173 38.6487 56.0506C44.1564 52.971 52 45.1254 52 32.554C52 19.9825 44.1564 12.1369 38.6487 9.05733C35.3102 7.19061 32.6658 5.11258 32.0003 0.557766Z"
+        fill="white"
+      />
+      <path d="M23.428 24.214C23.818 23.824 24.452 23.824 24.842 24.214L31.842 31.214C32.233 31.605 32.233 32.238 31.842 32.628L24.842 39.628C24.452 40.019 23.818 40.019 23.428 39.628C23.037 39.238 23.037 38.605 23.428 38.214L29.721 31.921L23.428 25.628C23.037 25.238 23.037 24.605 23.428 24.214Z" fill="#302E33"/>
+    </svg>
+  </button>
+
+  <div class="thumbs-viewport">
+    <div
+      class="thumbs-list"
+      :style="{ transform: `translateY(-${thumbIndex * ITEM_HEIGHT}px)` }"
+    >
+      <div
+        v-for="(img, index) in images"
+        :key="index"
+        class="thumb-item"
+        :class="{ active: activeImageIndex === index }"
+        @click="activeImageIndex = index"
+      >
+        <img :src="img.url" alt="thumbnail" />
+      </div>
+    </div>
+  </div>
+
+  <button
+    class="thumb-nav down"
+    @click="scrollDown"
+    :disabled="thumbIndex >= maxIndex"
+    aria-label="Scroll down"
+  >
+    <svg class="thumb-svg down" viewBox="0 0 64 64">
+      <path
+        fill-rule="evenodd"
+        clip-rule="evenodd"
+        d="M31.9997 0.557766C31.3342 5.11258 28.6898 7.19061 25.3513 9.05733C19.8436 12.1369 12 19.9825 12 32.554C12 45.1254 19.8436 52.971 25.3513 56.0506C28.6898 57.9173 31.3342 59.9953 31.9997 64.5501V64.554C32 64.552 32 64.552 32 64.552C32 64.552 32 64.552 32 64.552V64.5501C32.6658 59.9953 35.3102 57.9173 38.6487 56.0506C44.1564 52.971 52 45.1254 52 32.554C52 19.9825 44.1564 12.1369 38.6487 9.05733C35.3102 7.19061 32.6658 5.11258 32.0003 0.557766Z"
+        fill="white"
+      />
+      <path d="M23.428 24.214C23.818 23.824 24.452 23.824 24.842 24.214L31.842 31.214C32.233 31.605 32.233 32.238 31.842 32.628L24.842 39.628C24.452 40.019 23.818 40.019 23.428 39.628C23.037 39.238 23.037 38.605 23.428 38.214L29.721 31.921L23.428 25.628C23.037 25.238 23.037 24.605 23.428 24.214Z" fill="#302E33"/>
+    </svg>
+  </button>
+</div>
           <div class="main-image" v-if="images.length > 0">
             <img :src="images[activeImageIndex].url" alt="main" />
           </div>
@@ -316,6 +364,24 @@ const reviews = ref([]);
 const reviewsCount = computed(() => reviews.value.length);
 const images = ref([]);
 
+const thumbIndex = ref(0);
+const ITEM_HEIGHT = 90; // Высота картинки (80px) + gap (10px)
+const VISIBLE_COUNT = 4; // Сколько картинок видно одновременно
+
+const maxIndex = computed(() => {
+  if (!product.value?.images) return 0;
+  // Максимальный сдвиг = общее кол-во минус видимые
+  return Math.max(0, product.value.images.length - VISIBLE_COUNT);
+});
+
+const scrollUp = () => {
+  if (thumbIndex.value > 0) thumbIndex.value--;
+};
+
+const scrollDown = () => {
+  if (thumbIndex.value < maxIndex.value) thumbIndex.value++;
+};
+
 const currentSort = ref({
   field: null,
   direction: null
@@ -552,6 +618,78 @@ onMounted(loadData)
 </script>
 
 <style lang="scss" scoped>
+.thumbnails-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 80px;
+
+  .thumb-nav {
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s;
+
+    &:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .thumb-svg {
+      width: 30px;
+      height: 30px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+      
+      &.up { transform: rotate(-90deg); }   // Поворот стрелки вверх
+      &.down { transform: rotate(90deg); }  // Поворот стрелки вниз
+    }
+  }
+
+  .thumbs-viewport {
+    overflow: hidden;
+    position: relative;
+  }
+
+  .thumbs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .thumb-item {
+    width: 80px;
+    height: 80px;
+    border-radius: 15px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.3s, transform 0.2s;
+    flex-shrink: 0;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    &.active {
+      border-color: #FF7A00;
+    }
+
+    &:hover {
+      transform: scale(1.02);
+    }
+  }
+}
+
 h2 {
   font-size: 24px;
   font-weight: 600;
