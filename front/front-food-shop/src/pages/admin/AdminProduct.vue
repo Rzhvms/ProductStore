@@ -94,7 +94,7 @@
                   :class="{ active: activeImageIndex === index }"
                   @click="activeImageIndex = index"
                 >
-                  <img :src="img.url" alt="thumb" />
+                  <img :src="img?.url" alt="thumb" />
                 </div>
               </div>
             </div>
@@ -127,8 +127,8 @@
           <div class="main-image-display">
             <div class="main-placeholder">
               <img
-                v-if="form.images[activeImageIndex].url"
-                :src="form.images[activeImageIndex].url"
+                v-if="form.images[activeImageIndex]?.url"
+                :src="form.images[activeImageIndex]?.url"
                 alt="main"
               />
             </div>

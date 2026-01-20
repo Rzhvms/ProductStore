@@ -1,6 +1,6 @@
 <template>
   <Header />
-  
+
   <div v-if="loading" class="loading-state container">
     Загрузка...
   </div>
@@ -12,93 +12,91 @@
   <div v-else class="product-page" style="padding: 24px 48px;">
     <main class="main-content container">
       <div class="breadcrumbs">
-          <span 
-            class="crumb-link" 
-            :class="{ active: currentView === 'categories' }"
-            @click="goToCatalog"
-          >
-            Каталог
-          </span>
-          <span v-if="parentCategoryName" class="separator">›</span>
-          <span 
-            v-if="parentCategoryName"
-            class="crumb-link"
-            @click="goToCategory(parentCategoryName)"
-          >
-            {{ parentCategoryName }}
-          </span>
-          <span v-if="categoryName" class="separator">›</span>
-          <span 
-            v-if="categoryName" 
-            class="crumb-link"
-          >
-            {{ categoryName }}
-          </span>
-          <span v-if="product" class="separator">›</span>
-          <span 
-            v-if="product" 
-            class="crumb-link active"
-          >
-            {{ product.name }}
-          </span>
-        </div>
+        <span class="crumb-link" :class="{ active: currentView === 'categories' }" @click="goToCatalog">Каталог</span>
+        <span v-if="parentCategoryName" class="separator">›</span>
+        <span v-if="parentCategoryName" class="crumb-link" @click="goToCategory(parentCategoryName)">
+          {{ parentCategoryName }}
+        </span>
+        <span v-if="categoryName" class="separator">›</span>
+        <span v-if="categoryName" class="crumb-link">{{ categoryName }}</span>
+        <span v-if="product" class="separator">›</span>
+        <span v-if="product" class="crumb-link active">{{ product.name }}</span>
+      </div>
+
       <section class="product-hero">
         <div class="gallery-wrapper">
+          
           <div class="thumbnails-col">
-  <button
-    class="thumb-nav up"
-    @click="scrollUp"
-    :disabled="thumbIndex === 0"
-    aria-label="Scroll up"
-  >
-    <svg class="thumb-svg up" viewBox="0 0 64 64">
-      <path
-        fill-rule="evenodd"
-        clip-rule="evenodd"
-        d="M31.9997 0.557766C31.3342 5.11258 28.6898 7.19061 25.3513 9.05733C19.8436 12.1369 12 19.9825 12 32.554C12 45.1254 19.8436 52.971 25.3513 56.0506C28.6898 57.9173 31.3342 59.9953 31.9997 64.5501V64.554C32 64.552 32 64.552 32 64.552C32 64.552 32 64.552 32 64.552V64.5501C32.6658 59.9953 35.3102 57.9173 38.6487 56.0506C44.1564 52.971 52 45.1254 52 32.554C52 19.9825 44.1564 12.1369 38.6487 9.05733C35.3102 7.19061 32.6658 5.11258 32.0003 0.557766Z"
-        fill="white"
-      />
-      <path d="M23.428 24.214C23.818 23.824 24.452 23.824 24.842 24.214L31.842 31.214C32.233 31.605 32.233 32.238 31.842 32.628L24.842 39.628C24.452 40.019 23.818 40.019 23.428 39.628C23.037 39.238 23.037 38.605 23.428 38.214L29.721 31.921L23.428 25.628C23.037 25.238 23.037 24.605 23.428 24.214Z" fill="#302E33"/>
-    </svg>
-  </button>
+            <button
+              class="thumb-nav up"
+              @click="scrollUp"
+              :disabled="thumbIndex === 0"
+              aria-label="Scroll up"
+            >
+              <svg class="thumb-svg up" viewBox="0 0 64 64">
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M31.9997 0.557766C31.3342 5.11258 28.6898 7.19061 25.3513 9.05733C19.8436 12.1369 12 19.9825 12 32.554C12 45.1254 19.8436 52.971 25.3513 56.0506C28.6898 57.9173 31.3342 59.9953 31.9997 64.5501V64.554C32 64.552 32 64.552 32 64.552C32 64.552 32 64.552 32 64.552V64.5501C32.6658 59.9953 35.3102 57.9173 38.6487 56.0506C44.1564 52.971 52 45.1254 52 32.554C52 19.9825 44.1564 12.1369 38.6487 9.05733C35.3102 7.19061 32.6658 5.11258 32.0003 0.557766Z"
+                  fill="white"
+                />
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M23.428 24.214C23.818 23.824 24.452 23.824 24.842 24.214L31.842 31.214C32.233 31.605 32.233 32.238 31.842 32.628L24.842 39.628C24.452 40.019 23.818 40.019 23.428 39.628C23.037 39.238 23.037 38.605 23.428 38.214L29.721 31.921L23.428 25.628C23.037 25.238 23.037 24.605 23.428 24.214Z"
+                  fill="#302E33"
+                />
+              </svg>
+            </button>
 
-  <div class="thumbs-viewport">
-    <div
-      class="thumbs-list"
-      :style="{ transform: `translateY(-${thumbIndex * ITEM_HEIGHT}px)` }"
-    >
-      <div
-        v-for="(img, index) in images"
-        :key="index"
-        class="thumb-item"
-        :class="{ active: activeImageIndex === index }"
-        @click="activeImageIndex = index"
-      >
-        <img :src="img.url" alt="thumbnail" />
-      </div>
-    </div>
-  </div>
+            <div class="thumbs-viewport">
+              <div
+                class="thumbs-list"
+                :style="{ transform: `translateY(-${thumbIndex * ITEM_HEIGHT}px)` }"
+              >
+                <div
+                  v-for="(img, index) in images"
+                  :key="index"
+                  class="thumb-item"
+                  :class="{ active: activeImageIndex === index }"
+                  @click="activeImageIndex = index"
+                >
+                  <img :src="img.url" alt="thumbnail" />
+                </div>
+              </div>
+            </div>
 
-  <button
-    class="thumb-nav down"
-    @click="scrollDown"
-    :disabled="thumbIndex >= maxIndex"
-    aria-label="Scroll down"
-  >
-    <svg class="thumb-svg down" viewBox="0 0 64 64">
-      <path
-        fill-rule="evenodd"
-        clip-rule="evenodd"
-        d="M31.9997 0.557766C31.3342 5.11258 28.6898 7.19061 25.3513 9.05733C19.8436 12.1369 12 19.9825 12 32.554C12 45.1254 19.8436 52.971 25.3513 56.0506C28.6898 57.9173 31.3342 59.9953 31.9997 64.5501V64.554C32 64.552 32 64.552 32 64.552C32 64.552 32 64.552 32 64.552V64.5501C32.6658 59.9953 35.3102 57.9173 38.6487 56.0506C44.1564 52.971 52 45.1254 52 32.554C52 19.9825 44.1564 12.1369 38.6487 9.05733C35.3102 7.19061 32.6658 5.11258 32.0003 0.557766Z"
-        fill="white"
-      />
-      <path d="M23.428 24.214C23.818 23.824 24.452 23.824 24.842 24.214L31.842 31.214C32.233 31.605 32.233 32.238 31.842 32.628L24.842 39.628C24.452 40.019 23.818 40.019 23.428 39.628C23.037 39.238 23.037 38.605 23.428 38.214L29.721 31.921L23.428 25.628C23.037 25.238 23.037 24.605 23.428 24.214Z" fill="#302E33"/>
-    </svg>
-  </button>
-</div>
-          <div class="main-image" v-if="images.length > 0">
-            <img :src="images[activeImageIndex].url" alt="main" />
+             <button
+              class="thumb-nav down"
+              @click="scrollDown"
+              :disabled="thumbIndex >= maxIndex"
+              aria-label="Scroll down"
+            >
+              <svg class="thumb-svg down" viewBox="0 0 64 64">
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M31.9997 0.557766C31.3342 5.11258 28.6898 7.19061 25.3513 9.05733C19.8436 12.1369 12 19.9825 12 32.554C12 45.1254 19.8436 52.971 25.3513 56.0506C28.6898 57.9173 31.3342 59.9953 31.9997 64.5501V64.554C32 64.552 32 64.552 32 64.552C32 64.552 32 64.552 32 64.552V64.5501C32.6658 59.9953 35.3102 57.9173 38.6487 56.0506C44.1564 52.971 52 45.1254 52 32.554C52 19.9825 44.1564 12.1369 38.6487 9.05733C35.3102 7.19061 32.6658 5.11258 32.0003 0.557766Z"
+                  fill="white"
+                />
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M23.428 24.214C23.818 23.824 24.452 23.824 24.842 24.214L31.842 31.214C32.233 31.605 32.233 32.238 31.842 32.628L24.842 39.628C24.452 40.019 23.818 40.019 23.428 39.628C23.037 39.238 23.037 38.605 23.428 38.214L29.721 31.921L23.428 25.628C23.037 25.238 23.037 24.605 23.428 24.214Z"
+                  fill="#302E33"
+                />
+              </svg>
+            </button>
           </div>
+
+             <div class="main-image">
+                <img 
+                  v-if="images.length > 0 && images[activeImageIndex]" 
+                  :src="images[activeImageIndex].url" 
+                  alt="main" 
+                />
+                <div v-else class="no-image-placeholder">Нет фото</div>
+              </div>
         </div>
 
         <div class="product-info">
@@ -108,33 +106,26 @@
           </h1>
 
           <div class="row-rating">
-                <div class="stars-wrapper">
-                  <svg 
-                    v-for="star in 5" 
-                    :key="star" 
-                    class="star-icon" 
-                    width="32" 
-                    height="32" 
-                    viewBox="0 0 24 24"
-                  >
-                    <defs>
-                      <linearGradient :id="'grad-' + (product.id || 'new') + '-' + star">
-                        <stop offset="0%" stop-color="#FF7A00" />
-                        <stop :offset="calculateOffset(product.rating, star)" stop-color="#FF7A00" />
-                        <stop :offset="calculateOffset(product.rating, star)" stop-color="#E5E7EB" />
-                        <stop offset="100%" stop-color="#E5E7EB" />
-                      </linearGradient>
-                    </defs>
-                    <path 
-                      :fill="'url(#grad-' + (product.id || 'new') + '-' + star + ')'" 
-                      d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" 
-                    />
-                  </svg>  
-                  <h3 class="rating-value" style="margin-left: 20px;">{{ product.rating || 0 }}</h3>
-                </div>
-                <h3 class="rating-value">({{ reviewsCount }} отзывов)</h3>
-                <h3 class="article">Артикул: {{ article }}</h3>
-              </div>
+            <div class="stars-wrapper">
+              <svg v-for="star in 5" :key="star" class="star-icon" width="32" height="32" viewBox="0 0 24 24">
+                <defs>
+                  <linearGradient :id="'grad-' + (product.id || 'new') + '-' + star">
+                    <stop offset="0%" stop-color="#FF7A00" />
+                    <stop :offset="calculateOffset(product.rating, star)" stop-color="#FF7A00" />
+                    <stop :offset="calculateOffset(product.rating, star)" stop-color="#E5E7EB" />
+                    <stop offset="100%" stop-color="#E5E7EB" />
+                  </linearGradient>
+                </defs>
+                <path
+                  :fill="'url(#grad-' + (product.id || 'new') + '-' + star + ')'"
+                  d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+                />
+              </svg>
+              <h3 class="rating-value" style="margin-left: 20px;">{{ product.rating || 0 }}</h3>
+            </div>
+            <h3 class="rating-value">({{ reviewsCount }} отзывов)</h3>
+            <h3 class="article">Артикул: {{ article }}</h3>
+          </div>
 
           <div class="tags-row">
             <div v-if="categoryName" class="tag-group">
@@ -148,27 +139,23 @@
           </div>
 
           <div class="price-action-row">
-            <h2 class="price">
-              {{ formatPrice(product.price) }} / {{ priceUnit }}
-            </h2>
-            
+            <h2 class="price">{{ formatPrice(product.price) }} / {{ priceUnit }}</h2>
+
             <button v-if="!isInCart"
-              class="btn-primary" 
-              @click="handleAddToCart" 
+              class="btn-primary"
+              @click="handleAddToCart"
               :disabled="addingToCart || product.quantity === 0"
             >
               {{ addingToCart ? 'Добавляем...' : 'В корзину' }}
             </button>
+
             <div v-else class="counter">
               <button @click="decrementStock">-</button>
               <div class="input-short-counter">{{ cartItemCount }}{{ stockUnit }}</div>
               <button @click="incrementStock">+</button>
             </div>
-            <button 
-              class="btn-favorite" 
-              :class="{ active: isFavorite }" 
-              @click="toggleFavorite"
-            >
+
+            <button class="btn-favorite" :class="{ active: isFavorite }" @click="toggleFavorite">
               {{ isFavorite ? '♥' : '♡' }}
             </button>
           </div>
@@ -184,7 +171,9 @@
               <div class="nutri-item">Белки: {{ nutrition.protein || 0 }}г</div>
               <div class="nutri-item">Жиры: {{ nutrition.fats || 0 }}г</div>
               <div class="nutri-item">Углеводы: {{ nutrition.carbs || 0 }}г</div>
-              <div v-if="nutrition.energy" class="nutri-item">Энергетическая ценность: {{ nutrition.energy }} ккал/{{ nutrition.joules }} кДж</div>
+              <div v-if="nutrition.energy" class="nutri-item">
+                Энергетическая ценность: {{ nutrition.energy }} ккал/{{ nutrition.joules }} кДж
+              </div>
             </div>
           </div>
 
@@ -208,49 +197,27 @@
 
       <section class="reviews-section" id="reviews">
         <div class="reviews-header">
-          <h2>Отзывы <span class="count">0</span></h2>
+          <h2>Отзывы <span class="count">{{ reviewsCount }}</span></h2>
           <button class="btn-primary-outline" @click="showReviewModal = true">Написать отзыв</button>
         </div>
+
         <div v-if="reviewsCount!==0" class="sort-controls">
-            <span class="sort-label">Сортировка по:</span>
-            
-            <button 
-              class="btn-sort" 
-              :class="{ active: currentSort.field === 'date' }" 
-              @click="toggleSort('date')"
-            >
-              Дате 
-              <span v-if="currentSort.field === 'date'">
-                {{ currentSort.direction === 'asc' ? '↑' : '↓' }}
-              </span>
-            </button>
+          <span class="sort-label">Сортировка по:</span>
+          <button class="btn-sort" :class="{ active: currentSort.field === 'date' }" @click="toggleSort('date')">
+            Дате <span v-if="currentSort.field === 'date'">{{ currentSort.direction === 'asc' ? '↑' : '↓' }}</span>
+          </button>
+          <button class="btn-sort" :class="{ active: currentSort.field === 'rating' }" @click="toggleSort('rating')">
+            Рейтингу <span v-if="currentSort.field === 'rating'">{{ currentSort.direction === 'asc' ? '↑' : '↓' }}</span>
+          </button>
+          <button class="btn-sort" :class="{ active: currentSort.field === 'useful' }" @click="toggleSort('useful')">
+            Полезности <span v-if="currentSort.field === 'useful'">{{ currentSort.direction === 'asc' ? '↑' : '↓' }}</span>
+          </button>
+        </div>
 
-            <button 
-              class="btn-sort" 
-              :class="{ active: currentSort.field === 'rating' }" 
-              @click="toggleSort('rating')"
-            >
-              Рейтингу
-              <span v-if="currentSort.field === 'rating'">
-                {{ currentSort.direction === 'asc' ? '↑' : '↓' }}
-              </span>
-            </button>
-
-            <button 
-              class="btn-sort" 
-              :class="{ active: currentSort.field === 'useful' }" 
-              @click="toggleSort('useful')"
-            >
-              Полезности
-              <span v-if="currentSort.field === 'useful'">
-                {{ currentSort.direction === 'asc' ? '↑' : '↓' }}
-              </span>
-            </button>
-          </div>
         <div v-if="reviewsCount!==0" class="reviews-list">
-           <div v-for="review in sortedReviews" :key="review.id" class="review-card">
-              <div class="review-content">
-                <div class="review-user-header">
+          <div v-for="review in sortedReviews" :key="review.id" class="review-card">
+            <div class="review-content">
+              <div class="review-user-header">
                 <div class="user-info">
                   <div class="avatar-circle">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2">
@@ -260,7 +227,6 @@
                   </div>
                   <span class="user-name">{{ review.author }}</span>
                 </div>
-
                 <div class="stars-row">
                   <svg v-for="i in 5" :key="i" width="20" height="20" viewBox="0 0 24 24" class="star-mini">
                     <defs>
@@ -271,34 +237,24 @@
                         <stop offset="100%" stop-color="#D1D5DB"/>
                       </linearGradient>
                     </defs>
-                    <path 
-                      :fill="'url(#r-grad-' + review.id + '-' + i + ')'" 
-                      d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
-                    />
+                    <path :fill="'url(#r-grad-' + review.id + '-' + i + ')'" d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
                   </svg>
                   <span class="rating-num">{{ review.rating.toString().replace('.', ',') }}</span>
                 </div>
               </div>
-
               <p class="review-text">{{ review.text }}</p>
-              </div>
-              <div class="review-footer">
+            </div>
+            <div class="review-footer">
               <span class="pub-date">Дата публикации: {{ review.date }}</span>
-                <div class="useful-actions">
-                  <span>Был ли отзыв полезен?</span>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2">
-                    <!--like (thumb up)-->
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                  </svg>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2">
-                    <!--dislike (thumb down)-->
-                    <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/>
-                  </svg>
-                </div>
+              <div class="useful-actions">
+                <span>Был ли отзыв полезен?</span>
               </div>
-           </div>
+            </div>
+          </div>
         </div>
-        <span v-else class="empty-text" style="text-align: center">Пока никто не оставил отзыв на этот товар. Поделитесь своим мнением первым!</span>
+        <span v-else class="empty-text" style="text-align: center">
+          Пока никто не оставил отзыв на этот товар. Поделитесь своим мнением первым!
+        </span>
       </section>
     </main>
 
@@ -307,41 +263,30 @@
         <div class="modal-content">
           <button class="modal-close" @click="closeModal">✕</button>
           <h2>Ваш отзыв</h2>
-          
           <div class="form-group">
             <label>Оценка</label>
             <div class="stars-selector">
-              <span 
-                v-for="star in 5" 
-                :key="star" 
-                class="star-input" 
-                :class="{ filled: star <= newReview.rating }"
-                @click="newReview.rating = star"
-              >★</span>
+              <span v-for="star in 5" :key="star" class="star-input" :class="{ filled: star <= newReview.rating }" @click="newReview.rating = star">★</span>
             </div>
             <span v-if="reviewErrors.rating" class="error-msg">{{ reviewErrors.rating }}</span>
           </div>
-
           <div class="form-group">
             <label>Текст отзыва</label>
-            <textarea 
-              v-model="newReview.text" 
-              placeholder="Поделитесь впечатлениями о товаре"
-              :class="{ 'error-border': reviewErrors.text }"
-            ></textarea>
+            <textarea v-model="newReview.text" placeholder="Поделитесь впечатлениями о товаре" :class="{ 'error-border': reviewErrors.text }"></textarea>
             <span v-if="reviewErrors.text" class="error-msg">{{ reviewErrors.text }}</span>
           </div>
-
           <button class="btn-primary full-width" @click="submitReview">Опубликовать</button>
         </div>
       </div>
     </Teleport>
+
   </div>
+
   <Footer />
 </template>
 
 <script setup>
-import { ref, computed, onMounted, reactive } from 'vue'
+import { ref, computed, onMounted, reactive, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import Header from './Header.vue'
 import Footer from './Footer.vue'
@@ -352,7 +297,7 @@ const loading = ref(true)
 const error = ref(null)
 const addingToCart = ref(false)
 const isFavorite = ref(false)
-const activeImageIndex = ref(0)
+
 const product = ref(null)
 const categoryName = ref(null)
 const categoryId = ref(null)
@@ -360,121 +305,65 @@ const parentCategoryName = ref(null)
 const parentCategoryId = ref(null)
 const isInCart = ref(false)
 const cartItemCount = ref(0)
-const reviews = ref([]);
-const reviewsCount = computed(() => reviews.value.length);
-const images = ref([]);
+const reviews = ref([])
+const reviewsCount = computed(() => reviews.value.length)
+const images = ref([])
 
-const thumbIndex = ref(0);
-const ITEM_HEIGHT = 90; // Высота картинки (80px) + gap (10px)
-const VISIBLE_COUNT = 4; // Сколько картинок видно одновременно
+// ===================== SLIDER =====================
+const activeImageIndex = ref(0)
+const thumbIndex = ref(0)
+
+const ITEM_HEIGHT = 156
+const VIEWPORT_HEIGHT = 600
+
+const visibleCount = computed(() => Math.floor(VIEWPORT_HEIGHT / ITEM_HEIGHT))
 
 const maxIndex = computed(() => {
-  if (!product.value?.images) return 0;
-  // Максимальный сдвиг = общее кол-во минус видимые
-  return Math.max(0, product.value.images.length - VISIBLE_COUNT);
-});
+  if (!images.value || images.value.length === 0) return 0
+  return Math.max(0, images.value.length - visibleCount.value)
+})
 
 const scrollUp = () => {
-  if (thumbIndex.value > 0) thumbIndex.value--;
-};
+  if (thumbIndex.value > 0) thumbIndex.value--
+}
 
 const scrollDown = () => {
-  if (thumbIndex.value < maxIndex.value) thumbIndex.value++;
-};
-
-const currentSort = ref({
-  field: null,
-  direction: null
-});
-
-const unitDict = {
-  'кг': 'Килограмм',
-  'г': 'Грамм',
-  'л': 'Литр',
-  'мл': 'Миллилитр'
-};
-
-const priceUnitsDict = {
-  'st': 'шт',
-  'kg': 'кг',
-  'l': 'л'
-};
-
-const stockUnitsDict = {
-  'kg': 'кг',
-  'st': 'шт',
-  'l': 'л'
-};
-
-// Логика отзывов
-const showReviewModal = ref(false)
-const newReview = reactive({
-  rating: 0,
-  text: ''
-})
-const reviewErrors = reactive({
-  rating: '',
-  text: ''
-})
-
-const loadCart = async () => {
-  try {
-    const cartData = await cartApi.get()
-    return cartData.items || []
-  } catch (e) {
-    console.error("Ошибка загрузки корзины", e)
-    return []
-  }
+  if (thumbIndex.value < maxIndex.value) thumbIndex.value++
 }
 
-function calculateOffset(rating, starIndex) {
-  if (!rating) return '0%';
-  const val = rating - (starIndex - 1);
-  if (val >= 1) return '100%';
-  if (val <= 0) return '0%';
-  return `${val * 100}%`;
-}
-
+// ===================== SORT =====================
+const currentSort = ref({ field: null, direction: null })
 function toggleSort(field) {
   if (currentSort.value.field !== field) {
-    currentSort.value = { field, direction: 'asc' };
-    return;
+    currentSort.value = { field, direction: 'asc' }
+    return
   }
-
-  if (currentSort.value.direction === 'asc') {
-    currentSort.value.direction = 'desc';
-  } else {
-    currentSort.value = { field: null, direction: null };
-  }
+  currentSort.value.direction = currentSort.value.direction === 'asc' ? 'desc' : null
+  if (!currentSort.value.direction) currentSort.value.field = null
 }
 
 const sortedReviews = computed(() => {
-  if (!currentSort.value.field) return reviews.value;
-
+  if (!currentSort.value.field) return reviews.value
   return [...reviews.value].sort((a, b) => {
-    const modifier = currentSort.value.direction === 'asc' ? 1 : -1;
-    
+    const modifier = currentSort.value.direction === 'asc' ? 1 : -1
     if (currentSort.value.field === 'date') {
-      const getTimestamp = (dateStr) => {
-        if (!dateStr) return 0;
-        
-        const [day, month, year] = dateStr.split('.');
-        return new Date(2000 + Number(year), Number(month) - 1, Number(day)).getTime();
-      };
-      return (getTimestamp(a.date) - getTimestamp(b.date)) * modifier;
+      const getTimestamp = (d) => {
+        if (!d) return 0
+        const [day, month, year] = d.split('.')
+        return new Date(2000 + Number(year), Number(month) - 1, Number(day)).getTime()
+      }
+      return (getTimestamp(a.date) - getTimestamp(b.date)) * modifier
     }
+    if (currentSort.value.field === 'rating') return (a.rating - b.rating) * modifier
+    if (currentSort.value.field === 'useful') return ((a.useful || 0) - (b.useful || 0)) * modifier
+    return 0
+  })
+})
 
-    if (currentSort.value.field === 'rating') {
-      return (a.rating - b.rating) * modifier;
-    }
-
-    if (currentSort.value.field === 'useful') {
-      return ((a.useful || 0) - (b.useful || 0)) * modifier;
-    }
-
-    return 0;
-  });
-});
+// ===================== REVIEW MODAL =====================
+const showReviewModal = ref(false)
+const newReview = reactive({ rating: 0, text: '' })
+const reviewErrors = reactive({ rating: '', text: '' })
 
 const closeModal = () => {
   showReviewModal.value = false
@@ -487,391 +376,194 @@ const closeModal = () => {
 const submitReview = async () => {
   reviewErrors.rating = newReview.rating === 0 ? 'Пожалуйста, поставьте оценку' : ''
   reviewErrors.text = newReview.text.trim().length < 5 ? 'Напишите хотя бы пару слов (минимум 5 символов)' : ''
-
   if (!reviewErrors.rating && !reviewErrors.text) {
-    await reviewApi.post(product.value.id, newReview.rating, newReview.text)
-    closeModal()
+    try {
+      await reviewApi.post(product.value.id, newReview.rating, newReview.text)
+      closeModal()
+      // Рекомендуется обновить список отзывов после отправки
+      const reviewsData = await reviewApi.getList(product.value.id)
+      reviews.value = reviewsData.productReviewList || []
+    } catch (e) {
+      console.error(e)
+    }
   }
 }
 
+// ===================== OTHER COMPUTED (SAFE) =====================
 const characteristics = computed(() => product.value?.characteristics || {})
 
 const displayWeight = computed(() => {
-  const g = characteristics.value.grammage
-  if (g && g.weight) return `${g.weight}${g.unit || 'г'}`
-  return null
+  const g = characteristics.value?.grammage
+  return g?.weight ? `${g.weight}${g.unit || 'г'}` : null
 })
 
-const priceUnit = computed(() => priceUnitsDict[characteristics.value.priceUnit || 'st'])
-const stockUnit = computed(() => stockUnitsDict[characteristics.value.stockUnit || 'kg'])
-const brand = computed(() => characteristics.value.brand)
-const article = computed(() => characteristics.value.article)
+const priceUnitsDict = { st: 'шт', kg: 'кг', l: 'л' }
+const stockUnitsDict = { kg: 'кг', st: 'шт', l: 'л' }
+
+const priceUnit = computed(() => priceUnitsDict[characteristics.value?.priceUnit || 'st'] || 'шт')
+const stockUnit = computed(() => stockUnitsDict[characteristics.value?.stockUnit || 'kg'] || 'кг')
+const brand = computed(() => characteristics.value?.brand)
+const article = computed(() => characteristics.value?.article)
 
 const nutrition = computed(() => {
-  if (!characteristics.value.nutrition) return null
-  try {
-    return typeof characteristics.value.nutrition === 'string' 
-      ? JSON.parse(characteristics.value.nutrition) 
-      : characteristics.value.nutrition
-  } catch (e) { return null }
+  const nut = characteristics.value?.nutrition
+  if (!nut) return null
+  try { 
+    return typeof nut === 'string' ? JSON.parse(nut) : nut 
+  } catch { 
+    return null 
+  }
 })
 
 const customSpecs = computed(() => {
-  const ignoredKeys = ['grammage', 'nutrition', 'brand', 'article', 'priceUnit', 'stockUnit', 'images']
+  const ignoredKeys = ['grammage','nutrition','brand','article','priceUnit','stockUnit','images']
   return Object.entries(characteristics.value)
-    .filter(([key]) => !ignoredKeys.includes(key))
-    .map(([key, value]) => ({ name: key, value }))
+    .filter(([k]) => !ignoredKeys.includes(k))
+    .map(([name, value]) => ({ name, value }))
 })
 
-const formatPrice = (value) => {
-  return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(value)
+const formatPrice = (v) => new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(v || 0)
+
+function calculateOffset(rating, starIndex) {
+  if (!rating) return '0%'
+  const val = rating - (starIndex - 1)
+  if (val >= 1) return '100%'
+  if (val <= 0) return '0%'
+  return `${val * 100}%`
 }
 
-// Синхронизация count из корзины
+// ===================== CART =====================
 const syncCartCount = async () => {
-  const cartItems = await loadCart()
-  const id = route.params.id
-  const item = cartItems.find(i => i.productId === id)
-  cartItemCount.value = item ? item.quantity : 0
-  isInCart.value = cartItemCount.value > 0
+  try {
+    const cartData = await cartApi.get()
+    const cartItems = cartData.items || []
+    const id = route.params.id
+    const item = cartItems.find(i => i.productId === id)
+    cartItemCount.value = item ? item.quantity : 0
+    isInCart.value = cartItemCount.value > 0
+  } catch {
+    isInCart.value = false
+    cartItemCount.value = 0
+  }
 }
 
-// Добавить 1
 const incrementStock = async () => {
   if (!product.value) return
   cartItemCount.value++
-  try {
-    await cartApi.add(product.value.id, cartItemCount.value)
-  } catch (e) {
-    console.error(e)
-    cartItemCount.value--
+  try { 
+    await cartApi.add(product.value.id, cartItemCount.value) 
+    isInCart.value = true
+  } catch { 
+    cartItemCount.value-- 
   }
-  isInCart.value = cartItemCount.value > 0
 }
 
-// Убрать 1
 const decrementStock = async () => {
   if (!product.value || cartItemCount.value <= 0) return
   cartItemCount.value--
   try {
     if (cartItemCount.value === 0) {
       await cartApi.remove(product.value.id)
+      isInCart.value = false
     } else {
       await cartApi.add(product.value.id, cartItemCount.value)
     }
-  } catch (e) {
-    console.error(e)
-    cartItemCount.value++
+  } catch { 
+    cartItemCount.value++ 
   }
-  isInCart.value = cartItemCount.value > 0
 }
 
 const handleAddToCart = async () => {
-  if (!product.value) return;
-  addingToCart.value = true;
-  try {
-    await cartApi.add(product.value.id, 1);
-  } catch (err) { alert(err.message || 'Ошибка'); }
-  finally { addingToCart.value = false; }
-
-  // После добавления обновляем count
-  await syncCartCount()
+  if (!product.value) return
+  addingToCart.value = true
+  try { 
+    await cartApi.add(product.value.id, 1)
+    await syncCartCount()
+  } catch (err) { 
+    alert(err.message || 'Ошибка при добавлении в корзину') 
+  } finally { 
+    addingToCart.value = false 
+  }
 }
 
-
-// ---------- DATA LOADING ----------
-const loadData = async () => {
-  loading.value = true
+// ===================== FAVORITE =====================
+const toggleFavorite = async () => {
+  if (!product.value) return
   try {
-    const id = route.params.id
+    if (isFavorite.value) await favoriteApi.remove(product.value.id)
+    else await favoriteApi.add(product.value.id)
+    isFavorite.value = !isFavorite.value
+  } catch (e) { 
+    console.error(e) 
+  }
+}
+
+// ===================== DATA LOADING =====================
+const loadData = async () => {
+  const id = route.params.id
+  if (!id) return
+
+  loading.value = true
+  error.value = null
+  
+  // Важно: Сбрасываем индексы галереи перед загрузкой нового товара
+  activeImageIndex.value = 0
+  thumbIndex.value = 0
+
+  try {
     const data = await productApi.get(id)
     product.value = data
+
+    // Category Logic
     if (data.categoryId) {
-        categoryId.value = data.categoryId
-        const catData = await getCategory(data.categoryId)
-        categoryName.value = catData.categoryName || catData.name
+      categoryId.value = data.categoryId
+      const catData = await getCategory(data.categoryId)
+      categoryName.value = catData.categoryName || catData.name
+      
+      if (catData.parentCategoryId) {
         parentCategoryId.value = catData.parentCategoryId
         const parentCatData = await getCategory(catData.parentCategoryId)
         parentCategoryName.value = parentCatData.categoryName || parentCatData.name
+      }
     }
 
-    // Теперь синхронизируем корзину
-    await syncCartCount()
+    // Параллельная загрузка доп. данных
+    const [cartItems, favoritesData, reviewsData, imagesData] = await Promise.all([
+      cartApi.get().catch(() => ({ items: [] })),
+      favoriteApi.get().catch(() => ({ productList: [] })),
+      reviewApi.getList(id).catch(() => ({ productReviewList: [] })),
+      getProductImages(id).catch(() => [])
+    ])
 
-    const favoritesData = await favoriteApi.get()
-    const favoriteProducts = favoritesData.productList
-    isFavorite.value = favoriteProducts.some(item => item.productId === id)
+    // Sync Cart
+    const cartItem = (cartItems.items || []).find(i => i.productId === id)
+    cartItemCount.value = cartItem ? cartItem.quantity : 0
+    isInCart.value = cartItemCount.value > 0
 
-    const reviewsData = await reviewApi.getList(id)
-    reviews.value = reviewsData.productReviewList
+    // Sync Favorites
+    isFavorite.value = (favoritesData.productList || []).some(item => item.productId === id)
 
-    const imagesData = await getProductImages(id)
-    images.value = imagesData.map(i => ({id: i.id, url: i.url}))
+    // Sync Reviews
+    reviews.value = reviewsData.productReviewList || []
+
+    // Sync Images
+    images.value = imagesData.map(i => ({ id: i.id, url: i.url }))
+    
   } catch (err) {
-    error.value = "Ошибка: " + err.message
+    console.error(err)
+    error.value = "Не удалось загрузить данные о товаре."
   } finally {
     loading.value = false
   }
 }
 
+// Следим за изменением ID в URL (если пользователь перейдет на другой товар с этой же страницы)
+watch(() => route.params.id, loadData)
+
 onMounted(loadData)
 </script>
 
 <style lang="scss" scoped>
-.thumbnails-col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  width: 80px;
-
-  .thumb-nav {
-    background: none;
-    border: none;
-    cursor: pointer;
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 0.3s;
-
-    &:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-    }
-
-    .thumb-svg {
-      width: 30px;
-      height: 30px;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
-      
-      &.up { transform: rotate(-90deg); }   // Поворот стрелки вверх
-      &.down { transform: rotate(90deg); }  // Поворот стрелки вниз
-    }
-  }
-
-  .thumbs-viewport {
-    overflow: hidden;
-    position: relative;
-  }
-
-  .thumbs-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .thumb-item {
-    width: 80px;
-    height: 80px;
-    border-radius: 15px;
-    overflow: hidden;
-    cursor: pointer;
-    border: 2px solid transparent;
-    transition: border-color 0.3s, transform 0.2s;
-    flex-shrink: 0;
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    &.active {
-      border-color: #FF7A00;
-    }
-
-    &:hover {
-      transform: scale(1.02);
-    }
-  }
-}
-
-h2 {
-  font-size: 24px;
-  font-weight: 600;
-}
-
-h3 {
-  font-size: 22px;
-  font-weight: 600;
-}
-
-span {
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.input-short-counter {
-    width: 40px;
-    text-align: center;
-    border: none;
-    outline: none;
-    font-size: 14px;
-    font-weight: 600;
-    background: transparent;
-}
-
-.counter {
-  background-color: #fff;
-  display: flex;
-  padding: 12px 18px;
-  border-radius: 16px;
-  align-items: center;
-  height: 48px;
-  width: 200px;
-  justify-content: space-between;
-  border: 1px solid #ddd;
-}
-
-.counter button {
-  font-size: 24px;
-  color: #FF7A00;
-  background: none;
-  border: none;
-  outline: none;
-  cursor: pointer;
-}
-
-.review-card {
-    background-color: #F9F9F9;
-    border-radius: 12px;
-    padding: 24px;
-    margin-bottom: 20px;
-}
-
-.review-header-title h4 {
-    margin: 0 0 12px 0;
-    color: #4B5563;
-    font-size: 18px;
-    font-weight: 600;
-}
-
-/* Стили текста */
-.review-text {
-    font-size: 14px;
-    line-height: 1.5;
-    color: #374151;
-    margin-bottom: 16px;
-}
-
-/* Блок цитаты (оранжевая полоска) */
-.review-quote {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 16px;
-}
-
-.quote-bar {
-    width: 4px;
-    background-color: #FF7A00;
-    border-radius: 2px;
-    flex-shrink: 0;
-}
-
-.review-quote p {
-    font-size: 14px;
-    color: #9CA3AF; /* Светло-серый текст цитаты */
-    line-height: 1.5;
-    margin: 0;
-}
-
-/* Хедер юзера */
-.review-user-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.avatar-circle {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background-color: #fff;
-    border: 1px solid #E5E7EB;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.user-name {
-    font-weight: 700;
-    font-size: 18px;
-    color: #374151;
-}
-
-.stars-row {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.rating-num {
-    font-weight: 700;
-    font-size: 18px;
-    color: #FF7A00;
-    margin-left: 8px;
-}
-
-/* Футер карточки */
-.review-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 8px;
-}
-
-.pub-date {
-    font-size: 13px;
-    color: #9CA3AF;
-}
-
-.review-actions {
-    display: flex;
-    gap: 24px;
-}
-
-.breadcrumbs { font-size: 14px; color: #9E9E9E; padding: 20px; padding-bottom: 0; }
-.crumb-link { cursor: pointer; transition: color 0.2s; }
-.crumb-link:hover { color: #FFA84C; }
-.crumb-link.active { color: #FF7A00; font-weight: 500; cursor: default; }
-.separator { margin: 0 8px; color: #CCC; }
-
-.row-rating {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  justify-content: space-between;
-}
-
-.stars-wrapper {
-  display: flex;
-  align-items: center;
-}
-
-.rating-value {
-  color: #FF7A00;
-  font-weight: 600;
-  font-size: 24px;
-}
-.tag {
-	background: #555;
-	color: #fff;
-	padding: 4px 18px;
-	border-radius: 24px;
-}
-
-
 $bg-color: #ffffff;
 $bg-secondary: #f6f6f6;
 $primary-orange: #ffa84c;
@@ -879,6 +571,129 @@ $text-dark: #222;
 $text-grey: #888;
 $border-radius: 24px;
 $container-max-width: 1920px;
+
+/* ============ GALLERY (PORTED FROM ADMIN) ============ */
+.gallery-wrapper {
+  display: flex;
+  gap: 20px;
+  /* Увеличиваем высоту до 600px как в админке */
+  height: 600px; 
+}
+
+.thumbnails-col {
+  display: flex;
+  flex-direction: column;
+  /* Фиксированная ширина как в админке */
+  width: 144px;
+  position: relative;
+  height: 100%;
+  flex-shrink: 0;
+  /* Убрали align-items: center, так как картинки 100% ширины */
+}
+
+.thumbs-viewport {
+  height: 100%;
+  overflow: hidden;
+  width: 100%;
+}
+
+.thumbs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* Gap как в админке */
+  transition: transform 0.3s ease;
+}
+
+.thumb-item {
+  width: 100%;
+  aspect-ratio: 1 / 1; /* Квадрат */
+  flex: 0 0 auto;
+  background-color: #F9F9F9;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  overflow: hidden;
+  transition: all 0.2s;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &:hover {
+    background-color: #E5E7EB;
+  }
+
+  &.active {
+    border-color: #FF7A00;
+  }
+}
+
+/* Кнопки навигации (Overlay) */
+.thumb-nav {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  
+  /* Сброс стилей кнопки */
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  width: auto;
+  height: auto;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .thumb-svg {
+    width: 32px;
+    height: 32px;
+    opacity: 0.9;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  
+  &:hover .thumb-svg { opacity: 1; }
+  &:disabled .thumb-svg { opacity: 0.35; }
+
+  /* Вращение стрелок */
+  .thumb-svg.up { transform: rotate(-90deg); }
+  .thumb-svg.down { transform: rotate(90deg); }
+}
+
+.thumb-nav.up {
+  top: -16px;
+}
+
+.thumb-nav.down {
+  bottom: -16px;
+}
+
+/* Главное изображение */
+.main-image {
+  flex: 1;
+  background-color: $bg-secondary;
+  border-radius: $border-radius;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+}
+.no-image-placeholder {
+  color: #ccc;
+  font-size: 18px;
+}
+
+/* ============ END GALLERY ============ */
 
 .loading-state, .error-state { padding: 100px 20px; text-align: center; font-size: 20px; color: $text-grey; }
 .container { max-width: $container-max-width; margin: 0 auto; padding: 0 20px; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; }
@@ -904,15 +719,8 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   &.active { color: #ffa84c; }
 }
 
-.reviews-link { color: $primary-orange; border-bottom: 1px $primary-orange; margin-left: 5px; font-weight: 600; }
-
 .product-hero {
   display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
-  .gallery-wrapper {
-    display: flex; gap: 20px;
-    .thumbnails { display: flex; flex-direction: column; gap: 10px; .thumb { width: 140px; height: 140px; background-color: $bg-secondary; border-radius: $border-radius; cursor: pointer; &.active { border: 2px solid $primary-orange; } } }
-    .main-image { flex-grow: 1; background-color: $bg-secondary; border-radius: $border-radius; min-height: 400px; }
-  }
   .product-info {
     background-color: $bg-secondary; border-radius: $border-radius; display: flex; flex-direction: column; justify-content: center; gap: 40px; width: -webkit-fill-available; padding-left: 48px; padding-right: 48px;
     .product-title { font-size: 28px; font-weight: bold; margin-bottom: 20px; line-height: 1.2; .weight { color: $text-grey; font-size: 28px; } }
@@ -1004,4 +812,162 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   .star-input { color: #eee; transition: 0.1s; &:hover { transform: scale(1.1); } &.filled { color: $primary-orange; } }
 }
 .error-msg { color: #ff4d4d; font-size: 12px; margin-top: 5px; display: block; }
+
+/* Общие стили для SVG звезд и т.д. */
+h2 {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+h3 {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+span {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.input-short-counter {
+    width: 40px;
+    text-align: center;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    font-weight: 600;
+    background: transparent;
+}
+
+.counter {
+  background-color: #fff;
+  display: flex;
+  padding: 12px 18px;
+  border-radius: 16px;
+  align-items: center;
+  height: 48px;
+  width: 200px;
+  justify-content: space-between;
+  border: 1px solid #ddd;
+}
+
+.counter button {
+  font-size: 24px;
+  color: #FF7A00;
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+}
+
+.review-card {
+    background-color: #F9F9F9;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+}
+
+.review-header-title h4 {
+    margin: 0 0 12px 0;
+    color: #4B5563;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.review-text {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #374151;
+    margin-bottom: 16px;
+}
+
+.review-user-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.avatar-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #fff;
+    border: 1px solid #E5E7EB;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-name {
+    font-weight: 700;
+    font-size: 18px;
+    color: #374151;
+}
+
+.stars-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.rating-num {
+    font-weight: 700;
+    font-size: 18px;
+    color: #FF7A00;
+    margin-left: 8px;
+}
+
+.review-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+}
+
+.pub-date {
+    font-size: 13px;
+    color: #9CA3AF;
+}
+
+.review-actions {
+    display: flex;
+    gap: 24px;
+}
+
+.breadcrumbs { font-size: 14px; color: #9E9E9E; padding: 20px; padding-bottom: 0; }
+.crumb-link { cursor: pointer; transition: color 0.2s; }
+.crumb-link:hover { color: #FFA84C; }
+.crumb-link.active { color: #FF7A00; font-weight: 500; cursor: default; }
+.separator { margin: 0 8px; color: #CCC; }
+
+.row-rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.stars-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.rating-value {
+  color: #FF7A00;
+  font-weight: 600;
+  font-size: 24px;
+}
+.tag {
+	background: #555;
+	color: #fff;
+	padding: 4px 18px;
+	border-radius: 24px;
+}
 </style>

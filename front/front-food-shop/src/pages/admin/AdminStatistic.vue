@@ -663,9 +663,6 @@ const calculateOffset = (rating, starIndex) => {
   border-bottom: none; 
   position: relative;
 }
-.metric-tab::after {
-  /* Разделители вертикальные, если нужны, но на макете их нет явно */
-}
 
 .m-label { font-size: 14px; color: #666; margin-bottom: 8px; }
 .m-value-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
@@ -751,7 +748,5 @@ const calculateOffset = (rating, starIndex) => {
 .u-score { font-weight: 700; color: #FF7A00; margin-left: 5px; }
 
 /* Dropdown styles reused */
-.sort-btn-styled { /* ... */ }
-.custom-dropdown-menu { /* ... */ }
 .header-left-group{ display: flex; align-items: center; gap: 12px; }
 </style>
