@@ -578,7 +578,7 @@ onBeforeUnmount(() => {
   align-items: center;
   background: #ff8800;
   border-radius: 12px;
-  height: 32px;
+  height: 35.5px;
   padding: 0 2px;
 }
 

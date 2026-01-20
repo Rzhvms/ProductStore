@@ -351,6 +351,15 @@ const reviewErrors = reactive({
   rating: '',
   text: ''
 })
+const loadCart = async () => {
+  try {
+    const cartData = await cartApi.get()
+    return cartData.items || []
+  } catch (e) {
+    console.error("Ошибка загрузки корзины", e)
+    return []
+  }
+}
 
 function calculateOffset(rating, starIndex) {
   if (!rating) return '0%';
@@ -725,7 +734,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   }
   .product-info {
     background-color: $bg-secondary; border-radius: $border-radius; display: flex; flex-direction: column; justify-content: center; gap: 40px; width: -webkit-fill-available; padding-left: 48px; padding-right: 48px;
-    .product-title { font-size: 28px; font-weight: bold; margin-bottom: 20px; line-height: 1.2; .weight { color: $text-grey; } }
+    .product-title { font-size: 28px; font-weight: bold; margin-bottom: 20px; line-height: 1.2; .weight { color: $text-grey; font-size: 28px; } }
     .rating-row { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; font-size: 14px; .stars { color: $primary-orange; } .rating-val { color: $primary-orange; font-weight: bold; } .article { margin-left: auto; color: $text-dark; } }
     .tags-row {
       display: flex; align-items: center; gap: 30px; margin-bottom: 40px; font-size: 14px; justify-content: space-between;
