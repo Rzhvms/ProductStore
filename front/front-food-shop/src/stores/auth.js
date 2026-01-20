@@ -9,12 +9,13 @@ export const useAuthStore = defineStore('auth', {
     remember: !!localStorage.getItem('refreshToken'),
     userRole: sessionStorage.getItem('userRole') || null,
     isRefreshing: false,
+    isLoggingOut: false,
     refreshSubscribers: [],
   }),
 
   getters: {
     isAuthenticated: (state) => !!state.accessToken,
-    storedRefreshToken: (state) => {
+    storedRefreshToken: () => {
       return localStorage.getItem('refreshToken') 
           || sessionStorage.getItem('refreshToken') 
           || null;
@@ -45,9 +46,13 @@ export const useAuthStore = defineStore('auth', {
       const currentRefreshToken = this.storedRefreshToken;
       
       if (!currentRefreshToken) {
-        console.error('Refresh token not found');
-        await this.logoutRe();
+        this.clearAuth();
+        router.push('/login');
         return Promise.reject(new Error('No refresh token'));
+      }
+
+      if (this.isLoggingOut) {
+        return Promise.reject(new Error('Logout in progress'));
       }
 
       if (this.isRefreshing) {
@@ -64,23 +69,22 @@ export const useAuthStore = defineStore('auth', {
         const newAccessToken = response.data?.accessToken || response.accessToken;
         const newRefreshToken = response.data?.refreshToken || response.refreshToken;
         
+        if (!newAccessToken) {
+          throw new Error('No access token in response');
+        }
+        
         this.setToken(newAccessToken);
         
         if (newRefreshToken) {
           this.setRefreshToken(newRefreshToken);
         }
         
-        console.log('Token refreshed successfully');
-        
         this.onRefreshSuccess(newAccessToken);
         
         return newAccessToken;
       } catch (error) {
-        console.error('Token refresh failed:', error);
-        
         this.onRefreshFailure(error);
-        
-        await this.logoutRe();
+        this.silentLogout();
         throw error;
       } finally {
         this.isRefreshing = false;
@@ -116,14 +120,28 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    silentLogout() {
+      if (this.isLoggingOut) return;
+      this.clearAuth();
+      router.push('/login');
+    },
+
     async logoutRe() {
+      if (this.isLoggingOut) {
+        return;
+      }
+      
+      this.isLoggingOut = true;
       this.stopRefreshTimer();
+      
       try {
-        await logout();
+        if (this.accessToken) {
+          await logout();
+        }
       } catch (error) {
-        console.error('Logout API error:', error);
       } finally {
         this.clearAuth();
+        this.isLoggingOut = false;
         router.push('/login');
       }
     },
@@ -146,12 +164,16 @@ export const useAuthStore = defineStore('auth', {
     startRefreshTimer() {
       this.stopRefreshTimer();
       
-      const refreshInterval = 40 * 60 * 1000; // 40 минут
+      if (!this.storedRefreshToken) {
+        return;
+      }
+      
+      const refreshInterval = 40 * 60 * 1000;
       
       this.refreshTimer = setInterval(() => {
-        this.refreshTokenRe().catch(err => {
-          console.error('Scheduled token refresh failed:', err);
-        });
+        if (!this.isLoggingOut && this.storedRefreshToken) {
+          this.refreshTokenRe().catch(() => {});
+        }
       }, refreshInterval);
     },
 
@@ -162,15 +184,23 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    initAuth() {
+    async initAuth() {
       this.remember = !!localStorage.getItem('refreshToken');
       
       if (!this.userRole) {
         this.userRole = sessionStorage.getItem('userRole') || null;
       }
       
-      if (this.accessToken && this.storedRefreshToken) {
+      const hasRefreshToken = !!this.storedRefreshToken;
+      
+      if (this.accessToken && hasRefreshToken) {
         this.startRefreshTimer();
+      } else if (!this.accessToken && hasRefreshToken) {
+        try {
+          await this.refreshTokenRe();
+          this.startRefreshTimer();
+        } catch (error) {
+        }
       }
     }
   }

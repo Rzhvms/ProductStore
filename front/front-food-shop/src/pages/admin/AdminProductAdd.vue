@@ -9,14 +9,28 @@
       <div class="main-content">
         
         <div class="left-col">
-           <div class="upload-zone">
-              <span class="upload-text">Загрузите обложку товара</span>
-              <button class="btn-circle-orange" @click="openFileDialog">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 5V19M5 12H19" stroke="#FF7A00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </button>
-           </div>
+          <div class="upload-zone" :style="previewImage ? { backgroundImage: `url(${previewImage})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}">
+              
+              <template v-if="!previewImage">
+                  <span class="upload-text">Загрузите обложку товара</span>
+                  <button class="btn-circle-orange" @click="openFileDialog">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 5V19M5 12H19" stroke="#FF7A00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+              </template>
+
+              <template v-else>
+                  <div class="image-actions">
+                      <button class="btn-circle-white" @click="openFileDialog" title="Заменить">
+                          <img src="../../assets/edit.svg" alt="edit" /> </button>
+                      <button class="btn-circle-white remove" @click.stop="previewImage = null; selectedFile = null;" title="Удалить">
+                          <span style="font-size: 20px; line-height: 1;">&times;</span>
+                      </button>
+                  </div>
+              </template>
+
+          </div>
         </div>
 
         <div class="right-col">
@@ -384,6 +398,8 @@ const router = useRouter();
 
 const isLoading = ref(false);
 const categoriesRaw = ref([]); // Сюда придут данные из API
+const selectedFile = ref(null);
+const previewImage = ref(null);
 
 // Состояние UI
 const showCatDropdown = ref(false);
@@ -528,7 +544,7 @@ const addProduct = async () => {
       if (attr.name && attr.value) characteristics[attr.name] = attr.value;
     });
 
-    await adminProductApi.create(
+    const newProduct = await adminProductApi.create(
       form.value.title,
       null,
       form.value.description,
@@ -537,6 +553,19 @@ const addProduct = async () => {
       form.value.categoryId,
       characteristics
     );
+
+    const productId = newProduct.productId || newProduct;
+
+    if (selectedFile.value && productId) {
+      try {
+        const formData = new FormData();
+        formData.append('file', selectedFile.value);
+        await adminProductApi.addImage(productId, formData, true);
+      } catch (error) {
+        console.error(error);
+        alert('Товар создан. Не удалось добавить изображение');
+      }
+    }
 
     router.push('/admin/products');
   } catch (error) {
@@ -573,16 +602,8 @@ const openFileDialog = () => {
 const handleFileChange = async (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  
-  const formData = new FormData();
-  formData.append('file', file);
-  
-  try {
-    // const response = await adminProductApi.addImage(form.id, file);
-    form.value.images.push(response.imageId);
-  } catch (error) {
-    console.error(error);
-  }
+  selectedFile.value = file;
+  previewImage.value = URL.createObjectURL(file);
 };
 
 const removeImage = (index) => {

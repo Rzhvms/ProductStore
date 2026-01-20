@@ -54,7 +54,7 @@
         <div class="product-row" v-for="(p, i) in filteredProducts" :key="p.id" @click="openProduct(p.id)">
   
           <div class="row-image">
-            <div class="img-placeholder" :style="{ backgroundImage: p.image ? `url(${p.image})` : '' }"></div>
+            <div class="img-placeholder" :style="{ backgroundImage: p.image ? `url(${p.image.url})` : '' }"></div>
           </div>
 
           <div class="row-content">
@@ -219,7 +219,7 @@
 import { reactive, ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from './AdminLayout.vue'
-import { adminProductApi, categoryApi, reviewApi } from '@/services/api.js'
+import { adminProductApi, categoryApi, reviewApi, getProductImages } from '@/services/api.js'
 
 /* --- STATE --- */
 const products = ref([])
@@ -263,6 +263,12 @@ const getRating = async (id) => {
   return reviewsData.reduce((acc, review) => acc + review.rating, 0) / reviewsData.length
 }
 
+const getImage = async (id) => {
+  const images = await getProductImages(id)
+  const mainImage = images.find(i => i.isMain)
+  return mainImage;
+}
+
 /* --- INITIAL DATA FETCHING --- */
 const loadData = async () => {
   isLoading.value = true
@@ -275,7 +281,8 @@ const loadData = async () => {
     products.value = await Promise.all(
       productsResponse.productList.map(async (p) => ({
         ...p,
-        rating: await getRating(p.id)
+        rating: await getRating(p.id),
+        image: await getImage(p.id)
       }))
     )
   } catch (error) {

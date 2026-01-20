@@ -250,12 +250,22 @@ export const updateReview = async (id, rating, message) => {
     }
 };
 
+export const changeReviewVisibility = async (id, isVisible) => {
+    try {
+        const response = await api.patch(`review/admin/change-visible/${id}`, { isVisible });
+        return response.data;
+    } catch (error) {
+        throw new Error("Не удалось обновить отзыв");
+    }
+};
+
 export const reviewApi = {
     get: getReview,
     delete: deleteReview,
     update: updateReview,
     getList: getReviews,
     post: postReview,
+    changeVisibility: changeReviewVisibility
 }
 
 export const getFavoriteProducts = async (pageNumber = 1, pageSize = 10) => {

@@ -117,14 +117,14 @@
 
     <div class="user-data-grid">
       <div class="data-field">
-        <label>Фамилия Имя Отчество</label>
+        <label>Фамилия Имя</label>
         <input v-if="isEditing" v-model="editForm.fullname" class="field-value editing"/>
         <div v-else class="field-value">{{ selectedUser.fullname }}</div>
       </div>
       <div class="data-field">
         <label>День рождения</label>
         <input v-if="isEditing" v-model="editForm.birthday" class="field-value editing"/>
-        <div v-else class="field-value">{{ selectedUser.birthday }}</div>
+        <div v-else class="field-value">{{ selectedUser.birthDate }}</div>
       </div>
       <div class="data-field">
         <label>Почта</label>
@@ -159,32 +159,32 @@
           <input type="text" placeholder="Поиск..." v-model="searchOrderQuery">
         </div>
         <div class="control-box dropdown-wrapper">
-          <button class="sort-btn-styled card" :class="{ 'is-active': showSortDropdown }" @click.stop="showSortDropdown = !showSortDropdown">
-            <img src="../../assets/drop down button.svg" />
-            <span>По алфавиту</span>
-          </button>
-          <div v-if="showSortDropdown" class="custom-dropdown-menu sort-menu-design">
-            <div class="sort-group-label">По дате создания</div>
-            <div class="sort-item" @click="setSortOption('date-asc')">
-              <div class="radio-indicator" :class="{ selected: sortOption === 'date-asc' }"></div>
-              <span class="sort-text">Сначала старшие</span>
-            </div>
-            <div class="sort-item" @click="setSortOption('date-desc')">
-              <div class="radio-indicator" :class="{ selected: sortOption === 'date-desc' }"></div>
-              <span class="sort-text">Сначала новее</span>
-            </div>
-            <div class="dd-divider"></div>
-            <div class="sort-group-label">По цене</div>
-            <div class="sort-item" @click="setSortOption('price-asc')">
-              <div class="radio-indicator" :class="{ selected: sortOption === 'price-asc' }"></div>
-              <span class="sort-text">Сначала дешевле</span>
-            </div>
-            <div class="sort-item" @click="setSortOption('price-desc')">
-              <div class="radio-indicator" :class="{ selected: sortOption === 'price-desc' }"></div>
-              <span class="sort-text">Сначала дороже</span>
-            </div>
-          </div>
-        </div>
+  <button class="sort-btn-styled card" :class="{ 'is-active': showOrderSortDropdown }" @click.stop="showOrderSortDropdown = !showOrderSortDropdown">
+    <img src="../../assets/drop down button.svg" />
+    <span>{{ orderSortLabel }}</span>
+  </button>
+  <div v-if="showOrderSortDropdown" class="custom-dropdown-menu sort-menu-design">
+    <div class="sort-group-label">По дате создания</div>
+    <div class="sort-item" @click="setOrderSortOption('date-asc')">
+      <div class="radio-indicator" :class="{ selected: orderSortOption === 'date-asc' }"></div>
+      <span class="sort-text">Сначала старые</span>
+    </div>
+    <div class="sort-item" @click="setOrderSortOption('date-desc')">
+      <div class="radio-indicator" :class="{ selected: orderSortOption === 'date-desc' }"></div>
+      <span class="sort-text">Сначала новые</span>
+    </div>
+    <div class="dd-divider"></div>
+    <div class="sort-group-label">По цене</div>
+    <div class="sort-item" @click="setOrderSortOption('price-asc')">
+      <div class="radio-indicator" :class="{ selected: orderSortOption === 'price-asc' }"></div>
+      <span class="sort-text">Сначала дешевле</span>
+    </div>
+    <div class="sort-item" @click="setOrderSortOption('price-desc')">
+      <div class="radio-indicator" :class="{ selected: orderSortOption === 'price-desc' }"></div>
+      <span class="sort-text">Сначала дороже</span>
+    </div>
+  </div>
+</div>
       </div>
     </div>
 
@@ -200,20 +200,20 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-if="visibleOrders.count === 0" v-for="order in visibleOrders" :key="order.id">
-          <td class="id-cell">{{ order.id }}</td>
-          <td>{{ order.orderDate }}</td>
-          <td>{{ order.orderDate }}</td>
-          <td class="price-cell">{{ order.totalSum }}</td>
-          <td class="address-cell">{{ order.deliveryId }}</td>
-          <td class="arrow-cell">
-            <img src="../../assets/arrow-down.svg" alt=">" style="transform: rotate(270deg);" />
-          </td>
-        </tr>
-        <tr v-else>
-          <td colspan="6" class="no-data" style="text-align: center;">Заказов нет</td>
-        </tr>
-      </tbody>
+  <tr v-for="order in visibleOrders" :key="order.id">
+    <td class="id-cell">{{ order.id }}</td>
+    <td>{{ order.orderDate }}</td>
+    <td>{{ order.deliveryDate }}</td>
+    <td class="price-cell">{{ order.totalSum }} ₽</td>
+    <td class="address-cell">{{ order.address }}</td>
+    <td class="arrow-cell">
+      <img src="../../assets/arrow-down.svg" alt=">" style="transform: rotate(270deg);" />
+    </td>
+  </tr>
+  <tr v-if="visibleOrders.length === 0">
+    <td colspan="6" class="no-data" style="text-align: center;">Заказов нет</td>
+  </tr>
+</tbody>
     </table>
     
     <div class="show-more-footer" v-if="visibleOrders.length < filteredUserOrders.length">
@@ -267,15 +267,16 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import AdminLayout from './AdminLayout.vue';
 import { adminUserApi } from '@/services/api'; 
 
-// --- СОСТОЯНИЕ ---
 const searchQuery = ref('');
 const searchOrderQuery = ref('');
 const showSortDropdown = ref(false);
+const showOrderSortDropdown = ref(false);
 const sortOption = ref('name-asc');
+const orderSortOption = ref('date-desc');
 const showFilters = ref(false);
 const currentView = ref('users');
 const selectedUser = ref(null);
@@ -283,35 +284,33 @@ const itemsPerPage = 5;
 const visibleCount = ref(itemsPerPage);
 const isLoading = ref(false);
 
-const users = ref([]); // Теперь загружаем всё одним махом
+const users = ref([]);
 const userOrders = ref([]); 
 
-// Хелпер для форматирования даты
 const formatDate = (isoDate) => {
   if (!isoDate) return 'Не указано';
   const date = new Date(isoDate);
   return date.toLocaleDateString('ru-RU');
 };
 
-// --- ЗАГРУЗКА ДАННЫХ (ОПТИМИЗИРОВАНО) ---
 const loadData = async () => {
   isLoading.value = true;
   try {
     const data = await adminUserApi.getProfiles(); 
-    // Маппим данные напрямую из нового формата userList
     users.value = data.userList.map(u => ({
       id: u.id,
       name: u.name,
       lastName: u.lastName,
-      fullname: `${u.lastName} ${u.name}`,
+      fullname: `${u.lastName || ''} ${u.name || ''}`.trim(),
       birthDate: formatDate(u.birthDate),
       rawBirthDate: u.birthDate,
       email: u.email,
       phone: u.phone,
       city: u.city || 'Не указан',
-      orders: u.ordersCount || 0
+      orders: u.ordersCount || 0,
+      gender: u.gender,
+      about: u.about
     }));
-
   } catch (error) {
     console.error("Не удалось загрузить пользователей", error);
   } finally {
@@ -319,9 +318,20 @@ const loadData = async () => {
   }
 };
 
-onMounted(loadData);
+onMounted(() => {
+  loadData();
+  document.addEventListener('click', handleClickOutside);
+});
 
-// --- ПРОСМОТР ПОЛЬЗОВАТЕЛЯ ---
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
+
+const handleClickOutside = () => {
+  showSortDropdown.value = false;
+  showOrderSortDropdown.value = false;
+};
+
 const openUser = async (user) => {
   selectedUser.value = { ...user };
   currentView.value = 'user';
@@ -329,15 +339,20 @@ const openUser = async (user) => {
   visibleCount.value = itemsPerPage;
 
   try {
-    // Здесь всё ещё нужен запрос, так как список заказов детальный
-    const orders = await adminUserApi.getOrders(user.id);
-    userOrders.value = orders.map(order => ({
+    const orders = await adminUserApi.getOrders();
+    let ordersData = orders || [];
+    ordersData = ordersData.filter(order => order.customerId === user.id);
+    userOrders.value = ordersData.map(order => ({
       id: order.id,
-      created_at: formatDate(order.orderDate),
-      raw_created_at: order.orderDate,
-      price: order.totalSum,
-      address: 'Адрес уточняется...' 
+      orderDate: formatDate(order.orderDate),
+      deliveryDate: formatDate(order.deliveryDate || order.orderDate),
+      rawOrderDate: order.orderDate,
+      totalSum: order.totalSum || 0,
+      deliveryId: order.deliveryId,
+      address: order.address || 'Адрес уточняется...'
     }));
+    
+    console.log('Загружено заказов:', userOrders.value.length, userOrders.value);
   } catch (error) {
     console.error("Ошибка загрузки заказов", error);
   }
@@ -349,7 +364,6 @@ const goHome = () => {
   isEditing.value = false;
 };
 
-// --- РЕДАКТИРОВАНИЕ ---
 const isEditing = ref(false);
 const editForm = ref({});
 
@@ -359,6 +373,11 @@ const startEdit = () => {
     birthday: selectedUser.value.rawBirthDate ? selectedUser.value.rawBirthDate.split('T')[0] : ''
   }; 
   isEditing.value = true;
+};
+
+const cancelEdit = () => {
+  isEditing.value = false;
+  editForm.value = {};
 };
 
 const saveUser = async () => {
@@ -372,13 +391,12 @@ const saveUser = async () => {
       name,
       lastName,
       editForm.value.phone,
-      selectedUser.value.gender, // сохраняем старый или добавляем в форму
+      selectedUser.value.gender,
       new Date(editForm.value.birthday).toISOString(),
       selectedUser.value.about,
       editForm.value.email
     );
 
-    // Обновляем локально
     const updatedUser = {
       ...selectedUser.value,
       name,
@@ -397,11 +415,27 @@ const saveUser = async () => {
     isEditing.value = false;
     alert("Сохранено");
   } catch (error) {
+    console.error("Ошибка сохранения:", error);
     alert("Ошибка сохранения");
   }
 };
 
-// --- ФИЛЬТРАЦИЯ И СОРТИРОВКА ---
+const promptDelete = async () => {
+  if (!selectedUser.value) return;
+  
+  if (!confirm(`Удалить аккаунт пользователя ${selectedUser.value.fullname}?`)) return;
+  
+  try {
+    await adminUserApi.deleteProfile(selectedUser.value.id);
+    users.value = users.value.filter(u => u.id !== selectedUser.value.id);
+    goHome();
+    alert("Аккаунт удалён");
+  } catch (error) {
+    console.error("Ошибка удаления:", error);
+    alert("Ошибка удаления");
+  }
+};
+
 const cities = computed(() => [...new Set(users.value.map(u => u.city))].filter(c => c !== 'Не указан'));
 const selectedCities = ref([]);
 const orderRange = ref({ from: null, to: null });
@@ -411,20 +445,28 @@ const filteredUsers = computed(() => {
 
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase();
-    result = result.filter(u => u.fullname.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+    result = result.filter(u => 
+      u.fullname.toLowerCase().includes(q) || 
+      u.email.toLowerCase().includes(q) ||
+      (u.phone && u.phone.includes(q))
+    );
   }
 
   if (selectedCities.value.length > 0) {
     result = result.filter(u => selectedCities.value.includes(u.city));
   }
 
-  if (orderRange.value.from !== null) result = result.filter(u => u.orders >= orderRange.value.from);
-  if (orderRange.value.to !== null) result = result.filter(u => u.orders <= orderRange.value.to);
+  if (orderRange.value.from !== null && orderRange.value.from !== '') {
+    result = result.filter(u => u.orders >= orderRange.value.from);
+  }
+  if (orderRange.value.to !== null && orderRange.value.to !== '') {
+    result = result.filter(u => u.orders <= orderRange.value.to);
+  }
 
   result.sort((a, b) => {
     switch (sortOption.value) {
-      case 'name-asc': return a.fullname.localeCompare(b.fullname);
-      case 'name-desc': return b.fullname.localeCompare(a.fullname);
+      case 'name-asc': return a.fullname.localeCompare(b.fullname, 'ru');
+      case 'name-desc': return b.fullname.localeCompare(a.fullname, 'ru');
       case 'orders-desc': return b.orders - a.orders;
       case 'orders-asc': return a.orders - b.orders;
       case 'date-desc': return new Date(b.rawBirthDate || 0) - new Date(a.rawBirthDate || 0); 
@@ -435,25 +477,23 @@ const filteredUsers = computed(() => {
   return result;
 });
 
-
-// Логика списка заказов пользователя
 const filteredUserOrders = computed(() => {
   let result = [...userOrders.value];
+  
   if (searchOrderQuery.value) {
     const q = searchOrderQuery.value.toLowerCase();
     result = result.filter(o => 
-      o.id.toLowerCase().includes(q) || 
+      String(o.id).toLowerCase().includes(q) || 
       (o.address && o.address.toLowerCase().includes(q))
     );
   }
   
-  // Сортировка заказов
   result.sort((a, b) => {
-    switch (sortOption.value) { // Используем ту же переменную сортировки, или создать отдельную
-      case 'price-asc': return a.price - b.price;
-      case 'price-desc': return b.price - a.price;
-      case 'date-asc': return new Date(a.raw_created_at) - new Date(b.raw_created_at);
-      case 'date-desc': return new Date(b.raw_created_at) - new Date(a.raw_created_at);
+    switch (orderSortOption.value) {
+      case 'price-asc': return a.totalSum - b.totalSum;
+      case 'price-desc': return b.totalSum - a.totalSum;
+      case 'date-asc': return new Date(a.rawOrderDate) - new Date(b.rawOrderDate);
+      case 'date-desc': return new Date(b.rawOrderDate) - new Date(a.rawOrderDate);
       default: return 0;
     }
   });
@@ -467,6 +507,57 @@ const visibleOrders = computed(() => {
 const showMoreOrders = () => {
   visibleCount.value += itemsPerPage;
 };
+
+const buttonSortLabel = computed(() => {
+  const options = {
+    'name-asc': 'От А до Я',
+    'name-desc': 'От Я до А',
+    'orders-desc': 'Сначала много заказов',
+    'orders-asc': 'Сначала мало заказов',
+    'date-desc': 'Сначала младшие',
+    'date-asc': 'Сначала старшие'
+  };
+  return options[sortOption.value] || 'Сортировка';
+});
+
+const orderSortLabel = computed(() => {
+  const options = {
+    'date-asc': 'Сначала старые',
+    'date-desc': 'Сначала новые',
+    'price-asc': 'Сначала дешевле',
+    'price-desc': 'Сначала дороже'
+  };
+  return options[orderSortOption.value] || 'Сортировка';
+});
+
+const setSortOption = (opt) => {
+  sortOption.value = opt;
+  showSortDropdown.value = false;
+};
+
+const setOrderSortOption = (opt) => {
+  orderSortOption.value = opt;
+  showOrderSortDropdown.value = false;
+};
+
+const toggleFilters = () => {
+  showFilters.value = !showFilters.value;
+};
+
+const closeFilters = () => {
+  showFilters.value = false;
+};
+
+const resetFilters = () => {
+  selectedCities.value = [];
+  orderRange.value = { from: null, to: null };
+};
+
+const isFiltered = computed(() => {
+  return selectedCities.value.length > 0 || 
+         orderRange.value.from !== null || 
+         orderRange.value.to !== null;
+});
 </script>
 
 <style scoped>

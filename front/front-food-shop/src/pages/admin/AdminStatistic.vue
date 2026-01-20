@@ -75,7 +75,7 @@
           <template v-else>
             <div class="product-row" v-for="(p, i) in filteredProducts" :key="p.id" @click="openProductStats(p)">
               <div class="row-image">
-                <div class="img-placeholder" :style="{ backgroundImage: p.image ? `url(${p.image})` : '' }"></div>
+                <div class="img-placeholder" :style="{ backgroundImage: p.image ? `url(${p.image.url})` : '' }"></div>
               </div>
               <div class="row-content">
                 <div class="row-main">
@@ -198,36 +198,93 @@
 
         <div class="reviews-wrapper">
           <div class="reviews-title-row">
-            <h2>Отзывы <span class="reviews-total">{{ selectedProduct.reviewsCount }}</span></h2>
+            <h2>Отзывы <span class="reviews-total">{{ reviews.length }}</span></h2>
           </div>
 
           <div class="reviews-sort-row">
             <span class="rs-label">Сортировка по:</span>
-            <span class="rs-link active">Дате ↑</span>
-            <span class="rs-link">Рейтингу</span>
-            <span class="rs-link">Полезности</span>
+            
+            <button 
+              class="rs-link" 
+              :class="{ active: currentSort.field === 'date' }" 
+              @click="toggleSortReviews('date')"
+            >
+              Дате 
+              <span v-if="currentSort.field === 'date'">{{ currentSort.direction === 'asc' ? '↑' : '↓' }}</span>
+            </button>
+
+            <button 
+              class="rs-link" 
+              :class="{ active: currentSort.field === 'rating' }" 
+              @click="toggleSortReviews('rating')"
+            >
+              Рейтингу
+              <span v-if="currentSort.field === 'rating'">{{ currentSort.direction === 'asc' ? '↑' : '↓' }}</span>
+            </button>
+
+            <button 
+              class="rs-link" 
+              :class="{ active: currentSort.field === 'useful' }" 
+              @click="toggleSortReviews('useful')"
+            >
+              Полезности
+              <span v-if="currentSort.field === 'useful'">{{ currentSort.direction === 'asc' ? '↑' : '↓' }}</span>
+            </button>
           </div>
 
-          <div class="review-item card-box">
-            <div class="user-header">
-              <div class="u-avatar-placeholder">👤</div>
-              <span class="u-name">Иван П.</span>
-              <div class="u-stars">
-                 <span class="star-f filled">★</span><span class="star-f filled">★</span><span class="star-f filled">★</span><span class="star-f filled">★</span><span class="star-f">★</span>
-                 <span class="u-score">4.0</span>
-              </div>
+          <div v-if="sortedReviews.length === 0" style="color: #999; padding: 20px 0;">
+             Отзывов пока нет.
+          </div>
+
+          <div v-for="review in sortedReviews" :key="review.id" class="review-item card-box">
+            
+            <div v-if="review.type === 'admin_reply'" class="review-body">
+               <h4 style="margin: 0 0 10px;">{{ review.title }}</h4>
+               <p class="review-text-content">{{ review.text }}</p>
+               <div class="admin-reply-block">
+                 <div class="reply-line"></div>
+                 <div class="reply-content">{{ review.quote }}</div>
+               </div>
             </div>
-             <div class="review-body">
-              <p class="review-text-content">
-                Отличный товар {{ selectedProduct.name }}, полностью соответствует описанию. Доставили быстро.
-              </p>
+
+            <div v-else>
+                <div class="user-header">
+                  <div class="u-avatar-placeholder">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                  </div>
+                  <span class="u-name">{{ review.author }}</span>
+                  <div class="u-stars">
+                     <svg v-for="i in 5" :key="i" width="18" height="18" viewBox="0 0 24 24" class="star-mini">
+                        <defs>
+                          <linearGradient :id="'stat-r-grad-' + review.id + '-' + i">
+                            <stop offset="0%" stop-color="#FF7A00"/>
+                            <stop :offset="calculateOffset(review.rating, i)" stop-color="#FF7A00"/>
+                            <stop :offset="calculateOffset(review.rating, i)" stop-color="#D1D5DB"/>
+                            <stop offset="100%" stop-color="#D1D5DB"/>
+                          </linearGradient>
+                        </defs>
+                        <path :fill="'url(#stat-r-grad-' + review.id + '-' + i + ')'" d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                      </svg>
+                     <span class="u-score">{{ review.rating }}</span>
+                  </div>
+                </div>
+                 <div class="review-body">
+                  <p class="review-text-content">{{ review.text }}</p>
+                </div>
             </div>
+
             <div class="review-footer">
-              <span class="pub-date">Дата публикации: 13.05.25</span>
+              <span class="pub-date">Дата публикации: {{ review.date }}</span>
               <div class="review-actions">
-                <button class="act-btn"><span class="icon-eye">👁</span> Показать комментарий</button>
+                <button class="act-btn" @click="toggleReviewVisibility(review)">
+                    <span class="icon-eye">{{ review.isHidden ? '👁' : '👁‍🗨' }}</span> 
+                    {{ review.isHidden ? 'Показать комментарий' : 'Скрыть комментарий' }}
+                </button>
                 <button class="act-btn"><span class="icon-reply">↩</span> Ответить</button>
-                <button class="act-btn delete"><span class="icon-trash">🗑</span> Удалить</button>
+                <button class="act-btn delete" @click="deleteReview(review.id)"><span class="icon-trash">🗑</span> Удалить</button>
               </div>
             </div>
           </div>
@@ -242,7 +299,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import AdminLayout from './AdminLayout.vue';
-import { adminProductApi, categoryApi, reviewApi } from '@/services/api';
+import { adminProductApi, categoryApi, reviewApi, getProductImages } from '@/services/api';
 import './admin.css';
 
 // === СОСТОЯНИЕ (STATE) ===
@@ -259,6 +316,12 @@ const products = ref([]);
 const categoriesList = ref([]);
 const categoriesMap = ref({});
 
+const reviews = ref([]);
+const currentSort = ref({
+  field: 'date',
+  direction: 'desc'
+});
+
 const getRating = async (id) => {
   const reviews = await reviewApi.getList(id)
   const reviewsData = reviews.productReviewList
@@ -266,31 +329,31 @@ const getRating = async (id) => {
   return reviewsData.reduce((acc, review) => acc + review.rating, 0) / reviewsData.length
 }
 
+const getImage = async (id) => {
+  const images = await getProductImages(id)
+  const mainImage = images.find(i => i.isMain)
+  return mainImage;
+}
+
 // === ЗАГРУЗКА ДАННЫХ ===
 const loadData = async () => {
   isLoading.value = true;
   try {
-    // 1. Загружаем категории для фильтров и маппинга имен
     const catsData = await categoryApi.get();
     categoriesList.value = catsData;
     catsData.forEach(c => {
       categoriesMap.value[c.categoryId] = c.categoryName;
     });
 
-    // 2. Загружаем реальные товары
-    // Запрашиваем первую страницу с большим размером, чтобы получить список для демо
     const prodResponse = await adminProductApi.get(1, 100);
     const rawProducts = prodResponse.productList || [];
-    // 3. Объединяем реальные данные с моковыми статистическими данными
     products.value = await Promise.all(rawProducts.map(async (p) => {
-      // Генерируем случайный рейтинг для демо (от 3.0 до 5.0)
       const revData = await reviewApi.getList(p.id);
       const reviews = revData.productReviewList;
       const mockRating = await getRating(p.id);
       const mockReviews = reviews.length;
       const mockSales = Math.floor(Math.random() * 5000) + 100;
       
-      // Генерация распределения звезд
       const stars = {};
       stars[5] = reviews.filter(r => r.rating === 5).length;
       stars[4] = reviews.filter(r => r.rating === 4).length;
@@ -305,11 +368,12 @@ const loadData = async () => {
         categoryId: p.categoryId,
         categoryName: categoriesMap.value[p.categoryId] || 'Не указана',
         description: p.description,
-        image: '', 
+        image: await getImage(p.id),
         rating: mockRating,
         reviewsCount: mockReviews,
         mockSales: mockSales,
-        starCounts: stars
+        starCounts: stars,
+        reviews: reviews
       };
     }));
     if (localStorage.getItem('productId')) {
@@ -352,9 +416,20 @@ const resetFilters = () => {
   sortOption.value = '';
 };
 
-function openProductStats(prod) {
+async function openProductStats(prod) {
   selectedProduct.value = prod;
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  isLoading.value = true;
+  try {
+    const revData = await reviewApi.getList(prod.id);
+    reviews.value = revData.productReviewList;
+  } catch (e) {
+    console.error('Load data error:', e);
+    error.value = e.message || 'Ошибка загрузки данных';
+    reviews.value = [];
+  } finally {
+    isLoading.value = false;
+  }
 }
 function closeProductStats() {
   selectedProduct.value = null;
@@ -364,6 +439,63 @@ function closeProductStats() {
 function toggleFilters() {
   showFilters.value = !showFilters.value;
 }
+
+const toggleSortReviews = (field) => {
+  if (currentSort.value.field !== field) {
+    currentSort.value = { field, direction: 'asc' };
+    return;
+  }
+  if (currentSort.value.direction === 'asc') {
+    currentSort.value.direction = 'desc';
+  } else {
+    currentSort.value = { field: 'date', direction: 'desc' };
+  }
+};
+
+const sortedReviews = computed(() => {
+  if (!reviews.value.length) return [];
+  if (!currentSort.value.field) return reviews.value;
+  return [...reviews.value].sort((a, b) => {
+    const modifier = currentSort.value.direction === 'asc' ? 1 : -1;
+    if (currentSort.value.field === 'date') {
+      // Парсим дату формата dd.mm.yy или dd.mm.yyyy
+      const getTimestamp = (dateStr) => {
+        if (!dateStr) return 0;
+        const parts = dateStr.split('.');
+        // Простейший парсинг для формата DD.MM.YYYY
+        if (parts.length === 3) {
+             const day = parseInt(parts[0], 10);
+             const month = parseInt(parts[1], 10) - 1;
+             const year = parseInt(parts[2].length === 2 ? '20'+parts[2] : parts[2], 10);
+             return new Date(year, month, day).getTime();
+        }
+        return 0;
+      };
+      return (getTimestamp(a.date) - getTimestamp(b.date)) * modifier;
+    }
+
+    if (currentSort.value.field === 'rating') {
+      return (a.rating - b.rating) * modifier;
+    }
+
+    if (currentSort.value.field === 'useful') {
+      return ((a.useful || 0) - (b.useful || 0)) * modifier;
+    }
+
+    return 0;
+  });
+});
+
+const toggleReviewVisibility = async (review) => {
+  review.isHidden = !review.isHidden;
+  await reviewApi.changeVisibility(review.id, review.isHidden);
+};
+
+const deleteReview = async (reviewId) => {
+  if (!confirm('Удалить комментарий?')) return;
+  reviews.value = reviews.value.filter(r => r.id !== reviewId);
+  await reviewApi.delete(reviewId);
+};
 
 function setSortOption(opt) {
   sortOption.value = opt;

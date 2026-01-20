@@ -64,13 +64,13 @@
                 :class="{ active: activeImageIndex === index }"
                 @click="activeImageIndex = index"
               >
-                <img v-if="img" :src="img" alt="thumb" />
+                <img v-if="img.url" :src="img.url" alt="thumb" />
               </div>
             </div>
 
             <div class="main-image-display">
               <div class="main-placeholder">
-                <img v-if="form.images[activeImageIndex]" :src="form.images[activeImageIndex]" alt="main" />
+                <img v-if="form.images[activeImageIndex].url" :src="form.images[activeImageIndex].url" alt="main" />
               </div>
             </div>
           </div>
@@ -90,7 +90,7 @@
               </button>
 
               <div class="card-placeholder">
-                <img v-if="img" :src="img" alt="card" />
+                <img v-if="img.url" :src="img.url" alt="card" />
               </div>
             </div>
 
@@ -160,23 +160,23 @@
               <div class="row-rating">
                 <div class="stars-wrapper">
                   <svg 
-                    v-for="star in 5" 
-                    :key="star" 
+                    v-for="i in 5" 
+                    :key="i" 
                     class="star-icon" 
                     width="32" 
                     height="32" 
                     viewBox="0 0 24 24"
                   >
                     <defs>
-                      <linearGradient :id="'grad-' + (form.id || 'new') + '-' + star">
+                      <linearGradient :id="'grad-' + (form.id || 'new') + '-' + i">
                         <stop offset="0%" stop-color="#FF7A00" />
-                        <stop :offset="calculateOffset(form.rating, star)" stop-color="#FF7A00" />
-                        <stop :offset="calculateOffset(form.rating, star)" stop-color="#E5E7EB" />
+                        <stop :offset="calculateOffset(form.rating, i)" stop-color="#FF7A00" />
+                        <stop :offset="calculateOffset(form.rating, i)" stop-color="#E5E7EB" />
                         <stop offset="100%" stop-color="#E5E7EB" />
                       </linearGradient>
                     </defs>
                     <path 
-                      :fill="'url(#grad-' + (form.id || 'new') + '-' + star + ')'" 
+                      :fill="'url(#grad-' + (form.id || 'new') + '-' + i + ')'" 
                       d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" 
                     />
                   </svg>  
@@ -790,7 +790,7 @@ async function mapApiToForm(apiData) {
     article: characteristics.article || '',
     nutrition,
     attributes,
-    images: images ? images.map(i => i.url) : [],
+    images: images ? images.map(i => ({id: i.id, url: i.url})) : [],
     rating: Number(rating) || 0,
   };
 }
@@ -1138,7 +1138,7 @@ async function addImage(e) {
     
     const newImageUrl = response.imageUrl || response.path || previewUrl;
     
-    form.value.images.push(newImageUrl);
+    form.value.images.push({ id: response.id, url: newImageUrl });
     
     e.target.value = ''; 
     
@@ -1149,10 +1149,10 @@ async function addImage(e) {
   }
 }
 
-function removeImage(index) {
+async function removeImage(index) {
   const image = form.value.images[index];
-  if (image.url) {
-    adminProductApi.deleteImage(form.value.id, image.id);
+  if (image && image.id) {
+    await adminProductApi.deleteImage(form.value.id, image.id);
   }
   
   form.value.images.splice(index, 1);
@@ -1195,15 +1195,15 @@ function toggleSort(field) {
   }
 }
 
-function toggleReviewVisibility(review) {
+async function toggleReviewVisibility(review) {
   review.isHidden = !review.isHidden;
-  // TODO: API call
+  await reviewApi.changeVisibility(review.id, review.isHidden);
 }
 
-function deleteReview(reviewId) {
+async function deleteReview(reviewId) {
   if (!confirm('Удалить комментарий?')) return;
   reviews.value = reviews.value.filter(r => r.id !== reviewId);
-  // TODO: API call
+  await reviewApi.delete(reviewId);
 }
 
 // ==================== МЕТОДЫ: ВАЛИДАЦИЯ ====================
