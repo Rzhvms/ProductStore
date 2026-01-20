@@ -616,7 +616,6 @@ $bg-light: #f9f9f9;
   display: flex;
   gap: 32px;
   margin-bottom: 30px;
-  padding: 20px 0;
 }
 
 .left-col { 
