@@ -26,6 +26,7 @@ internal class FavoriteProductsRepository : IFavoriteProductsRepository
                     JOIN ""{nameof(FavoriteProductsModel)}"" fp 
                         ON p.""{nameof(ProductModel.Id)}"" = fp.""{nameof(FavoriteProductsModel.ProductId)}""
                     WHERE fp.""{nameof(FavoriteProductsModel.UserId)}"" = @UserId
+                    AND p.""{nameof(ProductModel.IsVisible)}"" = @IsVisible
                     ORDER BY p.""{nameof(ProductModel.Id)}""
                     OFFSET @Offset LIMIT @Limit
                     ";
@@ -34,7 +35,8 @@ internal class FavoriteProductsRepository : IFavoriteProductsRepository
         {
             UserId = userId,
             Offset = offset,
-            Limit = pageSize
+            Limit = pageSize,
+            IsVisible = true
         });
         return result;
     }

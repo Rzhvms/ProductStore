@@ -1,7 +1,7 @@
 using Application.Extensions;
-using Application.UseCases.Product;
 using Application.UseCases.Product.Dto.Request;
 using Application.UseCases.Product.Dto.Response;
+using Application.UseCases.Product.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

@@ -86,6 +86,11 @@ builder.Services.AddSwaggerGen(c =>
         Title = "ProductStore.Api",
         Version = "v1"
     });
+    
+    c.MapType<System.Text.Json.Nodes.JsonObject>(() => new()
+    {
+        Type = "object"
+    });
 
     // Swagger + JWT
     c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme

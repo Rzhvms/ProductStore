@@ -10,7 +10,7 @@ public interface IProductRepository
     /// <summary>
     /// Создать продукт
     /// </summary>
-    Task<Guid> CreateProductAsync(ResultProductModel model);
+    Task<Guid> CreateProductAsync(ResultProductModel model, Guid? id = null);
 
     /// <summary>
     /// Получить продукт
@@ -36,4 +36,9 @@ public interface IProductRepository
     /// Удалить продукт
     /// </summary>
     Task DeleteProductAsync(Guid id);
+
+    /// <summary>
+    /// Получить все продукты
+    /// </summary>
+    Task<IEnumerable<ResultProductModel>> GetAllProductsAsync();
 }

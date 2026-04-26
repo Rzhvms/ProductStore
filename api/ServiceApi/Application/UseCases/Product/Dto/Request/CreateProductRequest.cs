@@ -14,4 +14,5 @@ public record CreateProductRequest
     public int Quantity { get; init; }
     public Guid CategoryId { get; init; }
     public JsonObject? Characteristics { get; init; }
+    public bool IsVisible { get; init; }
 }

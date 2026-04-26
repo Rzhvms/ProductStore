@@ -1,6 +1,7 @@
 using Application.Ports.Repositories;
 using Application.UseCases.Product.Dto.Request;
 using Application.UseCases.Product.Dto.Response;
+using Application.UseCases.Product.Interfaces;
 
 namespace Application.UseCases.Product;
 

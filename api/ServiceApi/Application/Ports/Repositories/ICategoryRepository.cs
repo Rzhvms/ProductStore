@@ -7,7 +7,7 @@ public interface ICategoryRepository
     /// <summary>
     /// Создать категорию
     /// </summary>
-    Task<Guid> CreateCategoryAsync(string categoryName, Guid? parentId);
+    Task<Guid> CreateCategoryAsync(string categoryName, Guid? parentId, bool isVisible);
 
     /// <summary>
     /// Получить категорию

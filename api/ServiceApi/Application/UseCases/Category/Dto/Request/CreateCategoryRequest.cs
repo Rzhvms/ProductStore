@@ -14,4 +14,9 @@ public record CreateCategoryRequest
     /// Айди родительской категории
     /// </summary>
     public Guid? ParentId { get; init; }
+    
+    /// <summary>
+    /// Отображается ли категория
+    /// </summary>
+    public bool IsVisible { get; init; }
 }

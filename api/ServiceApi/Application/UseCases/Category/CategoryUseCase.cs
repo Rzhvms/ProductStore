@@ -19,7 +19,7 @@ internal class CategoryUseCase : ICategoryUseCase
     /// <inheritdoc/>
     public async Task<CreateCategoryResponse> CreateCategoryAsync(CreateCategoryRequest request)
     {
-        var categoryId =  await _categoryRepository.CreateCategoryAsync(request.Name, request.ParentId);
+        var categoryId =  await _categoryRepository.CreateCategoryAsync(request.Name, request.ParentId, request.IsVisible);
         return new CreateCategoryResponse(){ Id = categoryId };
     }
 
@@ -36,7 +36,8 @@ internal class CategoryUseCase : ICategoryUseCase
         {
             CategoryId = category.Id,
             CategoryName = category.Name,
-            ParentCategoryId = category.ParentId
+            ParentCategoryId = category.ParentId,
+            IsVisible = category.IsVisible
         };
     }
 
@@ -48,7 +49,8 @@ internal class CategoryUseCase : ICategoryUseCase
         {
             CategoryId = x.Id,
             CategoryName = x.Name,
-            ParentCategoryId = x.ParentId
+            ParentCategoryId = x.ParentId,
+            IsVisible = x.IsVisible
         });
         return categoryResponse.ToList();
     }
@@ -60,7 +62,8 @@ internal class CategoryUseCase : ICategoryUseCase
         {
             Id = id,
             Name = request.Name,
-            ParentId = request.ParentId
+            ParentId = request.ParentId,
+            IsVisible = request.IsVisible
         };
         
         await _categoryRepository.UpdateCategoryAsync(model);

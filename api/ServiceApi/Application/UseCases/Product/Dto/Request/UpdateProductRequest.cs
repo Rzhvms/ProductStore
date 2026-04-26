@@ -38,4 +38,9 @@ public record UpdateProductRequest
     /// Характеристики товара
     /// </summary>
     public JsonObject? Characteristics { get; init; }
+    
+    /// <summary>
+    /// Отображается ли товар
+    /// </summary>
+    public bool IsVisible { get; init; }
 }

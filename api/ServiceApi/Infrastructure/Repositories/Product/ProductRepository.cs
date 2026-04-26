@@ -18,15 +18,15 @@ internal class ProductRepository : IProductRepository
     }
     
     /// <inheritdoc />
-    public async Task<Guid> CreateProductAsync(ResultProductModel model)
+    public async Task<Guid> CreateProductAsync(ResultProductModel model, Guid? id = null)
     {
         using var transaction = _connection.BeginTransaction();
         try
         {
             // Создаем новый продукт в базе
-            var productId = Guid.NewGuid();
+            var productId = id ?? Guid.NewGuid();
             var sql = $@"INSERT INTO ""{nameof(ProductModel)}"" 
-                            VALUES (@Id, @Name, @ProviderId, @CategoryId, @Description, @Price, @Quantity, @Characteristics)";
+                            VALUES (@Id, @Name, @ProviderId, @CategoryId, @Description, @Price, @Quantity, @Characteristics, @IsVisible)";
             
             await _connection.ExecuteAsync(sql, new
             {
@@ -37,7 +37,8 @@ internal class ProductRepository : IProductRepository
                 Description = model.Description,
                 Price = model.Price,
                 Quantity = model.Quantity,
-                Characteristics = model.Characteristics
+                Characteristics = model.Characteristics,
+                IsVisible = model.IsVisible
 
             }, transaction);
 
@@ -103,7 +104,8 @@ internal class ProductRepository : IProductRepository
                         ""{nameof(ProductModel.CategoryId)}"" = @CategoryId,
                         ""{nameof(ProductModel.Price)}"" = @Price,
                         ""{nameof(ProductModel.Quantity)}"" = @Quantity,
-                        ""{nameof(ProductModel.Characteristics)}"" = @Characteristics
+                        ""{nameof(ProductModel.Characteristics)}"" = @Characteristics,
+                        ""{nameof(ProductModel.IsVisible)}"" = @IsVisible
                     WHERE ""{nameof(ProductModel.Id)}"" = @Id";
         await _connection.ExecuteAsync(sql, new
         {
@@ -114,7 +116,8 @@ internal class ProductRepository : IProductRepository
             CategoryId = model.CategoryId,
             Price = model.Price,
             Quantity = model.Quantity,
-            Characteristics = model.Characteristics
+            Characteristics = model.Characteristics,
+            IsVisible = model.IsVisible
         });
     }
     
@@ -124,5 +127,13 @@ internal class ProductRepository : IProductRepository
         var sql = $@"DELETE FROM ""{nameof(ProductModel)}""
                         WHERE ""{nameof(ProductModel.Id)}"" = @Id";
         await _connection.ExecuteAsync(sql, new { Id = id });
+    }
+    
+    /// <inheritdoc />
+    public async Task<IEnumerable<ResultProductModel>> GetAllProductsAsync()
+    {
+        var sql = $@"SELECT * FROM ""{nameof(ProductModel)}""";
+
+        return await _connection.QueryAsync<ResultProductModel>(sql);
     }
 }

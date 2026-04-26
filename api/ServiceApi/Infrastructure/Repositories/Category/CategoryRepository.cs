@@ -16,11 +16,11 @@ public class CategoryRepository : ICategoryRepository
     }
     
     /// <inheritdoc/>
-    public async Task<Guid> CreateCategoryAsync(string categoryName, Guid? parentId)
+    public async Task<Guid> CreateCategoryAsync(string categoryName, Guid? parentId, bool isVisible)
     {
         var categoryId = Guid.NewGuid();
-        var sql = $@"INSERT INTO ""{nameof(CategoryModel)}"" VALUES (@Id, @Name, @ParentId)";
-        await _connection.ExecuteAsync(sql, new { Id = categoryId, Name = categoryName, ParentId = parentId });
+        var sql = $@"INSERT INTO ""{nameof(CategoryModel)}"" VALUES (@Id, @Name, @ParentId, @IsVisible)";
+        await _connection.ExecuteAsync(sql, new { Id = categoryId, Name = categoryName, ParentId = parentId, IsVisible = isVisible });
         return categoryId;
     }
 

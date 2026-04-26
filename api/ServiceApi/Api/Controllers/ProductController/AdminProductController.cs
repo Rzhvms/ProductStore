@@ -87,7 +87,6 @@ public class AdminProductController : ControllerBase
         return await _productUseCase.DeleteProductAsync(id);
     }
     
-    
     /// <summary>
     /// Загрузить картинку продукта
     /// </summary>

@@ -46,4 +46,9 @@ public record ResultProductModel
     /// Характеристики
     /// </summary>
     public JsonObject? Characteristics { get; init; }
+    
+    /// <summary>
+    /// Отображается ли категория
+    /// </summary>
+    public bool IsVisible { get; init; }
 }

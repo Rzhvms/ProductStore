@@ -27,7 +27,8 @@ internal class ProductUseCase : IProductUseCase
             Price = request.Price,
             Quantity = request.Quantity,
             CategoryId = request.CategoryId,
-            Characteristics =  request.Characteristics
+            Characteristics =  request.Characteristics,
+            IsVisible = request.IsVisible
         };
         
         var product = await _repository.CreateProductAsync(model);
@@ -66,7 +67,8 @@ internal class ProductUseCase : IProductUseCase
             Price = response.Price,
             Quantity = response.Quantity,
             CategoryId = response.CategoryId,
-            Characteristics = response.Characteristics
+            Characteristics = response.Characteristics,
+            IsVisible = response.IsVisible
         };
     }
     
@@ -74,7 +76,8 @@ internal class ProductUseCase : IProductUseCase
     public async Task<GetProductListResponse> GetProductListAsync(int pageNumber, int pageSize)
     {
         var response = await _repository.GetProductListAsync(pageNumber, pageSize);
-        var productList = response.Select(p => new GetProductResponse
+        var visibleProducts = response.Where(x => x.IsVisible);
+        var productList = visibleProducts.Select(p => new GetProductResponse
         {
             Id = p.Id,
             Name = p.Name,
@@ -104,7 +107,8 @@ internal class ProductUseCase : IProductUseCase
             Price = p.Price,
             Quantity = p.Quantity,
             CategoryId = p.CategoryId,
-            Characteristics = p.Characteristics
+            Characteristics = p.Characteristics,
+            IsVisible = p.IsVisible
         }).ToList();
         
         return new GetAdminProductListResponse()
@@ -117,7 +121,8 @@ internal class ProductUseCase : IProductUseCase
     public async Task<GetProductListResponse> GetProductListByCategoryIdAsync(Guid categoryId, int pageNumber, int pageSize)
     {
         var response = await _repository.GetProductListByCategoryIdAsync(categoryId, pageNumber, pageSize);
-        var productList = response.Select(p => new GetProductResponse
+        var visibleProducts = response.Where(x => x.IsVisible);
+        var productList = visibleProducts.Select(p => new GetProductResponse
         {
             Id = p.Id,
             Name = p.Name,
@@ -148,6 +153,7 @@ internal class ProductUseCase : IProductUseCase
             Quantity = p.Quantity,
             CategoryId = p.CategoryId,
             Characteristics = p.Characteristics,
+            IsVisible = p.IsVisible
         }).ToList();
         
         return new GetAdminProductListResponse()
@@ -167,7 +173,8 @@ internal class ProductUseCase : IProductUseCase
             Price = request.Price,
             Quantity = request.Quantity,
             CategoryId = request.CategoryId,
-            Characteristics =  request.Characteristics
+            Characteristics =  request.Characteristics,
+            IsVisible = request.IsVisible
         };
         await _repository.UpdateProductAsync(id, model); 
         

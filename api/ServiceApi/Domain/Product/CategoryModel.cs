@@ -22,4 +22,9 @@ public record CategoryModel
     /// Идентификатор родительской категории для дерева категорий
     /// </summary>
     public Guid? ParentId { get; init; }
+    
+    /// <summary>
+    /// Отображается ли категория
+    /// </summary>
+    public bool IsVisible { get; init; }
 }

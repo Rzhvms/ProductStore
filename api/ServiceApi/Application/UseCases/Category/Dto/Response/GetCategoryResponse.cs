@@ -5,4 +5,5 @@ public record GetCategoryResponse
     public Guid? CategoryId { get; init; }
     public string? CategoryName { get; init; }
     public Guid? ParentCategoryId { get; init; }
+    public bool IsVisible { get; init; }
 }

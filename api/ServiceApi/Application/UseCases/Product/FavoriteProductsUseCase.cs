@@ -1,6 +1,7 @@
 using Application.Ports.Repositories;
 using Application.UseCases.Product.Dto.Request;
 using Application.UseCases.Product.Dto.Response;
+using Application.UseCases.Product.Interfaces;
 
 namespace Application.UseCases.Product;
 
@@ -18,7 +19,8 @@ internal class FavoriteProductsUseCase : IFavoriteProductsUseCase
     public async Task<GetProductListResponse> GetFavoriteProductListAsync(Guid userId, int pageNumber, int pageSize)
     {
         var response = await _favoriteProductsRepository.GetFavoriteProductListAsync(userId, pageNumber, pageSize);
-        var productList = response.Select(p => new GetProductResponse
+        var visibleProducts = response.Where(p => p.IsVisible);
+        var productList = visibleProducts.Select(p => new GetProductResponse
         {
             Id = p.Id,
             Name = p.Name,

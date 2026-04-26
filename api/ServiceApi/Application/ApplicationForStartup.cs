@@ -57,6 +57,7 @@ public static class ApplicationForStartup
         services.AddScoped<IProductReviewUseCase, ProductReviewUseCase>();
         services.AddScoped<IYandexMapsAddressUseCase, YandexMapsAddressUseCase>();
         services.AddScoped<IGetUserListUseCase, GetUserListUseCase>();
+        services.AddScoped<IProductIntegrationUseCase, ProductIntegrationUseCase>();
         
         SqlMapper.AddTypeHandler(new JsonObjectTypeHandler());
         SqlMapper.AddTypeHandler(new JsonArrayTypeHandler());
