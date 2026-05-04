@@ -75,7 +75,7 @@
           <template v-else>
             <div class="product-row" v-for="(p, i) in filteredProducts" :key="p.id" @click="openProductStats(p)">
               <div class="row-image">
-                <div class="img-placeholder" :style="{ backgroundImage: p.image ? `url(${p.image.url})` : '' }"></div>
+                <div class="img-placeholder" :style="{ backgroundImage: p.image?.url ? `url(${p.image.url})` : '' }"></div>
               </div>
               <div class="row-content">
                 <div class="row-main">
@@ -330,9 +330,9 @@ const getRating = async (id) => {
 }
 
 const getImage = async (id) => {
-  const images = await getProductImages(id)
-  const mainImage = images.find(i => i.isMain)
-  return mainImage || images[0]
+    const images = await getProductImages(id)
+    if (!images || images.length === 0) return null
+    return images.find(i => i.isMain) ?? images[0] ?? null
 }
 
 // === ЗАГРУЗКА ДАННЫХ ===
@@ -663,9 +663,6 @@ const calculateOffset = (rating, starIndex) => {
   border-bottom: none; 
   position: relative;
 }
-.metric-tab::after {
-  /* Разделители вертикальные, если нужны, но на макете их нет явно */
-}
 
 .m-label { font-size: 14px; color: #666; margin-bottom: 8px; }
 .m-value-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
@@ -749,9 +746,5 @@ const calculateOffset = (rating, starIndex) => {
 .u-name { font-weight: 700; font-size: 15px; }
 .u-stars { display: flex; align-items: center; gap: 5px; margin-left: auto; }
 .u-score { font-weight: 700; color: #FF7A00; margin-left: 5px; }
-
-/* Dropdown styles reused */
-.sort-btn-styled { /* ... */ }
-.custom-dropdown-menu { /* ... */ }
 .header-left-group{ display: flex; align-items: center; gap: 12px; }
 </style>

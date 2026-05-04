@@ -86,7 +86,7 @@
                 <div class="product-image">
                   <img
                     v-if="product.image"
-                    :src="product.image.url"
+                    :src="product.image?.url"
                     :alt="product.name"
                   />
                   <span v-else>🖼️</span>

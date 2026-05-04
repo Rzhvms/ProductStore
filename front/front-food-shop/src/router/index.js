@@ -47,8 +47,8 @@ import AdminDashboard from '../pages/admin/AdminDashboard.vue'
 import AdminStatistic from '../pages/admin/AdminStatistic.vue'
 import AdminProduct from '../pages/admin/AdminProduct.vue'
 import AdminProductAdd from '../pages/admin/AdminProductAdd.vue'
-
-import App from '../App.vue'
+// ИСПРАВЛЕНО: Добавлен импорт новой страницы
+import AdminProductIntegration from '../pages/admin/AdminProductIntegration.vue'
 
 const routes = [
   { path: '/', component: CatalogIndex },
@@ -71,9 +71,6 @@ const routes = [
 
   // Cart
   { path: '/cart', component: Cart, meta: { requiresAuth: true } },
-  // { path: '/payment/:id', component: Payment, meta: { requiresAuth: true } },
-  // { path: '/payment/success', component: PaymentSuccess, meta: { requiresAuth: true } },
-  // { path: '/payment/failed', component: PaymentFailed, meta: { requiresAuth: true } },
 
   // Checkout
   { path: '/checkout/address', component: CheckoutAddress, meta: { requiresAuth: true } },
@@ -88,8 +85,14 @@ const routes = [
   // Admin
   { path: '/admin', component: AdminDashboard, meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/admin/products', component: AdminProducts, meta: { requiresAuth: true, requiresAdmin: true } },
-  { path: '/admin/products/:id', component: AdminProduct, meta: { requiresAuth: true, requiresAdmin: true }, props: true },
+  
+  // ИСПРАВЛЕНО: Статические пути перенесены ВЫШЕ путей с :id
   { path: '/admin/products/add', component: AdminProductAdd, meta: { requiresAuth: true, requiresAdmin: true } },
+  { path: '/admin/products/integration', component: AdminProductIntegration, meta: { requiresAuth: true, requiresAdmin: true } },
+
+  // ИСПРАВЛЕНО: Путь с параметром :id идет после конкретных страниц
+  { path: '/admin/products/:id', component: AdminProduct, meta: { requiresAuth: true, requiresAdmin: true }, props: true },
+  
   { path: '/admin/categories', component: AdminCategories, meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/admin/statistics', component: AdminStatistic, meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/admin/users', component: AdminUsers, meta: { requiresAuth: true, requiresAdmin: true } },
@@ -104,6 +107,7 @@ router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
   const isAuthenticated = authStore.isAuthenticated;
   const isAdmin = authStore.userRole !== 'user';
+  
   if (to.meta.requiresAuth && !isAuthenticated) {
     return next('/login');
   }

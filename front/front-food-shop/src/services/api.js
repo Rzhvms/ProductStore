@@ -304,6 +304,61 @@ export const clearFavorites = async (productIdList) => {
     }
 };
 
+export const exportProductById = async (id) => {
+    try {
+        const response = await api.get(`integration/product/${id}/export`, {
+            responseType: 'blob'
+        });
+        return response;
+    } catch (error) {
+        throw new Error("Не удалось экспортировать товар");
+    }
+};
+ 
+export const exportProductList = async () => {
+    try {
+        const response = await api.get('integration/product/list/export', {
+            responseType: 'blob'
+        });
+        return response;
+    } catch (error) {
+        throw new Error("Не удалось экспортировать товары");
+    }
+};
+ 
+export const importProduct = async (file) => {
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await api.post('integration/product/import', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
+    } catch (error) {
+        const data = error.response?.data
+        const msg = data?.message 
+            || data?.error
+            || (typeof data === 'string' ? data : null)
+            || error.message
+            || "Не удалось импортировать товар"
+        throw new Error(msg)
+    }
+};
+ 
+export const importProductList = async (file) => {
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await api.post('integration/product/list/import', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
+    } catch (error) {
+        const msg = error.response?.data?.message || error.response?.data || "Не удалось импортировать список товаров";
+        throw new Error(msg);
+    }
+};
+
 export const favoriteApi = {
     get: getFavoriteProducts,
     add: addToFavorites,
@@ -320,9 +375,9 @@ export const createOrder = async (orderDetails) => {
     }
 };
 
-export const createCategory = async (name, parentId = null) => {
+export const createCategory = async (name, parentId = null, isVisible = true) => {
     try {
-        const response = await api.post('categories/create', { name, parentId });
+        const response = await api.post('categories/create', { name, parentId, isVisible });
         return response.data;
     } catch (error) {
         throw new Error("Не удалось создать категорию");
@@ -347,11 +402,17 @@ export const getCategory = async (id) => {
     }
 };
 
-export const updateCategory = async (id, name, parentId = null) => {
+export const updateCategory = async (id, name, parentId = null, isVisible = true) => {
     try {
-        const response = await api.put(`categories/${id}`, { name, parentId });
+        // Бэкенд требует именно "name", "parentId" и "isVisible"
+        const response = await api.put(`categories/${id}`, { 
+            name: name,             // Возвращаем как просит бэкенд
+            parentId: parentId,     // Если в DTO это поле называется так
+            isVisible: isVisible 
+        });
         return response.data;
     } catch (error) {
+        console.error("API Update Error:", error.response?.data || error.message);
         throw new Error("Не удалось обновить категорию");
     }
 };
@@ -373,9 +434,9 @@ export const categoryApi = {
     delete: deleteCategory
 };
 
-export const createProduct = async (name, providerId, description, price, quantity, categoryId, characteristics) => {
+export const createProduct = async (name, providerId, description, price, quantity, categoryId, characteristics, isVisible = true) => {
     try {
-        const response = await api.post('admin-product/create', { name, providerId, description, price, quantity, categoryId, characteristics });
+        const response = await api.post('admin-product/create', { name, providerId, description, price, quantity, categoryId, characteristics, isVisible });
         return response.data;
     } catch (error) {
         throw new Error("Не удалось создать товар");
@@ -405,9 +466,9 @@ export const getProduct = async (id) => {
     }
 };
 
-export const updateProduct = async (id, name, providerId, description, price, quantity, categoryId, characteristics) => {
+export const updateProduct = async (id, name, providerId, description, price, quantity, categoryId, characteristics, isVisible = true) => {
     try {
-        const response = await api.put(`admin-product/${id}`, { name, providerId, description, price, quantity, categoryId, characteristics });
+        const response = await api.put(`admin-product/${id}`, { name, providerId, description, price, quantity, categoryId, characteristics, isVisible });
         return response.data;
     } catch (error) {
         throw new Error("Не удалось обновить товар");
@@ -472,8 +533,14 @@ export const adminProductApi = {
     delete: deleteProduct,
     getCategoryProducts: getCategoryProducts,
     addImage: addImageToProduct,
-    deleteImage: deleteImageFromProduct
+    deleteImage: deleteImageFromProduct,
+
+    exportById: exportProductById,
+    exportList: exportProductList,
+    importOne: importProduct,
+    importList: importProductList,
 };
+
 
 export const getUserProfile = async (userId) => {
     try {

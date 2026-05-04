@@ -101,102 +101,102 @@
             <div class="form-group">
                 <label>Категория и подкатегория:</label>
     
-    <!-- Обертка с click-outside -->
-    <div class="custom-select-container" v-click-outside="() => isCategorySelectorOpen = false">
-  
-  <!-- Заголовок -->
-  <div 
-    class="select-header" 
-    :class="{ 'is-open': isCategorySelectorOpen }" 
-    @click="isCategorySelectorOpen = !isCategorySelectorOpen"
-  >
-    <span>{{ selectedCategoryLabel }}</span>
-    <img src="../../assets/arrow-down.svg" />
-  </div>
-  
-  <!-- Тело селектора -->
-  <div v-if="isCategorySelectorOpen" class="select-body">
-    
-    <!-- Поиск -->
-    <div class="select-search-wrapper">
-      <img src="../../assets/search-normal.svg" alt="search" class="search-icon-sm" />
-      <input 
-        type="text" 
-        v-model="categorySearchQuery" 
-        placeholder="Введите название категории..." 
-        class="select-search-input"
-      />
-    </div>
-    
-    <!-- Список категорий -->
-    <div class="select-list">
-      
-      <template v-for="cat in filteredCategories" :key="cat.categoryName">
-        
-        <!-- Родительская категория (папка) -->
-        <div 
-          class="select-option parent-option" 
-          @click.stop="toggleCategory(cat.categoryName)"
-        >
-          <span class="option-text font-bold">{{ cat.categoryName }}</span>
-          <img 
-            src="../../assets/arrow-down.svg" 
-            class="cat-arrow" 
-            :class="{ 'is-expanded': expandedCategory === cat.categoryName }"
-          />
-        </div>
-        
-        <!-- Подкатегории -->
-        <template v-if="expandedCategory === cat.categoryName">
-          <label 
-            v-for="sub in cat.subs" 
-            :key="sub" 
-            class="select-option sub-option"
-            @click.stop="selectSubcategory(sub)"
-          >
-            <input 
-              type="radio" 
-              name="subcategory" 
-              :value="sub" 
-              v-model="form.subcategory"
-            />
-            <div 
-              class="radio-indicator" 
-              :class="{ selected: form.subcategory === sub }"
-            ></div>
-            <span class="option-text">{{ sub.categoryName }}</span>
-          </label>
-        </template>
-        
-      </template>
-      
-      <!-- Пусто -->
-      <div v-if="filteredCategories.length === 0" class="empty-select">
-        Ничего не найдено
-      </div>
-      
-    </div>
-  </div>
-  
-  <!-- Кнопка "Посмотреть все" -->
-    <div 
-      class="show-all-link" 
-      v-if="hasMoreCategories"
-      @click="showAllCategories = true"
-    >
-      Посмотреть все ({{ categories.length - visibleCategoriesCount }} ещё)
-      <img src="../../assets/arrow-down.svg" />
-    </div>
-    <div 
-      class="show-all-link" 
-      v-else-if="showAllCategories && !categorySearch"
-      @click="showAllCategories = false"
-      style="margin-top: 8px;"
-    >
-      Свернуть
-      <img src="../../assets/arrow-down.svg" />
-    </div>
-  </div>
+                <!-- Обертка с click-outside -->
+                <div class="custom-select-container" v-click-outside="() => isCategorySelectorOpen = false">
+              
+              <!-- Заголовок -->
+              <div 
+                class="select-header" 
+                :class="{ 'is-open': isCategorySelectorOpen }" 
+                @click="isCategorySelectorOpen = !isCategorySelectorOpen"
+              >
+                <span>{{ selectedCategoryLabel }}</span>
+                <img src="../../assets/arrow-down.svg" />
+              </div>
+              
+              <!-- Тело селектора -->
+              <div v-if="isCategorySelectorOpen" class="select-body">
+                
+                <!-- Поиск -->
+                <div class="select-search-wrapper">
+                  <img src="../../assets/search-normal.svg" alt="search" class="search-icon-sm" />
+                  <input 
+                    type="text" 
+                    v-model="categorySearchQuery" 
+                    placeholder="Введите название категории..." 
+                    class="select-search-input"
+                  />
+                </div>
+                
+                <!-- Список категорий -->
+                <div class="select-list">
+                  
+                  <template v-for="cat in filteredCategories" :key="cat.categoryName">
+                    
+                    <!-- Родительская категория (папка) -->
+                    <div 
+                      class="select-option parent-option" 
+                      @click.stop="toggleCategory(cat.categoryName)"
+                    >
+                      <span class="option-text font-bold">{{ cat.categoryName }}</span>
+                      <img 
+                        src="../../assets/arrow-down.svg" 
+                        class="cat-arrow" 
+                        :class="{ 'is-expanded': expandedCategory === cat.categoryName }"
+                      />
+                    </div>
+                    
+                    <!-- Подкатегории -->
+                    <template v-if="expandedCategory === cat.categoryName">
+                      <label 
+                        v-for="sub in cat.subs" 
+                        :key="sub" 
+                        class="select-option sub-option"
+                        @click.stop="selectSubcategory(sub)"
+                      >
+                        <input 
+                          type="radio" 
+                          name="subcategory" 
+                          :value="sub" 
+                          v-model="form.subcategory"
+                        />
+                        <div 
+                          class="radio-indicator" 
+                          :class="{ selected: form.subcategory === sub }"
+                        ></div>
+                        <span class="option-text">{{ sub.categoryName }}</span>
+                      </label>
+                    </template>
+                    
+                  </template>
+                  
+                  <!-- Пусто -->
+                  <div v-if="filteredCategories.length === 0" class="empty-select">
+                    Ничего не найдено
+                  </div>
+                  
+                </div>
+              </div>
+              
+              <!-- Кнопка "Посмотреть все" -->
+                <div 
+                  class="show-all-link" 
+                  v-if="hasMoreCategories"
+                  @click="showAllCategories = true"
+                >
+                  Посмотреть все ({{ categories.length - visibleCategoriesCount }} ещё)
+                  <img src="../../assets/arrow-down.svg" />
+                </div>
+                <div 
+                  class="show-all-link" 
+                  v-else-if="showAllCategories && !categorySearch"
+                  @click="showAllCategories = false"
+                  style="margin-top: 8px;"
+                >
+                  Свернуть
+                  <img src="../../assets/arrow-down.svg" />
+                </div>
+              </div>
             </div>
 
             <div class="form-group price-group">
@@ -278,7 +278,20 @@
 
                 </div>
             </div>
-
+            <div class="form-group">
+              <label>Видимость товара:</label>
+              <div class="toggle-row">
+                <span class="toggle-label-text">{{ form.isVisible ? 'Товар отображается в каталоге' : 'Товар скрыт от покупателей' }}</span>
+                <button
+                  type="button"
+                  class="toggle-btn"
+                  :class="{ 'toggle-on': form.isVisible, 'toggle-off': !form.isVisible }"
+                  @click="form.isVisible = !form.isVisible"
+                >
+                  <span class="toggle-knob"></span>
+                </button>
+              </div>
+            </div>
           </div> 
         </div> </div> <div class="full-width-section">
         <h2>О товаре</h2>
@@ -424,8 +437,9 @@ const form = ref({
   priceUnit: 'st',
   stock: 0,
   stockUnit: 'kg',
-  categoryId: null,    // Добавили поле для ID категории
-  subcategoryName: '', // Только для отображения в UI
+  categoryId: null,
+  subcategoryName: '',
+  isVisible: true,
   nutrition: {
     fats: '',
     carbs: '',
@@ -551,8 +565,10 @@ const addProduct = async () => {
       parseFloat(form.value.price) || 0,
       parseInt(form.value.stock) || 0,
       form.value.categoryId,
-      characteristics
+      characteristics,
+      form.value.isVisible
     );
+
 
     const productId = newProduct.productId || newProduct;
 
@@ -979,4 +995,57 @@ input, select, textarea {
 .select-option input:checked + .radio-custom { background: #FF7A00; border: 4px solid #FFD8B3; }
 .show-more-link { color: #FF7A00; font-size: 13px; cursor: pointer; text-align: center; margin-top: 10px; }
 .select-option.sub-option { display: flex; align-items: center; ;}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 8px;
+}
+ 
+.toggle-label-text {
+  font-size: 14px;
+  color: #444;
+}
+ 
+.toggle-btn {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  border-radius: 13px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.25s;
+  flex-shrink: 0;
+}
+ 
+.toggle-on {
+  background: #FF7A00;
+}
+ 
+.toggle-off {
+  background: #ccc;
+}
+ 
+.toggle-knob {
+  position: absolute;
+  top: 3px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  transition: left 0.25s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+ 
+.toggle-on .toggle-knob {
+  left: 25px;
+}
+ 
+.toggle-off .toggle-knob {
+  left: 3px;
+}
 </style>

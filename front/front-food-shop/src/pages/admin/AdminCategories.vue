@@ -88,6 +88,7 @@
                   <span class="item-text">{{ cat.categoryName }}</span>
                 </div>
                 <div class="row-meta">
+                  <span v-if="!cat.isVisible" class="hidden-badge">Скрыт</span>
                   <span class="meta-badge" title="Количество подкатегорий">{{ cat.subCategories.length }}</span>
                   <button class="expand-arrow-btn" :class="{ 'is-expanded': expandedCategoryIds.has(cat.categoryId) }" @click.stop="toggleExpand(cat.categoryId)">
                     <img src="../../assets/arrow-down.svg" />
@@ -114,6 +115,7 @@
             <div class="card-left">
               <img src="../../assets/folder.svg" alt="Logo" class="icon-orange" />
               <h1 class="card-title">{{ selectedCategory.categoryName }}</h1>
+              <span v-if="!selectedCategory.isVisible" class="hidden-badge">Скрыт</span>
             </div>
             <div class="header-card-actions">
               <button class="icon-btn" title="Редактировать" @click="openRenameDialog('category', selectedCategory)">
@@ -159,6 +161,7 @@
             </div>
             <div class="card-list-body">
               <div v-for="(sub, index) in visibleSubcategories" :key="index" class="card-list-item" @click="goToSubcategory(sub)">
+                <span v-if="!sub.isVisible" class="hidden-badge">Скрыт</span>
                 <span class="sub-text">{{ sub.categoryName }}</span>
                 <div class="row-meta">
                   <span class="meta-badge" title="Количество товаров">{{ getProductCount(sub) }}</span>
@@ -183,6 +186,7 @@
             <div class="card-left">
               <img src="../../assets/folder-open.svg" alt="Logo" class="icon-orange" />
               <h1 class="card-title">{{ selectedSubcategory.categoryName }}</h1>
+              <span v-if="!selectedSubcategory.isVisible" class="hidden-badge">Скрыт</span>
             </div>
             <div class="header-card-actions">
                <button class="icon-btn" title="Переименовать подкатегорию" @click="openRenameDialog('subcategory', selectedSubcategory)">
@@ -282,6 +286,20 @@
           <div class="modal-content centered-modal">
             <h3 class="modal-title-center">Название категории</h3>
             <input v-model="newCategoryName" placeholder="Введите новое название" class="gray-input" @keyup.enter="addCategory"/>
+            
+            <!-- НОВОЕ: переключатель isVisible -->
+            <div class="toggle-row" style="margin-top: 12px;">
+              <span class="toggle-label-text">{{ newCategoryVisible ? 'Отображается в каталоге' : 'Скрыта от покупателей' }}</span>
+              <button
+                type="button"
+                class="toggle-btn"
+                :class="{ 'toggle-on': newCategoryVisible, 'toggle-off': !newCategoryVisible }"
+                @click="newCategoryVisible = !newCategoryVisible"
+              >
+                <span class="toggle-knob"></span>
+              </button>
+            </div>
+        
             <div class="modal-actions-center">
               <button class="btn-gray" @click="showAddCategoryDialog = false">Отмена</button>
               <button class="btn-orange" @click="addCategory">Сохранить</button>
@@ -303,6 +321,20 @@
           <div class="modal-content centered-modal">
             <h3 class="modal-title-center">Переименовать</h3>
             <input v-model="renameValue" class="gray-input" @keyup.enter="confirmRename"/>
+            
+            <!-- НОВОЕ: переключатель isVisible -->
+            <div class="toggle-row" style="margin-top: 12px;">
+              <span class="toggle-label-text">{{ renameIsVisible ? 'Отображается в каталоге' : 'Скрыта от покупателей' }}</span>
+              <button
+                type="button"
+                class="toggle-btn"
+                :class="{ 'toggle-on': renameIsVisible, 'toggle-off': !renameIsVisible }"
+                @click="renameIsVisible = !renameIsVisible"
+              >
+                <span class="toggle-knob"></span>
+              </button>
+            </div>
+        
             <div class="modal-actions-center">
               <button class="btn-gray" @click="showRenameDialog = false">Отмена</button>
               <button class="btn-orange" @click="confirmRename">Сохранить</button>
@@ -344,6 +376,18 @@
                     <div v-if="filteredParentCategories.length === 0" class="empty-select">Ничего не найдено</div>
                   </div>
                 </div>
+              </div>
+
+              <div class="toggle-row" style="margin-top: 12px;">
+                <span class="toggle-label-text">{{ newSubVisible ? 'Отображается в каталоге' : 'Скрыта от покупателей' }}</span>
+                <button
+                  type="button"
+                  class="toggle-btn"
+                  :class="{ 'toggle-on': newSubVisible, 'toggle-off': !newSubVisible }"
+                  @click="newSubVisible = !newSubVisible"
+                >
+                  <span class="toggle-knob"></span>
+                </button>
               </div>
             </div>
             <div class="sidebar-actions">
@@ -409,6 +453,9 @@ const selectedProductToAdd = ref('');
 const renameValue = ref('');
 const renameTarget = ref(null);
 const deleteTarget = ref(null);
+const newCategoryVisible = ref(true);
+const newSubVisible = ref(true);
+const renameIsVisible = ref(true);
 
 const isCategorySelectorOpen = ref(false);
 const categorySearchQuery = ref('');
@@ -436,12 +483,13 @@ async function addCategory() {
   if (!newCategoryName.value.trim()) return;
   isSaving.value = true;
   try {
-    const category = await categoryApi.create(newCategoryName.value.trim());
+    await categoryApi.create(newCategoryName.value.trim(), null, newCategoryVisible.value);
     newCategoryName.value = '';
+    newCategoryVisible.value = true;
     showAddCategoryDialog.value = false;
     await loadCategories();
-  } catch (error) {
-    error.value = error.message;
+  } catch (err) {
+    error.value = err.message;
   } finally {
     isSaving.value = false;
   }
@@ -451,13 +499,14 @@ async function addSubcategory() {
   if (!newSubName.value.trim() || !selectedParentId.value) return;
   isSaving.value = true;
   try {
-    const category = await categoryApi.create(newSubName.value.trim(), selectedParentId.value);
+    await categoryApi.create(newSubName.value.trim(), selectedParentId.value, newSubVisible.value);
     newSubName.value = '';
+    newSubVisible.value = true;
     selectedParentId.value = null;
     showAddSubSidebar.value = false;
     await loadCategories();
-  } catch (error) {
-    error.value = error.message;
+  } catch (err) {
+    error.value = err.message;
   } finally {
     isSaving.value = false;
   }
@@ -467,17 +516,27 @@ async function addSubcategoryFromModal() {
   if (!newSubName.value.trim() || !selectedCategory.value) return;
   isSaving.value = true;
   try {
-    const category = await categoryApi.create(newSubName.value.trim(), selectedCategory.value.categoryId);
+    await categoryApi.create(newSubName.value.trim(), selectedCategory.value.categoryId, newSubVisible.value);
+    
+    // Сбрасываем поля
     newSubName.value = '';
     showAddSubDialog.value = false;
+    
+    // Сначала загружаем свежие данные с сервера
     await loadCategories();
-    selectedCategory.value = parentCategories.value.find(c => c.categoryId === selectedCategory.value.categoryId);
+    
+    // Обновляем ссылку на выбранную категорию, чтобы в списке появилась новая подкатегория
+    const updatedCat = parentCategories.value.find(c => c.categoryId === selectedCategory.value.categoryId);
+    if (updatedCat) {
+      selectedCategory.value = updatedCat;
+    }
   } catch (err) {
-    error.value = err.message;
+    error.value = "Ошибка при добавлении: " + err.message;
   } finally {
     isSaving.value = false;
   }
 }
+
 
 async function confirmRename() {
   const newVal = renameValue.value.trim();
@@ -486,17 +545,24 @@ async function confirmRename() {
   isSaving.value = true;
   try {
     if (type === 'category') {
-      await categoryApi.update(data.categoryId, newVal);
+      await categoryApi.update(data.categoryId, newVal, null, renameIsVisible.value);
     } else if (type === 'subcategory') {
-      await categoryApi.update(data.categoryId, newVal, data.parentId);
+      await categoryApi.update(data.categoryId, newVal, data.parentCategoryId, renameIsVisible.value);
     }
-    await loadCategories();
-    if (selectedCategory.value) {
-      selectedCategory.value = parentCategories.value.find(c => c.categoryId === selectedCategory.value.categoryId);
+    
+    await loadCategories(); // Здесь данные Proxy обновились
+
+    // Исправленный поиск для обновления заголовка
+    if (currentView.value === 'subcategories' && selectedCategory.value) {
+       // Ищем обновленного родителя в computed свойстве
+       selectedCategory.value = parentCategories.value.find(c => c.categoryId === selectedCategory.value.categoryId);
+    } 
+    
+    if (currentView.value === 'products' && selectedSubcategory.value) {
+       // Ищем подкатегорию в полном плоском списке categories
+       selectedSubcategory.value = categories.value.find(c => c.categoryId === data.categoryId);
     }
-    if (selectedSubcategory.value && type === 'subcategory') {
-      selectedSubcategory.value = categories.value.find(c => c.categoryId === data.categoryId);
-    }
+
     showRenameDialog.value = false;
   } catch (err) {
     error.value = err.message;
@@ -714,6 +780,7 @@ function openAddSubDialog() {
 function openRenameDialog(type, data) {
   renameTarget.value = { type, data };
   renameValue.value = data.categoryName;
+  renameIsVisible.value = data.isVisible ?? true;
   showRenameDialog.value = true;
 }
 
@@ -723,14 +790,30 @@ function promptDelete(type, data) {
 }
 
 async function addProductToSubcategory() {
-  if (!selectedProductToAdd.value) return;
+  if (!selectedProductToAdd.value || !selectedSubcategory.value) return;
   const prod = products.value.find(p => p.id === Number(selectedProductToAdd.value));
-  if (prod && selectedSubcategory.value) {
-    await adminProductApi.update(id, prod.name, prod.providerId, prod.description, prod.price, prod.quantity, selectedSubcategory.value.categoryId, prod.characteristics);
-    await loadCategories();
+  if (prod) {
+    try {
+      isSaving.value = true;
+      await adminProductApi.update(
+        prod.id, 
+        prod.name, 
+        prod.providerId, 
+        prod.description, 
+        prod.price, 
+        prod.quantity, 
+        selectedSubcategory.value.categoryId, 
+        prod.characteristics
+      );
+      await loadCategories();
+      showAddProductDialog.value = false;
+      selectedProductToAdd.value = '';
+    } catch (err) {
+      error.value = "Ошибка сохранения товара: " + err.message;
+    } finally {
+      isSaving.value = false;
+    }
   }
-  selectedProductToAdd.value = '';
-  showAddProductDialog.value = false;
 }
 
 function getProductCount(sub) {
@@ -772,6 +855,64 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+
+.hidden-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: #999;
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 2px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-right: 8px;
+}
+ 
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 8px;
+}
+ 
+.toggle-label-text {
+  font-size: 14px;
+  color: #444;
+}
+ 
+.toggle-btn {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  border-radius: 13px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.25s;
+  flex-shrink: 0;
+}
+ 
+.toggle-on { background: #FF7A00; }
+.toggle-off { background: #ccc; }
+ 
+.toggle-knob {
+  position: absolute;
+  top: 3px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  transition: left 0.25s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+ 
+.toggle-on .toggle-knob { left: 25px; }
+.toggle-off .toggle-knob { left: 3px; }
+
+
 .admin-wrapper { padding: 20px 40px; min-height: 80vh; font-family: 'Segoe UI', sans-serif; }
 .breadcrumbs { font-size: 14px; color: #9E9E9E; margin-bottom: 25px; }
 .crumb-link { cursor: pointer; transition: color 0.2s; }

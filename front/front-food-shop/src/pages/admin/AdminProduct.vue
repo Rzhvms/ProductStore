@@ -127,7 +127,7 @@
           <div class="main-image-display">
             <div class="main-placeholder">
               <img
-                v-if="form.images[activeImageIndex].url"
+                v-if="form.images[activeImageIndex]?.url"
                 :src="form.images[activeImageIndex].url"
                 alt="main"
               />
@@ -403,6 +403,28 @@
               <h2>{{ formatPrice(form.price) }} ₽ / {{ priceUnitsDict[form.priceUnit] }}</h2>
               <span v-if="form.stock > 0">В наличии {{ form.stock }} {{ stockUnitsDict[form.stockUnit] }}</span>
               <span v-else class="out-of-stock">Нет в наличии</span>
+            </div>
+
+            <div v-if="!isEditMode" style="margin-top: 8px;">
+              <span v-if="!form.isVisible" class="hidden-badge">Скрыт от покупателей</span>
+              <span v-else class="visible-badge">Отображается</span>
+            </div>
+
+            <div v-if="isEditMode" class="form-group">
+              <label>Видимость товара:</label>
+              <div class="toggle-row">
+                <span class="toggle-label-text">
+                  {{ form.isVisible ? 'Товар отображается в каталоге' : 'Товар скрыт от покупателей' }}
+                </span>
+                <button
+                  type="button"
+                  class="toggle-btn"
+                  :class="{ 'toggle-on': form.isVisible, 'toggle-off': !form.isVisible }"
+                  @click="form.isVisible = !form.isVisible"
+                >
+                  <span class="toggle-knob"></span>
+                </button>
+              </div>
             </div>
 
           </div>
@@ -735,6 +757,7 @@ const getEmptyForm = () => ({
   attributes: [],
   images: [],
   rating: 0,
+  isVisible: true,
 });
 
 const form = ref(getEmptyForm());
@@ -852,6 +875,7 @@ async function mapApiToForm(apiData) {
     attributes,
     images: images ? images.map(i => ({id: i.id, url: i.url})) : [],
     rating: Number(rating) || 0,
+    isVisible: apiData.isVisible ?? true,
   };
 }
 
@@ -897,7 +921,8 @@ function mapFormToApi(formData) {
     price: parseFloat(formData.price) || 0,
     quantity: parseInt(formData.stock) || 0,
     categoryId: formData.categoryId,
-    characteristics
+    characteristics,
+    isVisible: formData.isVisible,
   };
 }
 
@@ -974,7 +999,8 @@ async function handleSave() {
         apiData.price,
         apiData.quantity,
         apiData.categoryId,
-        apiData.characteristics
+        apiData.characteristics,
+        apiData.isVisible
       );
       
       // Переходим на страницу созданного товара
@@ -989,7 +1015,8 @@ async function handleSave() {
         apiData.price,
         apiData.quantity,
         apiData.categoryId,
-        apiData.characteristics
+        apiData.characteristics,
+        apiData.isVisible
       );
       
       originalForm.value = JSON.parse(JSON.stringify(form.value));
@@ -2492,6 +2519,32 @@ input.input-price {
   flex: 1;
 }
 
+.hidden-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #999;
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 2px 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.visible-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #4caf50;
+  background: #f1faf1;
+  border: 1px solid #c8e6c9;
+  border-radius: 4px;
+  padding: 2px 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
 .font-bold {
   font-weight: 600;
 }
@@ -2659,5 +2712,12 @@ input.input-price {
   width: 100%;
 }
 
-
+.toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #f9f9f9; border: 1px solid #eee; border-radius: 8px; }
+.toggle-label-text { font-size: 14px; color: #444; }
+.toggle-btn { position: relative; width: 48px; height: 26px; border-radius: 13px; border: none; cursor: pointer; transition: background 0.25s; flex-shrink: 0; }
+.toggle-on { background: #FF7A00; }
+.toggle-off { background: #ccc; }
+.toggle-knob { position: absolute; top: 3px; width: 20px; height: 20px; background: #fff; border-radius: 50%; transition: left 0.25s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.toggle-on .toggle-knob { left: 25px; }
+.toggle-off .toggle-knob { left: 3px; }
 </style>

@@ -97,7 +97,7 @@
   </button>
 </div>
           <div class="main-image" v-if="images.length > 0">
-            <img :src="images[activeImageIndex].url" alt="main" />
+            <img :src="images[activeImageIndex]?.url" alt="main" />
           </div>
         </div>
 
@@ -606,7 +606,9 @@ const loadData = async () => {
     reviews.value = reviewsData.productReviewList
 
     const imagesData = await getProductImages(id)
-    images.value = imagesData.map(i => ({id: i.id, url: i.url}))
+    images.value = Array.isArray(imagesData) 
+      ? imagesData.map(i => ({ id: i.id, url: i.url })).filter(i => i.url)
+      : []
   } catch (err) {
     error.value = "Ошибка: " + err.message
   } finally {

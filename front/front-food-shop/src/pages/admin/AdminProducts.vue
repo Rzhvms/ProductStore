@@ -54,7 +54,7 @@
         <div class="product-row" v-for="(p, i) in filteredProducts" :key="p.id" @click="openProduct(p.id)">
   
           <div class="row-image">
-            <div class="img-placeholder" :style="{ backgroundImage: p.image ? `url(${p.image.url})` : '' }"></div>
+            <div class="img-placeholder" :style="{ backgroundImage: p.image?.url ? `url(${p.image.url})` : '' }"></div>
           </div>
 
           <div class="row-content">
@@ -90,6 +90,11 @@
             <div class="row-meta">
               <span class="p-cat">Категория: {{ getCategoryName(p.categoryId) }}</span>
               <span class="p-sub" v-if="getCategoryName(p.categoryId) !== 'Не указана'">Подкатегория: {{ getSubcategoryName(p.categoryId) }}</span>
+            </div>
+
+            <div class="row-visibility">
+              <span v-if="!p.isVisible" class="hidden-badge">Скрыт от покупателей</span>
+              <span v-else class="visible-badge">Отображается</span>
             </div>
 
           </div>
@@ -264,9 +269,9 @@ const getRating = async (id) => {
 }
 
 const getImage = async (id) => {
-  const images = await getProductImages(id)
-  const mainImage = images.find(i => i.isMain)
-  return mainImage || images[0]
+    const images = await getProductImages(id)
+    if (!images || images.length === 0) return null
+    return images.find(i => i.isMain) ?? images[0] ?? null
 }
 
 /* --- INITIAL DATA FETCHING --- */
@@ -279,7 +284,7 @@ const loadData = async () => {
 
     const productsResponse = await adminProductApi.get(1, 100)
     products.value = await Promise.all(
-      productsResponse.productList.map(async (p) => ({
+      (productsResponse.productList || []).map(async (p) => ({
         ...p,
         rating: await getRating(p.id),
         image: await getImage(p.id)
@@ -490,6 +495,36 @@ watch(showAddProductDialog, (val) => {
 /* RESET & BASE */
 * { box-sizing: border-box; font-family: "Libre Franklin", ui-sans-serif, system-ui; }
 body { margin: 0; background: #fff; }
+
+.row-visibility {
+  margin-top: 6px;
+}
+ 
+.hidden-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #999;
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 2px 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+ 
+.visible-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #4caf50;
+  background: #f1faf1;
+  border: 1px solid #c8e6c9;
+  border-radius: 4px;
+  padding: 2px 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
 
 .page-container {
   display: flex;

@@ -45,10 +45,17 @@ public class CategoryRepository : ICategoryRepository
     {
         var sql = $@"UPDATE ""{nameof(CategoryModel)}""
                     SET ""{nameof(CategoryModel.Name)}"" = @Name,
-                        ""{nameof(CategoryModel.ParentId)}"" = @ParentId
+                        ""{nameof(CategoryModel.ParentId)}"" = @ParentId,
+                        ""{nameof(CategoryModel.IsVisible)}"" = @IsVisible
                     WHERE ""{nameof(CategoryModel.Id)}"" = @Id";
         
-        await _connection.ExecuteAsync(sql, new { category.Name, category.ParentId, category.Id });
+        await _connection.ExecuteAsync(sql, new
+        {
+            Name = category.Name, 
+            ParentId = category.ParentId, 
+            Id = category.Id,
+            IsVisible = category.IsVisible
+        });
     }
 
     /// <inheritdoc/>

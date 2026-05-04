@@ -14,8 +14,11 @@
         <router-link to="/admin/categories" class="menu-item" active-class="active">
           Каталог
         </router-link>
-        <router-link to="/admin/products" class="menu-item" active-class="active">
+        <router-link to="/admin/products" class="menu-item" active-class="active" exact>
           Товары
+        </router-link>
+        <router-link to="/admin/products/integration" class="menu-item" active-class="active">
+          Импорт / Экспорт
         </router-link>
         <router-link to="/admin/statistics" class="menu-item" active-class="active">
           Статистика
